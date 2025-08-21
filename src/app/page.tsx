@@ -1,103 +1,155 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { useState } from 'react';
+import { ScoreOverview } from '@/components/dashboard/ScoreOverview';
+import { CountryRankings } from '@/components/dashboard/CountryRankings';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+import { generateYearOptions } from '@/lib/utils';
+
+export default function Dashboard() {
+  const [selectedYear, setSelectedYear] = useState(2022);
+  const [selectedCountry, setSelectedCountry] = useState<number | undefined>(undefined);
+
+  const yearOptions = generateYearOptions(2010);
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Kilwa Analytics Dashboard</h1>
+            <p className="text-gray-600 mt-1">
+              Sovereign Risk Intelligence for African Markets
+            </p>
+          </div>
+          
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <label htmlFor="year-select" className="text-sm font-medium text-gray-700">
+                Year:
+              </label>
+              <select
+                id="year-select"
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(Number(e.target.value))}
+                className="border border-gray-300 rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {yearOptions.map((year) => (
+                  <option key={year.value} value={year.value}>
+                    {year.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            
+            <Button variant="primary" size="sm">
+              Generate Report
+            </Button>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </div>
+
+      {/* Key Metrics Overview */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center">
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-600">Countries Analyzed</p>
+                <p className="text-2xl font-bold text-gray-900">10</p>
+              </div>
+              <div className="ml-4 text-2xl">🌍</div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center">
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-600">Data Sources</p>
+                <p className="text-2xl font-bold text-gray-900">6</p>
+              </div>
+              <div className="ml-4 text-2xl">📊</div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center">
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-600">KPI Categories</p>
+                <p className="text-2xl font-bold text-gray-900">6</p>
+              </div>
+              <div className="ml-4 text-2xl">📈</div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center">
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-600">Last Updated</p>
+                <p className="text-sm font-bold text-gray-900">{new Date().toLocaleDateString()}</p>
+              </div>
+              <div className="ml-4 text-2xl">⏰</div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Main Dashboard Content */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Score Overview - Takes up 2 columns */}
+        <div className="lg:col-span-2">
+          <ScoreOverview year={selectedYear} countryId={selectedCountry} />
+        </div>
+        
+        {/* Country Rankings - Takes up 1 column */}
+        <div>
+          <CountryRankings year={selectedYear} limit={10} />
+        </div>
+      </div>
+
+      {/* Additional Information Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>About ISI</CardTitle>
+            <CardDescription>
+              Investment Suitability Index
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-gray-600">
+              The ISI evaluates investment potential across six key categories:
+              Macroeconomic Stability (25%), Business Environment (20%), 
+              Market Size & Demand (15%), Industry & Sector Trends (15%), 
+              Political & Economic Risks (15%), and Investment & Capital Markets (10%).
+            </p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle>About METI</CardTitle>
+            <CardDescription>
+              Market Entry Timing Indicator
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-gray-600">
+              METI analyzes optimal timing for market entry by evaluating current 
+              economic conditions, growth trends, and market dynamics to identify 
+              the best windows of opportunity for investment.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
