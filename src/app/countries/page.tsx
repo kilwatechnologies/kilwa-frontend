@@ -21,7 +21,6 @@ export default function CountriesPage() {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
   const yearOptions = generateYearOptions(2015);
-  
   // Mock historical data for selected country
   const historicalData = [
     { name: '2019', score: selectedCountry.isiScore - 5 },
