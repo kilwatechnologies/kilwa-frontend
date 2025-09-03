@@ -1,9 +1,10 @@
 'use client'
 
 import { useRouter, useSearchParams } from 'next/navigation'
+import { Suspense } from 'react'
 import OnboardingStep1 from '@/components/onboarding/OnboardingStep1'
 
-export default function Step1Page() {
+function Step1Content() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const email = searchParams.get('email') || ''
@@ -28,4 +29,12 @@ export default function Step1Page() {
   }
 
   return <OnboardingStep1 onNext={handleNext} onBack={handleBack} email={email} userExists={userExists} isOAuth={isOAuth} />
+}
+
+export default function Step1Page() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div></div>}>
+      <Step1Content />
+    </Suspense>
+  )
 }

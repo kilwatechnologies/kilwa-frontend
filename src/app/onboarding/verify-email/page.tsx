@@ -1,9 +1,10 @@
 'use client'
 
 import { useRouter, useSearchParams } from 'next/navigation'
+import { Suspense } from 'react'
 import OnboardingVerifyEmail from '@/components/onboarding/OnboardingVerifyEmail'
 
-export default function VerifyEmailPage() {
+function VerifyEmailContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const email = searchParams.get('email') || ''
@@ -21,4 +22,12 @@ export default function VerifyEmailPage() {
   }
 
   return <OnboardingVerifyEmail onNext={handleNext} onBack={handleBack} email={email} />
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div></div>}>
+      <VerifyEmailContent />
+    </Suspense>
+  )
 }
