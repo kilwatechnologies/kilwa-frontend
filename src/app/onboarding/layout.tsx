@@ -6,7 +6,7 @@ export default function OnboardingLayout({
   children: React.ReactNode
 }) {
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="min-h-screen bg-white-50 flex flex-col">
       <OnboardingNavbar />
       <div className="flex-1 flex items-center justify-center">
         {children}

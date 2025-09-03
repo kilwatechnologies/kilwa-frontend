@@ -1,5 +1,6 @@
 import Image from 'next/image'
 import { useState } from 'react'
+import { authApi } from '@/lib/api'
 
 interface OnboardingWelcomeProps {
   onStart: (email: string, userExists: boolean) => void
@@ -10,10 +11,28 @@ export default function OnboardingWelcome({ onStart }: OnboardingWelcomeProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const handleGoogleAuth = () => {
-    // TODO: Implement Google OAuth
-    console.log('Google auth clicked')
-    onStart('', false)
+  const handleGoogleAuth = async () => {
+    try {
+      setLoading(true)
+      setError('')
+      
+      // Get Google OAuth URL from backend
+      const response = await authApi.getGoogleAuthUrl(
+        `${window.location.origin}/auth/callback`
+      )
+      
+      if (response.data.auth_url) {
+        // Redirect to Google OAuth
+        window.location.href = response.data.auth_url
+      } else {
+        setError('Failed to initiate Google authentication')
+      }
+    } catch (err) {
+      console.error('Google auth error:', err)
+      setError('Failed to connect with Google. Please try again.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
@@ -24,23 +43,16 @@ export default function OnboardingWelcome({ onStart }: OnboardingWelcomeProps) {
     setError('')
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH_URL}/auth/initiate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
-      })
-
-      const data = await response.json()
-
-      if (data.success) {
-        const userExists = data.user?.exists || false
+      const response = await authApi.initiateAuth(email)
+      
+      if (response.data.success) {
+        const userExists = (response.data as any).user?.exists || false
         onStart(email, userExists)
       } else {
-        setError(data.message || 'Failed to proceed')
+        setError('Failed to proceed')
       }
     } catch (err) {
+      console.error('Email auth error:', err)
       setError('Failed to connect. Please try again.')
     } finally {
       setLoading(false)
@@ -48,7 +60,7 @@ export default function OnboardingWelcome({ onStart }: OnboardingWelcomeProps) {
   }
 
   return (
-    <div className="w-full max-w-md mx-auto p-8">
+    <div className="w-full max-w-md mx-auto p-8 bg-white">
         {/* Centered Logo */}
         <div className="flex justify-center mb-8">
            <Image 
@@ -70,7 +82,8 @@ export default function OnboardingWelcome({ onStart }: OnboardingWelcomeProps) {
         {/* Google Button */}
         <button
           onClick={handleGoogleAuth}
-          className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg shadow-sm bg-white text-gray-700 hover:bg-gray-50 transition-colors mb-4"
+          disabled={loading}
+          className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg shadow-sm bg-white text-gray-700 hover:bg-gray-50 transition-colors mb-4 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -83,9 +96,7 @@ export default function OnboardingWelcome({ onStart }: OnboardingWelcomeProps) {
 
         {/* Divider */}
         <div className="relative mb-4">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-300" />
-          </div>
+          
           <div className="relative flex justify-center text-sm">
             <span className="px-2 bg-white text-gray-500">or</span>
           </div>
@@ -121,7 +132,7 @@ export default function OnboardingWelcome({ onStart }: OnboardingWelcomeProps) {
         <div className="text-center mt-6">
           <p className="text-sm text-gray-600">
             Already have an account?{' '}
-            <button className="text-primary-600 hover:text-primary-700 font-medium">
+            <button className="text-black font-medium">
               Click here
             </button>
           </p>

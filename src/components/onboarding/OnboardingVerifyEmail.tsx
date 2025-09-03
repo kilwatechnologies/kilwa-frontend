@@ -83,7 +83,7 @@ export default function OnboardingVerifyEmail({ onNext, onBack, email }: Onboard
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="p-8 bg-white flex flex-col">
  
 
       {/* Main Content */}

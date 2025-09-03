@@ -1,20 +1,30 @@
 import Image from 'next/image'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { authApi } from '@/lib/api'
 
 interface OnboardingStep1Props {
   onNext: (email: string, skipOnboarding?: boolean) => void
   onBack: () => void
   email: string
   userExists: boolean
+  isOAuth?: boolean
 }
 
-export default function OnboardingStep1({ onNext, onBack, email, userExists }: OnboardingStep1Props) {
+export default function OnboardingStep1({ onNext, onBack, email, userExists, isOAuth = false }: OnboardingStep1Props) {
   const [password, setPassword] = useState('')
   const [hasMinLength, setHasMinLength] = useState(false)
   const [hasNumber, setHasNumber] = useState(false)
   const [hasUpperCase, setHasUpperCase] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  // Auto-proceed for OAuth users (they don't need password)
+  useEffect(() => {
+    if (isOAuth && email) {
+      // For Google OAuth users, just proceed to next step
+      onNext(email, false)
+    }
+  }, [isOAuth, email, onNext])
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
@@ -36,31 +46,31 @@ export default function OnboardingStep1({ onNext, onBack, email, userExists }: O
     setError('')
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH_URL}/auth/continue`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email,
-          password,
-        }),
-      })
+      // Validate email before sending
+      if (!email || !email.includes('@')) {
+        setError('Invalid email address')
+        return
+      }
 
-      const data = await response.json()
+      const response = await authApi.continueAuth(email, password)
+      const data = response.data
 
       if (data.success) {
-        if (userExists && data.tokens) {
+        if (userExists && (data as any).tokens) {
           // Existing user logged in - go to dashboard
-          localStorage.setItem('access_token', data.tokens.access_token)
-          localStorage.setItem('refresh_token', data.tokens.refresh_token)
+          const tokens = (data as any).tokens
+          localStorage.setItem('access_token', tokens.access_token)
+          localStorage.setItem('refresh_token', tokens.refresh_token)
           onNext(email, true)
-        } else if (data.requires_verification) {
+        } else if ((data as any).requires_verification) {
           // New user - go to email verification
+          onNext(email, false)
+        } else {
+          // Handle other success cases
           onNext(email, false)
         }
       } else {
-        setError(data.message || 'Authentication failed')
+        setError((data as any).message || 'Authentication failed')
       }
     } catch (err) {
       setError('Failed to connect. Please try again.')

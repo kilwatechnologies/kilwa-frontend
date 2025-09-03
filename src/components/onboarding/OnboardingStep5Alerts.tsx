@@ -18,7 +18,7 @@ export default function OnboardingStep4({ onNext, onBack }: OnboardingStep4Props
   }
 
   return (
-    <div className="w-full max-w-md mx-auto p-8">
+    <div className="w-full max-w-md mx-auto bg-white p-8">
       {/* Centered Logo */}
       <div className="flex justify-center mb-8">
         <Image 

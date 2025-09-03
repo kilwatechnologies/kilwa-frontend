@@ -13,11 +13,20 @@ import {
 
 // Configure axios - Updated for unified Python backend
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api',
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api',
   headers: {
     'Content-Type': 'application/json',
   },
   timeout: 30000, // 30 second timeout for data-heavy requests
+});
+
+// Create separate instance for auth endpoints (no /api prefix)
+const authInstance = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_AUTH_URL || 'http://localhost:5001',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  timeout: 30000,
 });
 
 // Response interceptor for error handling
@@ -144,6 +153,49 @@ export const etlApi = {
   
   // Health check
   getHealth: () => api.get<APIResponse<{ status: string; timestamp: string }>>('/etl/health'),
+};
+
+// Authentication API
+export const authApi = {
+  // Get Google OAuth URL
+  getGoogleAuthUrl: (redirectUri?: string) => {
+    const params = redirectUri ? `?redirect_uri=${encodeURIComponent(redirectUri)}` : '';
+    return authInstance.get<{auth_url: string}>(`/auth/google/url${params}`);
+  },
+  
+  // Handle Google OAuth token  
+  handleGoogleAuth: (token: string) =>
+    authInstance.post<APIResponse<{user: any, tokens: any}>>('/auth/google', { token }),
+
+  // Handle Google OAuth callback with authorization code
+  handleGoogleCallback: (code: string, redirectUri: string) =>
+    authInstance.post<APIResponse<{user: any, tokens: any}>>('/auth/google/callback', { 
+      code, 
+      redirect_uri: redirectUri 
+    }),
+  
+  // Email-based auth
+  initiateAuth: (email: string) =>
+    authInstance.post<APIResponse<{user_exists: boolean}>>('/auth/initiate', { email }),
+  
+  continueAuth: (email: string, password?: string) =>
+    authInstance.post<APIResponse<any>>('/auth/continue', { email, password }),
+  
+  register: (email: string, password: string, firstName?: string, lastName?: string) =>
+    authInstance.post<APIResponse<any>>('/auth/register', { email, password, first_name: firstName, last_name: lastName }),
+  
+  verifyEmail: (email: string, code: string) =>
+    authInstance.post<APIResponse<any>>('/auth/verify-email', { email, code }),
+  
+  login: (email: string, password: string) =>
+    authInstance.post<APIResponse<{user: any, tokens: any}>>('/auth/login', { email, password }),
+  
+  // User profile
+  getCurrentUser: (token: string) =>
+    authInstance.get<APIResponse<any>>('/auth/me', { headers: { Authorization: `Bearer ${token}` } }),
+  
+  updatePreferences: (preferences: any, token: string) =>
+    authInstance.put<APIResponse<any>>('/auth/preferences', preferences, { headers: { Authorization: `Bearer ${token}` } }),
 };
 
 export default api;
