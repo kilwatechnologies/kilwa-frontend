@@ -47,7 +47,7 @@ export default function OnboardingStep3({ onNext, onBack }: OnboardingStep3Props
   const isValid = selectedCountry && selectedIndustry && selectedCountry !== 'Select your country' && selectedIndustry !== 'Select your industry'
 
   return (
-    <div className="w-full max-w-md mx-auto bg-white p-8">
+    <div className="w-full max-w-md mx-auto rounded-xl bg-white p-8">
       {/* Centered Logo */}
      <div className="flex justify-center mb-8">
                     <Image 

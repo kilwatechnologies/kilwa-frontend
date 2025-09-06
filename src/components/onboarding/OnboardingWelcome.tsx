@@ -60,7 +60,7 @@ export default function OnboardingWelcome({ onStart }: OnboardingWelcomeProps) {
   }
 
   return (
-    <div className="w-full max-w-md mx-auto p-8 bg-white">
+    <div className="w-full max-w-md mx-auto p-8 bg-white rounded-xl">
         {/* Centered Logo */}
         <div className="flex justify-center mb-8">
            <Image 
@@ -96,7 +96,9 @@ export default function OnboardingWelcome({ onStart }: OnboardingWelcomeProps) {
 
         {/* Divider */}
         <div className="relative mb-4">
-          
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-300" />
+          </div>
           <div className="relative flex justify-center text-sm">
             <span className="px-2 bg-white text-gray-500">or</span>
           </div>
@@ -140,9 +142,9 @@ export default function OnboardingWelcome({ onStart }: OnboardingWelcomeProps) {
 
         <div className="text-center mt-6 text-xs text-gray-500">
           You acknowledge that you read, and continue to our{' '}
-          <a href="#" className="underline">Terms of Service</a>
+          <a href="#" className="text-black font-semibold">Terms of Service</a>
           {' '}and{' '}
-          <a href="#" className="underline">Privacy Policy</a>
+          <a href="#" className=" text-black font-semibold">Privacy Policy</a>
         </div>
     </div>
   )

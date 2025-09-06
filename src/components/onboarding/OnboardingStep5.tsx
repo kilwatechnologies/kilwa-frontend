@@ -177,7 +177,7 @@ export default function OnboardingStep5({ onComplete, onBack }: OnboardingStep5P
             {/* Subscribe Button */}
             <button
               onClick={() => handlePlanSelect(plan.id)}
-              className={`w-full py-3 px-4 rounded-lg font-medium transition-colors ${plan.buttonStyle}`}
+              className={`w-full py-3 px-4 rounded-full font-medium transition-colors ${plan.buttonStyle}`}
             >
               {plan.buttonText}
             </button>

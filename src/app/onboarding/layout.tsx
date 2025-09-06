@@ -9,6 +9,7 @@ export default function OnboardingLayout({
     <div className="min-h-screen bg-slate-50 flex flex-col">
       <OnboardingNavbar />
       <div className="flex-1 flex items-center justify-center">
+        
         {children}
       </div>
     </div>

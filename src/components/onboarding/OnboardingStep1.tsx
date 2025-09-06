@@ -80,7 +80,7 @@ export default function OnboardingStep1({ onNext, onBack, email, userExists, isO
   }
 
   return (
-    <div className="w-full max-w-md mx-auto p-8">
+    <div className="w-full max-w-md bg-white rounded-xl mx-auto p-8">
       {/* Centered Logo */}
       <div className="flex justify-center mb-8">
                 <Image 

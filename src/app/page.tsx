@@ -11,7 +11,7 @@ export default function HomePage() {
     const hasCompletedOnboarding = localStorage.getItem('kilwa-onboarding-complete')
     
     if (hasCompletedOnboarding) {
-      router.push('/onboarding')
+      router.push('/dashboard')
     } else {
       router.push('/onboarding')
     }
