@@ -112,7 +112,7 @@ export default function OnboardingWelcome({ onStart }: OnboardingWelcomeProps) {
               placeholder="Enter your email address"
               value={email}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.currentTarget.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none bg-white text-gray-900 placeholder-gray-500"
               required
             />
           </div>

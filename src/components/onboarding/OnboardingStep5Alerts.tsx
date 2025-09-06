@@ -66,7 +66,7 @@ export default function OnboardingStep4({ onNext, onBack }: OnboardingStep4Props
           <select
             value={isiThreshold}
             onChange={(e) => setIsiThreshold(e.target.value)}
-            className="px-3 py-1 border border-gray-300 rounded-2xl text-sm focus:ring-black focus:border-black"
+            className="px-3 py-1 border border-gray-300 bg-white text-gray-900 rounded-2xl text-sm focus:ring-black focus:border-black"
             disabled={!isiAlerts}
           >
             <option value="30">30</option>
@@ -98,7 +98,7 @@ export default function OnboardingStep4({ onNext, onBack }: OnboardingStep4Props
           <select
             value={metiTiming}
             onChange={(e) => setMetiTiming(e.target.value)}
-            className="px-3 py-1 border border-gray-300 rounded-2xl text-sm focus:ring-black focus:border-black"
+            className="px-3 py-1 border border-gray-300 bg-white text-gray-900 rounded-2xl text-sm focus:ring-black focus:border-black"
             disabled={!metiAlerts}
           >
             <option value="Early Entry">Early Entry</option>

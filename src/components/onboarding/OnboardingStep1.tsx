@@ -110,7 +110,7 @@ export default function OnboardingStep1({ onNext, onBack, email, userExists, isO
             placeholder={userExists ? "Enter your password" : "Create password"}
             value={password}
             onChange={handlePasswordChange}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white text-gray-900 outline-none"
             required
           />
         </div>

@@ -188,12 +188,14 @@ export default function OnboardingStep5({ onComplete, onBack }: OnboardingStep5P
       {/* Bottom Options */}
       <div className="max-w-4xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Advisory */}
-        <div className="text-center p-6 border bg-gray-100 border-gray-200 rounded-lg">
-          <div className="w-12 h-12 bg-gray-900 rounded flex items-center justify-center mx-auto mb-4">
-            <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-          </div>
+        <div className="flex flex-col items-start space-y-3 p-6 border bg-gray-100 border-gray-200 rounded-lg">
+          <Image 
+                src='/assets/advisory.svg' 
+                alt='advisorypic' 
+                width={40} 
+                height={40}
+                className="object-contain"
+              />
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Advisory</h3>
           <p className="text-sm text-gray-600 mb-4">
             Reports, briefings, 54 countries, analyst reports & priority SLA
@@ -204,17 +206,19 @@ export default function OnboardingStep5({ onComplete, onBack }: OnboardingStep5P
         </div>
 
         {/* Enterprise */}
-        <div className="text-center p-6 border bg-gray-100 border-gray-200 rounded-lg">
-          <div className="w-12 h-12 bg-gray-900 rounded flex items-center justify-center mx-auto mb-4">
-            <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm0 2h12v8H4V6z"/>
-            </svg>
-          </div>
+        <div className="flex flex-col items-start space-y-3 p-6 border bg-gray-100 border-gray-200 rounded-lg">
+         <Image 
+                src='/assets/enterprise.svg' 
+                alt='advisorypic' 
+                width={40} 
+                height={40}
+                className="object-contain"
+              />
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Enterprise</h3>
           <p className="text-sm text-gray-600 mb-4">
             API access, team accounts, 54 countries, analyst reports
           </p>
-          <button className="text-gray-900 underline font-medium">
+          <button className="text-gray-900  underline font-medium">
             Contact sales
           </button>
         </div>
