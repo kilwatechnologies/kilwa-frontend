@@ -83,13 +83,13 @@ export default function DashboardFilters({ onFiltersChange }: DashboardFiltersPr
           <select
             value={filters.performance}
             onChange={(e) => updateFilter('performance', e.target.value)}
-            className="w-full px-3 py-2 bg-transparent border-2 border-gray-600 text-white rounded-lg  text-sm"
+            className="w-full px-3 py-2 bg-black border-2 border-gray-600 text-white rounded-lg text-sm [&>option]:bg-black [&>option]:text-white"
           >
-            <option value="1-day">1-day performance</option>
-            <option value="1-week">1-week performance</option>
-            <option value="1-month">1-month performance</option>
-            <option value="3-month">3-month performance</option>
-            <option value="1-year">1-year performance</option>
+            <option value="1-day" className="bg-black text-white">1-day performance</option>
+            <option value="1-week" className="bg-black text-white">1-week performance</option>
+            <option value="1-month" className="bg-black text-white">1-month performance</option>
+            <option value="3-month" className="bg-black text-white">3-month performance</option>
+            <option value="1-year" className="bg-black text-white">1-year performance</option>
           </select>
         </div>
       </div>
@@ -109,12 +109,19 @@ export default function DashboardFilters({ onFiltersChange }: DashboardFiltersPr
             { key: 'healthcare', label: 'Healthcare & Pharmaceuticals' },
           ].map((sector) => (
             <label key={sector.key} className="flex items-center">
-              <input
-                type="checkbox"
-                checked={filters.sectors[sector.key as keyof typeof filters.sectors]}
-                onChange={(e) => updateSector(sector.key, e.target.checked)}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded bg-transparent"
-              />
+              <div className="relative">
+                <input
+                  type="checkbox"
+                  checked={filters.sectors[sector.key as keyof typeof filters.sectors]}
+                  onChange={(e) => updateSector(sector.key, e.target.checked)}
+                  className="h-4 w-4 appearance-none border-2 border-gray-600 rounded bg-transparentfocus:ring-offset-0 "
+                />
+                {filters.sectors[sector.key as keyof typeof filters.sectors] && (
+                  <svg className="absolute inset-0 h-4 w-4 text-white pointer-events-none" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                )}
+              </div>
               <span className="ml-3 text-sm text-gray-300">{sector.label}</span>
             </label>
           ))}

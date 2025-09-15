@@ -61,6 +61,7 @@ export default function OnboardingStep1({ onNext, onBack, email, userExists, isO
           const tokens = (data as any).tokens
           localStorage.setItem('access_token', tokens.access_token)
           localStorage.setItem('refresh_token', tokens.refresh_token)
+          localStorage.setItem('user_email', email)
           onNext(email, true)
         } else if ((data as any).requires_verification) {
           // New user - go to email verification

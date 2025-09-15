@@ -51,31 +51,20 @@ export default function CountryTreemap({ countries, onCountryClick }: CountryTre
     return 'text-white'
   }
 
-  // Calculate size based on ISI score for treemap layout
-  const getCountrySize = (score: number | undefined, totalScore: number) => {
-    if (!score) return { width: 120, height: 80 }
-    
-    // Calculate relative size based on ISI score
-    const minSize = 100
-    const maxSize = 300
-    const normalizedScore = Math.max(score, 30) // Minimum threshold
-    const sizeRatio = normalizedScore / 100
-    
-    const width = Math.floor(minSize + (maxSize - minSize) * sizeRatio)
-    const height = Math.floor((minSize + (maxSize - minSize) * sizeRatio) * 0.7) // Make height 70% of width
-    
-    return { width, height }
+  // Calculate size - equal width for all boxes
+  const getCountrySize = () => {
+    // All boxes have equal dimensions
+    return { width: 200, height: 140 }
   }
 
   const renderTreemapRegion = (regionName: string, regionCountries: Country[]) => {
-    const totalScore = regionCountries.reduce((sum, country) => sum + (country.isiScore || 0), 0)
     
     return (
       <div key={regionName} className="mb-8">
         <div className="text-sm text-gray-400 mb-3 font-medium">{regionName}</div>
         <div className="flex flex-wrap gap-1" style={{ alignItems: 'flex-start' }}>
           {regionCountries.map((country) => {
-            const size = getCountrySize(country.isiScore, totalScore)
+            const size = getCountrySize()
             return (
               <div
                 key={country.id}

@@ -42,6 +42,11 @@ function AuthCallbackContent() {
           }
 
           const user = responseData.user
+          
+          // Store user email for display purposes
+          if (user?.email) {
+            localStorage.setItem('user_email', user.email)
+          }
 
           // For Google OAuth users:
           // - If user exists and verified: go to dashboard

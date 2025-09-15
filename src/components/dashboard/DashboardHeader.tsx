@@ -5,10 +5,12 @@ import { useState, useEffect, useRef } from 'react'
 
 interface DashboardHeaderProps {
   userName: string
+  userInitials?: string
+  truncatedName?: string
   onMobileMenuToggle?: () => void
 }
 
-export default function DashboardHeader({ userName, onMobileMenuToggle }: DashboardHeaderProps) {
+export default function DashboardHeader({ userName, userInitials, truncatedName, onMobileMenuToggle }: DashboardHeaderProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [showUserDropdown, setShowUserDropdown] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -50,7 +52,7 @@ export default function DashboardHeader({ userName, onMobileMenuToggle }: Dashbo
           </button>
           <div>
             <h1 className="text-3xl font-semibold text-white">
-              Welcome, {userName}
+              Welcome back, {userName}!
             </h1>
           
           </div>
@@ -95,11 +97,11 @@ export default function DashboardHeader({ userName, onMobileMenuToggle }: Dashbo
             >
               <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
                 <span className="text-white text-sm font-medium">
-                  {userName.charAt(0).toUpperCase()}
+                  {userInitials || userName.slice(0, 2).toUpperCase()}
                 </span>
               </div>
               <div className="ml-3 text-right">
-                <div className="text-sm font-medium text-white">{userName}</div>
+                <div className="text-sm font-medium text-white">{truncatedName || userName}</div>
                 <div className="text-xs text-gray-300 mr-1.5">Premium</div>
               </div>
               <svg 

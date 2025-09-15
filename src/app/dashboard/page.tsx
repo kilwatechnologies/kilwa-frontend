@@ -21,9 +21,13 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [, setFilters] = useState({})
+  const [userEmail, setUserEmail] = useState<string>('')
 
   useEffect(() => {
     loadDashboardData()
+    // Get user email from localStorage 
+    const email = localStorage.getItem('user_email') || localStorage.getItem('userEmail') || 'user@example.com'
+    setUserEmail(email)
   }, [])
 
   const loadDashboardData = async () => {
@@ -158,6 +162,23 @@ export default function DashboardPage() {
     // TODO: Apply filters to countries data
   }
 
+  const getUsernameFromEmail = (email: string) => {
+    if (!email || !email.includes('@')) return 'User'
+    const [localPart] = email.split('@')
+    return localPart
+  }
+
+  const getInitialsFromEmail = (email: string) => {
+    if (!email || !email.includes('@')) return 'US'
+    const [localPart] = email.split('@')
+    return localPart.slice(0, 2).toUpperCase()
+  }
+
+  const getTruncatedUsername = (email: string) => {
+    const username = getUsernameFromEmail(email)
+    return username.length > 5 ? username.slice(0, 5) + '...' : username
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black">
@@ -177,7 +198,11 @@ export default function DashboardPage() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-h-0">
         {/* Header - Fixed */}
-        <DashboardHeader userName="Rachel T" />
+        <DashboardHeader 
+          userName={getUsernameFromEmail(userEmail)}
+          userInitials={getInitialsFromEmail(userEmail)}
+          truncatedName={getTruncatedUsername(userEmail)}
+        />
         
         {/* Content Area - Scrollable */}
         <div className="flex-1 flex min-h-0">

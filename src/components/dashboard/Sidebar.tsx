@@ -2,6 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 
 interface SidebarProps {
   isCollapsed: boolean
@@ -18,14 +19,15 @@ interface MenuItem {
 }
 
 export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
+  const pathname = usePathname()
+  
   const menuItems: MenuItem[] = [
     { 
       id: 'dashboard', 
       label: 'Dashboard', 
       iconSrc: '/assets/hom.svg',
       iconEmoji: '🏠', 
-      href: '/dashboard', 
-      active: true 
+      href: '/dashboard'
     },
     { 
       id: 'markets', 
@@ -146,13 +148,13 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
               <Link
                 href={item.href}
                 className={`flex items-center px-3 py-3 rounded-lg transition-colors group relative ${
-                  item.active 
+                  pathname === item.href 
                     ? 'bg-[#323131] text-white' 
                     : 'text-gray-300 hover:bg-[#323131] hover:text-white'
                 }`}
               >
                 <div className="flex items-center justify-center w-5 h-5">
-                  <IconComponent item={item} isActive={item.active} />
+                  <IconComponent item={item} isActive={pathname === item.href} />
                 </div>
                 {!isCollapsed && (
                   <span className="ml-3 text-sm font-medium">{item.label}</span>
