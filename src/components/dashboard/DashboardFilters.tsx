@@ -79,11 +79,11 @@ export default function DashboardFilters({ onFiltersChange }: DashboardFiltersPr
         </div>
 
         {/* Performance dropdown */}
-        <div className="mb-8">
+        <div className="mb-8 relative">
           <select
             value={filters.performance}
             onChange={(e) => updateFilter('performance', e.target.value)}
-            className="w-full px-3 py-2 bg-black border-2 border-gray-600 text-white rounded-lg text-sm [&>option]:bg-black [&>option]:text-white"
+            className="w-full pl-3 pr-12 py-2 bg-black border-2 border-gray-600 text-white rounded-lg text-sm appearance-none [&>option]:bg-black [&>option]:text-white"
           >
             <option value="1-day" className="bg-black text-white">1-day performance</option>
             <option value="1-week" className="bg-black text-white">1-week performance</option>
@@ -91,6 +91,11 @@ export default function DashboardFilters({ onFiltersChange }: DashboardFiltersPr
             <option value="3-month" className="bg-black text-white">3-month performance</option>
             <option value="1-year" className="bg-black text-white">1-year performance</option>
           </select>
+          <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
         </div>
       </div>
 
@@ -114,12 +119,14 @@ export default function DashboardFilters({ onFiltersChange }: DashboardFiltersPr
                   type="checkbox"
                   checked={filters.sectors[sector.key as keyof typeof filters.sectors]}
                   onChange={(e) => updateSector(sector.key, e.target.checked)}
-                  className="h-4 w-4 appearance-none border-2 border-gray-600 rounded bg-transparentfocus:ring-offset-0 "
+                  className="h-4 w-4 appearance-none border-2 border-gray-600 rounded bg-transparent focus:ring-2 focus:ring-gray-500 focus:ring-offset-0"
                 />
                 {filters.sectors[sector.key as keyof typeof filters.sectors] && (
-                  <svg className="absolute inset-0 h-4 w-4 text-white pointer-events-none" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
+                  <div className="absolute top-2.5 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+                    <svg className="h-3 w-3 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  </div>
                 )}
               </div>
               <span className="ml-3 text-sm text-gray-300">{sector.label}</span>

@@ -52,7 +52,7 @@ export default function DashboardHeader({ userName, userInitials, truncatedName,
           </button>
           <div>
             <h1 className="text-3xl font-semibold text-white">
-              Welcome back, {userName}!
+              Welcome back, {truncatedName}!
             </h1>
           
           </div>

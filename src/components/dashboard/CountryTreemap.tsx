@@ -86,7 +86,7 @@ export default function CountryTreemap({ countries, onCountryClick }: CountryTre
                 onMouseEnter={() => setHoveredCountry(country)}
                 onMouseLeave={() => setHoveredCountry(null)}
               >
-                <div className="flex flex-col h-full justify-between text-left">
+                <div className="flex flex-col h-full justify-between text-center">
                   <div>
                     <div className="font-bold text-xl mb-1">
                       {country.isoCode || country.name.substring(0, 3).toUpperCase()}
