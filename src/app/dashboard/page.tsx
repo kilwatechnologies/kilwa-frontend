@@ -46,8 +46,8 @@ export default function DashboardPage() {
         const countriesData = countriesResponse.data.data
         console.log('✅ Countries data received:', countriesData)
         
-        // Fetch ISI scores for most recent available year (2023)
-        const targetYear = 2023  // Use most recent year with data
+        // Fetch ISI scores for most recent available year (2022)
+        const targetYear = 2022  // Use most recent year with complete data
         console.log(`📊 Fetching ISI scores for year ${targetYear}...`)
         const isiResponse = await isiApi.getScores(targetYear)
         console.log('📈 ISI API Response:', isiResponse)
