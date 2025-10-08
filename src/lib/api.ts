@@ -198,4 +198,36 @@ export const authApi = {
     authInstance.put<APIResponse<any>>('/auth/preferences', preferences, { headers: { Authorization: `Bearer ${token}` } }),
 };
 
+// Sentiment API
+export const sentimentApi = {
+  // Get sentiment pulse for a country
+  getPulse: (countryId: number) =>
+    api.get<APIResponse<any>>(`/sentiment/pulse/${countryId}`),
+
+  // Get recent news articles
+  getNews: (countryId: number, days: number = 7, limit: number = 20) =>
+    api.get<APIResponse<any[]>>(`/sentiment/news/${countryId}?days=${days}&limit=${limit}`),
+
+  // Get sentiment alerts
+  getAlerts: (countryId?: number, activeOnly: boolean = true, limit: number = 50) => {
+    const params = new URLSearchParams();
+    if (countryId) params.append('country_id', countryId.toString());
+    params.append('active_only', activeOnly.toString());
+    params.append('limit', limit.toString());
+    return api.get<APIResponse<any[]>>(`/sentiment/alerts?${params.toString()}`);
+  },
+
+  // Run sentiment analysis
+  analyze: (countryId: number, daysBack: number = 7) =>
+    api.post<APIResponse<any>>(`/sentiment/analyze/${countryId}?days_back=${daysBack}`),
+
+  // Run sentiment analysis for all countries
+  analyzeAll: () =>
+    api.post<APIResponse<any>>('/sentiment/analyze-all'),
+
+  // Get sentiment trends
+  getTrends: (countryId: number, daysBack: number = 30) =>
+    api.get<APIResponse<any>>(`/sentiment/trends/${countryId}?days_back=${daysBack}`),
+};
+
 export default api;
