@@ -129,6 +129,29 @@ export default function SentimentPulsePage() {
     return 'bg-yellow-50 text-yellow-700 border border-yellow-200'
   }
 
+  // Calculate sentiment distribution from real news articles
+  const calculateSentimentMix = () => {
+    if (newsArticles.length === 0) {
+      // Fallback to hardcoded data
+      return [
+        { name: 'Positive', value: 40, color: '#4ADE80' },
+        { name: 'Neutral', value: 25, color: '#FDE047' },
+        { name: 'Negative', value: 35, color: '#F87171' },
+      ]
+    }
+
+    const positive = newsArticles.filter(a => a.sentiment_label === 'positive').length
+    const negative = newsArticles.filter(a => a.sentiment_label === 'negative').length
+    const neutral = newsArticles.filter(a => a.sentiment_label === 'neutral').length
+    const total = newsArticles.length
+
+    return [
+      { name: 'Positive', value: Math.round((positive / total) * 100), color: '#4ADE80' },
+      { name: 'Neutral', value: Math.round((neutral / total) * 100), color: '#FDE047' },
+      { name: 'Negative', value: Math.round((negative / total) * 100), color: '#F87171' },
+    ]
+  }
+
   // Hardcoded data for charts (as requested)
   const sentimentTimelineData = [
     { date: '01/02/25', positive: 75, neutral: 60, negative: 50 },
@@ -152,13 +175,10 @@ export default function SentimentPulsePage() {
     { name: 'Infrastructure', positive: 10, neutral: 50, negative: 40 },
   ]
 
-  const sentimentMixData = [
-    { name: 'Positive', value: 40, color: '#4ADE80' },
-    { name: 'Neutral', value: 25, color: '#FDE047' },
-    { name: 'Negative', value: 35, color: '#F87171' },
-  ]
-
   const periods = ['1 D', '5 D', '1 M', '3 M', '6 M', 'YTD', '1 Y', '5 Y', '10 Y']
+
+  // Calculate sentiment mix dynamically from news articles
+  const sentimentMixData = calculateSentimentMix()
 
   if (loading) {
     return (
@@ -266,9 +286,11 @@ export default function SentimentPulsePage() {
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                   <XAxis dataKey="date" stroke="#9ca3af" style={{ fontSize: '12px' }} />
                   <YAxis stroke="#9ca3af" style={{ fontSize: '12px' }} />
+
                   <Tooltip
                     contentStyle={{ backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                     labelStyle={{ color: '#111827', fontWeight: 600 }}
+                    
                     itemStyle={{ color: '#6b7280' }}
                   />
                   <Legend wrapperStyle={{ paddingTop: '20px' }} />
