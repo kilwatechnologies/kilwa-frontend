@@ -5,6 +5,7 @@ import Sidebar from '@/components/dashboard/Sidebar'
 import DashboardHeader from '@/components/dashboard/DashboardHeader'
 import { sentimentApi, countriesApi } from '@/lib/api'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
+import Image from 'next/image'
 
 interface Country {
   id: number
@@ -97,6 +98,22 @@ export default function SentimentPulsePage() {
   const getTruncatedUsername = (email: string) => {
     const username = getUsernameFromEmail(email)
     return username.length > 5 ? username.slice(0, 5) + '...' : username
+  }
+
+  const getCountryFlag = (countryName: string) => {
+    const flagMap: { [key: string]: string } = {
+      'Nigeria': '/assets/nigeria.svg',
+      'Ghana': '/assets/ghana.svg',
+      'South Africa': '/assets/south-africa.svg',
+      'Egypt': '/assets/egypt.svg',
+      'Rwanda': '/assets/rwanda.svg',
+      'Botswana': '/assets/botswana.svg',
+      'Tunisia': '/assets/tunisia.svg',
+      'Mauritius': '/assets/mauritius.svg',
+      'Kenya': '/assets/kenya.svg', // Will use emoji fallback if not exists
+      'Morocco': '/assets/morocco.svg', // Will use emoji fallback if not exists
+    }
+    return flagMap[countryName] || null
   }
 
   const getRelativeTime = (dateString: string) => {
@@ -212,8 +229,18 @@ export default function SentimentPulsePage() {
             <div className="flex items-center gap-3">
               {selectedCountry && (
                 <>
-                  <div className="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center shadow-sm">
-                    <span className="text-lg">🇰🇪</span>
+                  <div className="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center shadow-sm overflow-hidden">
+                    {getCountryFlag(selectedCountry.name) ? (
+                      <Image
+                        src={getCountryFlag(selectedCountry.name)!}
+                        alt={selectedCountry.name}
+                        width={40}
+                        height={40}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-lg">🌍</span>
+                    )}
                   </div>
                   <select
                     value={selectedCountry.id}
