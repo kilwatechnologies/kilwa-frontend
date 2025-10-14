@@ -42,6 +42,17 @@ export default function OnboardingVerifyEmail({ onNext, onBack, email }: Onboard
       const data = await response.json()
 
       if (data.success) {
+        // Store tokens in localStorage if provided
+        if (data.tokens) {
+          localStorage.setItem('access_token', data.tokens.access_token)
+          localStorage.setItem('refresh_token', data.tokens.refresh_token)
+        }
+
+        // Store user email if provided
+        if (data.user?.email) {
+          localStorage.setItem('user_email', data.user.email)
+        }
+
         if (data.user?.skip_onboarding === true) {
           // Existing user - go to dashboard
           onNext(true)

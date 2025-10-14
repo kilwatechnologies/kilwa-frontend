@@ -31,6 +31,8 @@ export default function SentimentPulsePage() {
   const [loading, setLoading] = useState(true)
   const [userEmail, setUserEmail] = useState<string>('')
   const [selectedPeriod, setSelectedPeriod] = useState('6 M')
+  const [sentimentTimelineData, setSentimentTimelineData] = useState<any[]>([])
+  const [trendsLoading, setTrendsLoading] = useState(false)
 
   useEffect(() => {
     loadInitialData()
@@ -41,8 +43,76 @@ export default function SentimentPulsePage() {
   useEffect(() => {
     if (selectedCountry) {
       loadSentimentData()
+      loadTrendsData(getPeriodDays(selectedPeriod))
     }
   }, [selectedCountry])
+
+  const getPeriodDays = (period: string) => {
+    const daysMap: { [key: string]: number } = {
+      '1 D': 1, '5 D': 5, '1 M': 30, '3 M': 90,
+      '6 M': 180, 'YTD': getDaysFromYearStart(), '1 Y': 365,
+      '5 Y': 1825, '10 Y': 3650
+    }
+    return daysMap[period] || 180
+  }
+
+  const getDaysFromYearStart = () => {
+    const now = new Date()
+    const startOfYear = new Date(now.getFullYear(), 0, 1)
+    const diff = now.getTime() - startOfYear.getTime()
+    return Math.ceil(diff / (1000 * 60 * 60 * 24))
+  }
+
+  const loadTrendsData = async (daysBack: number = 180) => {
+    if (!selectedCountry) return
+
+    try {
+      setTrendsLoading(true)
+      const response = await sentimentApi.getTrends(selectedCountry.id, daysBack)
+
+      if (response.data.success && response.data.data?.trend_data) {
+        // Transform backend data to chart format
+        const transformed = response.data.data.trend_data.map((point: any) => {
+          const sentiment = point.sentiment_pulse || 0
+          // Map sentiment (-100 to +100) to positive/negative/neutral percentages
+          return {
+            date: formatDate(point.date),
+            positive: sentiment > 0 ? Math.round(sentiment) : 0,
+            negative: sentiment < 0 ? Math.round(Math.abs(sentiment)) : 0,
+            neutral: 100 - Math.abs(Math.round(sentiment))
+          }
+        })
+
+        setSentimentTimelineData(transformed)
+      }
+    } catch (error) {
+      console.error('Error loading trend data:', error)
+      // Set fallback data on error
+      setSentimentTimelineData([
+        { date: '01/02/25', positive: 75, neutral: 60, negative: 50 },
+        { date: '01/15/25', positive: 90, neutral: 75, negative: 55 },
+        { date: '01/27/25', positive: 95, neutral: 70, negative: 85 },
+        { date: '02/02/25', positive: 70, neutral: 50, negative: 75 },
+        { date: '02/15/25', positive: 65, neutral: 45, negative: 70 },
+        { date: '03/02/25', positive: 100, neutral: 60, negative: 70 },
+      ])
+    } finally {
+      setTrendsLoading(false)
+    }
+  }
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString)
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const year = String(date.getFullYear()).slice(-2)
+    return `${month}/${day}/${year}`
+  }
+
+  const handlePeriodChange = (period: string) => {
+    setSelectedPeriod(period)
+    loadTrendsData(getPeriodDays(period))
+  }
 
   const loadInitialData = async () => {
     try {
@@ -169,28 +239,78 @@ export default function SentimentPulsePage() {
     ]
   }
 
-  // Hardcoded data for charts (as requested)
-  const sentimentTimelineData = [
-    { date: '01/02/25', positive: 75, neutral: 60, negative: 50 },
-    { date: '01/15/25', positive: 90, neutral: 75, negative: 55 },
-    { date: '01/27/25', positive: 95, neutral: 70, negative: 85 },
-    { date: '02/02/25', positive: 70, neutral: 50, negative: 75 },
-    { date: '02/15/25', positive: 65, neutral: 45, negative: 70 },
-    { date: '03/02/25', positive: 100, neutral: 60, negative: 70 },
-    { date: '03/15/25', positive: 95, neutral: 50, negative: 50 },
-    { date: '04/02/25', positive: 30, neutral: 20, negative: 25 },
-    { date: '04/15/25', positive: 30, neutral: 15, negative: 20 },
-    { date: '05/02/25', positive: 25, neutral: 20, negative: 15 },
-  ]
+  // Calculate sector sentiment from news articles by topic
+  const getSectorsData = () => {
+    // Fallback hardcoded data
+    const fallbackData = [
+      { name: 'Agriculture', positive: 90, neutral: 10, negative: 0 },
+      { name: 'Energy', positive: 56, neutral: 0, negative: 44 },
+      { name: 'Healthcare', positive: 45, neutral: 30, negative: 25 },
+      { name: 'Mining', positive: 20, neutral: 30, negative: 50 },
+      { name: 'Fintech', positive: 20, neutral: 0, negative: 80 },
+      { name: 'Infrastructure', positive: 10, neutral: 50, negative: 40 },
+    ]
 
-  const sectorsData = [
-    { name: 'Agriculture', positive: 90, neutral: 10, negative: 0 },
-    { name: 'Energy', positive: 56, neutral: 0, negative: 44 },
-    { name: 'Healthcare', positive: 45, neutral: 30, negative: 25 },
-    { name: 'Mining', positive: 20, neutral: 30, negative: 50 },
-    { name: 'Fintech', positive: 20, neutral: 0, negative: 80 },
-    { name: 'Infrastructure', positive: 10, neutral: 50, negative: 40 },
-  ]
+    // If no news articles, use fallback
+    if (!newsArticles || newsArticles.length === 0) return fallbackData
+
+    // Calculate sentiment for each topic from news articles
+    const calculateTopicSentiment = (topicKeywords: string[]) => {
+      const topicArticles = newsArticles.filter(article =>
+        article.topics?.some(topic =>
+          topicKeywords.some(keyword =>
+            topic.toLowerCase().includes(keyword.toLowerCase())
+          )
+        )
+      )
+
+      if (topicArticles.length === 0) return null
+
+      const positive = topicArticles.filter(a => a.sentiment_label === 'positive').length
+      const negative = topicArticles.filter(a => a.sentiment_label === 'negative').length
+      const neutral = topicArticles.filter(a => a.sentiment_label === 'neutral').length
+      const total = topicArticles.length
+
+      return {
+        positive: Math.round((positive / total) * 100),
+        negative: Math.round((negative / total) * 100),
+        neutral: Math.round((neutral / total) * 100),
+        count: total
+      }
+    }
+
+    // Define sectors with their topic keywords
+    const sectorDefinitions = [
+      { name: 'Economics', keywords: ['Economics', 'Economic'] },
+      { name: 'Policy', keywords: ['Policy', 'Regulation'] },
+      { name: 'Business', keywords: ['Business', 'Investment'] },
+      { name: 'Technology', keywords: ['Technology', 'Tech'] },
+      { name: 'Infrastructure', keywords: ['Infrastructure'] },
+      { name: 'Banking', keywords: ['Banking', 'Finance', 'Financial'] },
+    ]
+
+    // Calculate sentiment for each sector
+    const sectors = []
+    for (const sector of sectorDefinitions) {
+      const sentiment = calculateTopicSentiment(sector.keywords)
+      if (sentiment && sentiment.count >= 2) { // Only include if at least 2 articles
+        sectors.push({
+          name: sector.name,
+          positive: sentiment.positive,
+          negative: sentiment.negative,
+          neutral: sentiment.neutral
+        })
+      }
+    }
+
+    // Sort by positive sentiment (descending)
+    sectors.sort((a, b) => b.positive - a.positive)
+
+    // If we have real data, use it; otherwise use fallback
+    return sectors.length >= 3 ? sectors : fallbackData
+  }
+
+  const sectorsData = getSectorsData()
 
   const periods = ['1 D', '5 D', '1 M', '3 M', '6 M', 'YTD', '1 Y', '5 Y', '10 Y']
 
@@ -279,7 +399,7 @@ export default function SentimentPulsePage() {
                 {periods.map(period => (
                   <button
                     key={period}
-                    onClick={() => setSelectedPeriod(period)}
+                    onClick={() => handlePeriodChange(period)}
                     className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
                       selectedPeriod === period
                         ? 'bg-gray-100 text-gray-900 font-medium'

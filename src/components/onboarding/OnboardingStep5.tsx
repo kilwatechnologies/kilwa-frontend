@@ -1,14 +1,21 @@
 import Image from 'next/image'
 import { useState } from 'react'
+import { loadStripe } from '@stripe/stripe-js'
 
 interface OnboardingStep5Props {
   onComplete: () => void
   onBack: () => void
 }
 
+// Initialize Stripe
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
+
 export default function OnboardingStep5({ onComplete, onBack }: OnboardingStep5Props) {
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly')
   const [selectedPlan, setSelectedPlan] = useState<string>('')
+  const [loading, setLoading] = useState<boolean>(false)
+  const [error, setError] = useState<string | null>(null)
+
 
   const plans = [
     {
@@ -45,12 +52,12 @@ export default function OnboardingStep5({ onComplete, onBack }: OnboardingStep5P
       highlighted: true
     },
     {
-      id: 'platinum',
-      name: 'Platinum',
+      id: 'diamond',
+      name: 'Diamond',
       icon: '/assets/card1.svg',
-      price: { monthly: 299, yearly: 249 },
+      price: { monthly: 2499, yearly: 24999 },
       description: 'All features, 15 countries, full dashboard access, export tools',
-      subDescription: 'Best for: Analysts, boutique investors, consultants',
+      subDescription: 'Best for: Investment Teams & Corporations',
       features: [
         'Basic ISI Scores',
         'Top-10 Rankings',
@@ -62,13 +69,97 @@ export default function OnboardingStep5({ onComplete, onBack }: OnboardingStep5P
     }
   ]
 
-  const handlePlanSelect = (planId: string) => {
+  const handlePlanSelect = async (planId: string) => {
     setSelectedPlan(planId)
-    onComplete()
+    setError(null)
+
+    // Free plan - no payment needed
+    if (planId === 'free') {
+      onComplete()
+      return
+    }
+
+    // Advisory and Enterprise - contact sales
+    if (planId === 'advisory' || planId === 'enterprise') {
+      // TODO: Redirect to contact sales page or show modal
+      alert('Please contact sales for Advisory and Enterprise plans')
+      return
+    }
+
+    // Paid plans (Gold, Diamond) - redirect to Stripe Checkout
+    try {
+      setLoading(true)
+
+      // Get access token from localStorage
+      const accessToken = localStorage.getItem('access_token')
+
+      if (!accessToken) {
+        throw new Error('User not authenticated. Please log in again.')
+      }
+
+      // First, get user details to retrieve user_id
+      const userResponse = await fetch(`${process.env.NEXT_PUBLIC_AUTH_URL}/auth/me`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      })
+
+      if (!userResponse.ok) {
+        throw new Error('Failed to get user information')
+      }
+
+      const userData = await userResponse.json()
+      const userId = userData.user?.id
+
+      if (!userId) {
+        throw new Error('Could not retrieve user ID')
+      }
+
+      // Call backend to create checkout session
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/stripe/create-checkout-session`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        },
+        body: JSON.stringify({
+          user_id: userId,
+          plan_type: planId,
+          billing_period: billingPeriod,
+          success_url: `${window.location.origin}/dashboard?payment=success`,
+          cancel_url: `${window.location.origin}/onboarding/step-5?payment=canceled`
+        })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.detail || data.error || 'Failed to create checkout session')
+      }
+
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to create checkout session')
+      }
+
+      // Redirect to Stripe Checkout
+      window.location.href = data.data.checkout_url
+
+    } catch (err: any) {
+      console.error('Payment error:', err)
+      setError(err.message || 'Payment failed. Please try again.')
+      setLoading(false)
+    }
   }
 
   return (
     <div className="min-h-screen  p-6">
+      {/* Error Message */}
+      {error && (
+        <div className="max-w-4xl mx-auto mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-red-700 text-sm">{error}</p>
+        </div>
+      )}
+
       {/* Header */}
       <div className="text-center py-8">
       
@@ -177,9 +268,20 @@ export default function OnboardingStep5({ onComplete, onBack }: OnboardingStep5P
             {/* Subscribe Button */}
             <button
               onClick={() => handlePlanSelect(plan.id)}
-              className={`w-full py-3 px-4 rounded-full font-medium transition-colors ${plan.buttonStyle}`}
+              disabled={loading && selectedPlan === plan.id}
+              className={`w-full py-3 px-4 rounded-full font-medium transition-colors ${plan.buttonStyle} disabled:opacity-50 disabled:cursor-not-allowed`}
             >
-              {plan.buttonText}
+              {loading && selectedPlan === plan.id ? (
+                <span className="flex items-center justify-center">
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Processing...
+                </span>
+              ) : (
+                plan.buttonText
+              )}
             </button>
           </div>
         ))}

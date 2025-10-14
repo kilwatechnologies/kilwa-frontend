@@ -15,10 +15,11 @@ function Step1Content() {
     if (skipOnboarding) {
       router.push('/dashboard')
     } else {
-      // If OAuth user, skip email verification and go to step-2
-      if (isOAuth) {
+      // If OAuth user or existing user, skip email verification and go to step-2
+      if (isOAuth || userExists) {
         router.push(`/onboarding/step-2?email=${encodeURIComponent(email)}`)
       } else {
+        // New email/password user - needs email verification
         router.push(`/onboarding/verify-email?email=${encodeURIComponent(email)}`)
       }
     }
