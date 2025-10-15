@@ -5,7 +5,7 @@ import Sidebar from '@/components/dashboard/Sidebar'
 import DashboardHeader from '@/components/dashboard/DashboardHeader'
 import DashboardFilters from '@/components/dashboard/DashboardFilters'
 import CountryTreemap from '@/components/dashboard/CountryTreemap'
-import { countriesApi, isiApi } from '@/lib/api'
+import { countriesApi, isiApi, metiApi, sentimentApi } from '@/lib/api'
 
 interface Country {
   id: number
@@ -13,6 +13,8 @@ interface Country {
   isoCode: string
   region?: string
   isiScore?: number
+  metiScore?: number
+  sentimentPulse?: string
 }
 
 export default function DashboardPage() {
@@ -77,18 +79,68 @@ export default function DashboardPage() {
           console.log('📝 Using mock ISI scores:', isiScores)
         }
 
-        // Combine countries with their ISI scores
-        const countriesWithScores = countriesData.map(country => {
-          // Try both camelCase and snake_case for compatibility
-          const isiScore = isiScores.find(score => 
+        // Fetch METI scores for all countries
+        console.log('📊 Fetching METI scores...')
+        const metiPromises = countriesData.map(country =>
+          metiApi.getScoresByCountry(country.id).catch(err => {
+            console.log(`⚠️ METI fetch failed for ${country.name}:`, err)
+            return null
+          })
+        )
+        const metiResponses = await Promise.all(metiPromises)
+
+        // Fetch sentiment data for all countries
+        console.log('📊 Fetching sentiment data...')
+        const sentimentPromises = countriesData.map(country =>
+          sentimentApi.getNews(country.id, 7, 50).catch(err => {
+            console.log(`⚠️ Sentiment fetch failed for ${country.name}:`, err)
+            return null
+          })
+        )
+        const sentimentResponses = await Promise.all(sentimentPromises)
+
+        // Combine countries with their ISI scores, METI scores, and sentiment
+        const countriesWithScores = countriesData.map((country, index) => {
+          // ISI Score
+          const isiScore = isiScores.find(score =>
             score.countryId === country.id || score.country_id === country.id
           )
-          console.log(`🔗 Mapping ${country.name} (ID: ${country.id}): ISI Score = ${isiScore?.score || 'N/A'}`)
-          console.log(`    Available ISI records for debugging:`, isiScores.map(s => `ID: ${s.countryId || s.country_id}, Score: ${s.score}`))
+
+          // METI Score
+          let metiScore = undefined
+          const metiResponse = metiResponses[index]
+          if (metiResponse && metiResponse.data?.success && metiResponse.data?.data) {
+            const scores = Array.isArray(metiResponse.data.data) ? metiResponse.data.data : [metiResponse.data.data]
+            if (scores.length > 0) {
+              metiScore = scores[0].score
+            }
+          }
+
+          // Sentiment Pulse
+          let sentimentPulse = 'Neutral'
+          const sentimentResponse = sentimentResponses[index]
+          if (sentimentResponse && sentimentResponse.data?.success && sentimentResponse.data?.data) {
+            const articles = sentimentResponse.data.data
+            if (articles.length > 0) {
+              const positive = articles.filter((a: any) => a.sentiment_label === 'positive').length
+              const negative = articles.filter((a: any) => a.sentiment_label === 'negative').length
+              const neutral = articles.filter((a: any) => a.sentiment_label === 'neutral').length
+
+              const max = Math.max(positive, neutral, negative)
+              if (positive === max) sentimentPulse = 'Positive'
+              else if (negative === max) sentimentPulse = 'Negative'
+              else sentimentPulse = 'Neutral'
+            }
+          }
+
+          console.log(`🔗 Mapping ${country.name} (ID: ${country.id}): ISI=${isiScore?.score || 'N/A'}, METI=${metiScore || 'N/A'}, Sentiment=${sentimentPulse}`)
+
           return {
             ...country,
             isoCode: country.isoCode || country.name.substring(0, 3).toUpperCase(),
             isiScore: isiScore ? isiScore.score : undefined,
+            metiScore,
+            sentimentPulse,
             region: getRegionFromCountry(country.name)
           }
         })

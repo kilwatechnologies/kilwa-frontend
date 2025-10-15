@@ -35,6 +35,7 @@ export default function SentimentPulsePage() {
   const [trendsLoading, setTrendsLoading] = useState(false)
   const [showCalendar, setShowCalendar] = useState(false)
   const [selectedDate, setSelectedDate] = useState(new Date())
+  const [viewingMonth, setViewingMonth] = useState(new Date())
 
   useEffect(() => {
     loadInitialData()
@@ -52,6 +53,13 @@ export default function SentimentPulsePage() {
     }
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [showCalendar])
+
+  // Reset viewing month when calendar opens
+  useEffect(() => {
+    if (showCalendar) {
+      setViewingMonth(new Date())
+    }
   }, [showCalendar])
 
   // Reload data when date changes
@@ -243,9 +251,9 @@ export default function SentimentPulsePage() {
     if (newsArticles.length === 0) {
       // Fallback to hardcoded data
       return [
-        { name: 'Positive', value: 40, color: '#4ADE80' },
-        { name: 'Neutral', value: 25, color: '#FDE047' },
-        { name: 'Negative', value: 35, color: '#F87171' },
+        { name: 'Positive', value: 40, color: '#8FE36C' },
+        { name: 'Neutral', value: 25, color: '#FFE054' },
+        { name: 'Negative', value: 35, color: '#FF8F85' },
       ]
     }
 
@@ -255,9 +263,9 @@ export default function SentimentPulsePage() {
     const total = newsArticles.length
 
     return [
-      { name: 'Positive', value: Math.round((positive / total) * 100), color: '#4ADE80' },
-      { name: 'Neutral', value: Math.round((neutral / total) * 100), color: '#FDE047' },
-      { name: 'Negative', value: Math.round((negative / total) * 100), color: '#F87171' },
+      { name: 'Positive', value: Math.round((positive / total) * 100), color: '#8FE36C' },
+      { name: 'Neutral', value: Math.round((neutral / total) * 100), color: '#FFE054' },
+      { name: 'Negative', value: Math.round((negative / total) * 100), color: '#FF8F85' },
     ]
   }
 
@@ -390,7 +398,7 @@ export default function SentimentPulsePage() {
                       const country = countries.find(c => c.id === parseInt(e.target.value))
                       setSelectedCountry(country || null)
                     }}
-                    className="bg-white text-gray-900 pl-14 pr-10 py-2 rounded-lg border-2 border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm appearance-none cursor-pointer"
+                    className="bg-white text-gray-900 pl-14 pr-10 py-2 rounded-lg border-2 border-gray-200 focus:outline-none focus:border-gray-200 appearance-none cursor-pointer"
                   >
                     {countries.map(country => (
                       <option key={country.id} value={country.id}>{country.name}</option>
@@ -427,13 +435,13 @@ export default function SentimentPulsePage() {
 
               {/* Calendar Dropdown */}
               {showCalendar && (
-                <div className="absolute right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-xl p-4 z-50 w-80">
+                <div className="absolute right-0 mt- bg-white border border-gray-200 rounded-xl shadow-xl p-4 z-50 w-80">
                   <div className="flex items-center justify-between mb-4">
                     <button
                       onClick={() => {
-                        const newDate = new Date(selectedDate)
+                        const newDate = new Date(viewingMonth)
                         newDate.setMonth(newDate.getMonth() - 1)
-                        setSelectedDate(newDate)
+                        setViewingMonth(newDate)
                       }}
                       className="p-1.5 hover:bg-gray-100 rounded transition-colors"
                     >
@@ -442,13 +450,13 @@ export default function SentimentPulsePage() {
                       </svg>
                     </button>
                     <span className="text-base font-semibold text-gray-900">
-                      {selectedDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                      {viewingMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
                     </span>
                     <button
                       onClick={() => {
-                        const newDate = new Date(selectedDate)
+                        const newDate = new Date(viewingMonth)
                         newDate.setMonth(newDate.getMonth() + 1)
-                        setSelectedDate(newDate)
+                        setViewingMonth(newDate)
                       }}
                       className="p-1.5 hover:bg-gray-100 rounded transition-colors"
                     >
@@ -464,8 +472,8 @@ export default function SentimentPulsePage() {
                       <div key={day} className="text-xs font-medium text-gray-500 p-2">{day}</div>
                     ))}
                     {(() => {
-                      const year = selectedDate.getFullYear()
-                      const month = selectedDate.getMonth()
+                      const year = viewingMonth.getFullYear()
+                      const month = viewingMonth.getMonth()
                       const firstDay = new Date(year, month, 1).getDay()
                       const daysInMonth = new Date(year, month + 1, 0).getDate()
                       const days = []
@@ -505,7 +513,9 @@ export default function SentimentPulsePage() {
                   <div className="mt-4 pt-4 border-t border-gray-200 flex justify-between">
                     <button
                       onClick={() => {
-                        setSelectedDate(new Date())
+                        const today = new Date()
+                        setSelectedDate(today)
+                        setViewingMonth(today)
                         setShowCalendar(false)
                       }}
                       className="text-sm text-blue-600 hover:text-blue-700 font-medium"
@@ -557,15 +567,15 @@ export default function SentimentPulsePage() {
               {/* Legend */}
               <div className="flex gap-6 mb-6">
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#8FE36C' }}></div>
                   <span className="text-sm text-gray-600">Positive</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
+                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#FFE054' }}></div>
                   <span className="text-sm text-gray-600">Neutral</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#FF8F85' }}></div>
                   <span className="text-sm text-gray-600">Negative</span>
                 </div>
               </div>
@@ -583,9 +593,9 @@ export default function SentimentPulsePage() {
 
                     itemStyle={{ color: '#6b7280' }}
                   />
-                  <Line type="monotone" dataKey="positive" stroke="#4ADE80" strokeWidth={2} dot={{ r: 4 }} />
-                  <Line type="monotone" dataKey="neutral" stroke="#FBBF24" strokeWidth={2} dot={{ r: 4 }} />
-                  <Line type="monotone" dataKey="negative" stroke="#F87171" strokeWidth={2} dot={{ r: 4 }} />
+                  <Line type="monotone" dataKey="positive" stroke="#8FE36C" strokeWidth={2} dot={{ r: 4 }} />
+                  <Line type="monotone" dataKey="neutral" stroke="#FFE054" strokeWidth={2} dot={{ r: 4 }} />
+                  <Line type="monotone" dataKey="negative" stroke="#FF8F85" strokeWidth={2} dot={{ r: 4 }} />
                 </LineChart>
               </ResponsiveContainer>
 
@@ -620,26 +630,27 @@ export default function SentimentPulsePage() {
                 <p className="text-gray-500 text-sm">Highlights where investor confidence is rising or falling.</p>
               </div>
 
-              <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
+              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                <div className="p-6 h-[428px] flex flex-col">
 
               {/* Legend */}
-              <div className="flex gap-6 mb-6">
+              <div className="flex gap-6 mb-6 flex-shrink-0">
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#8FE36C' }}></div>
                   <span className="text-sm text-gray-600">Positive</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
+                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#FFE054' }}></div>
                   <span className="text-sm text-gray-600">Neutral</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#FF8F85' }}></div>
                   <span className="text-sm text-gray-600">Negative</span>
                 </div>
               </div>
 
-              {/* Stacked Bars */}
-              <div className="space-y-5">
+              {/* Stacked Bars - Scrollable */}
+              <div className="space-y-5 overflow-y-auto flex-1 pr-2">
                 {sectorsData.map((sector) => (
                   <div key={sector.name}>
                     <div className="flex items-center justify-between mb-2">
@@ -649,8 +660,8 @@ export default function SentimentPulsePage() {
                     <div className="flex h-8 rounded-full overflow-hidden bg-gray-100">
                       {sector.positive > 0 && (
                         <div
-                          style={{ width: `${sector.positive}%` }}
-                          className="bg-green-500 flex items-center justify-center relative"
+                          style={{ width: `${sector.positive}%`, backgroundColor: '#8FE36C' }}
+                          className="flex items-center justify-center relative"
                         >
                           {sector.name === 'Agriculture' && (
                             <span className="text-xs text-white font-semibold px-3 py-1 bg-gray-900 rounded-full absolute">30%</span>
@@ -658,16 +669,17 @@ export default function SentimentPulsePage() {
                         </div>
                       )}
                       {sector.neutral > 0 && (
-                        <div style={{ width: `${sector.neutral}%` }} className="bg-yellow-400"></div>
+                        <div style={{ width: `${sector.neutral}%`, backgroundColor: '#FFE054' }}></div>
                       )}
                       {sector.negative > 0 && (
-                        <div style={{ width: `${sector.negative}%` }} className="bg-red-500"></div>
+                        <div style={{ width: `${sector.negative}%`, backgroundColor: '#FF8F85' }}></div>
                       )}
                     </div>
                   </div>
                 ))}
               </div>
               </div>
+            </div>
             </div>
 
             {/* Signal Cards */}
@@ -680,7 +692,7 @@ export default function SentimentPulsePage() {
               <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
                 <div className="divide-y divide-gray-200">
                 {newsArticles.slice(0, 4).map((article, index) => (
-                  <div key={article.id} className={`py-4 hover:bg-gray-50 transition-all cursor-pointer ${index === 0 ? 'pt-0' : ''}`}>
+                  <div key={article.id} className={`py-4  transition-all cursor-pointer ${index === 0 ? 'pt-0' : ''}`}>
                     <h3 className="text-gray-900 text-sm font-medium mb-3 leading-snug">{article.title}</h3>
                     <div className="flex items-center justify-between flex-wrap gap-2">
                       <div className="flex items-center gap-2">
@@ -756,26 +768,27 @@ export default function SentimentPulsePage() {
                 <p className="text-gray-500 text-sm">Confidence-based outlook for market entry over the next 6 months.</p>
               </div>
 
-              <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
+              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                <div className="p-6 h-[391px] flex flex-col">
 
               {/* Legend */}
-              <div className="flex gap-6 mb-6">
+              <div className="flex gap-6 mb-6 flex-shrink-0">
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#8FE36C' }}></div>
                   <span className="text-sm text-gray-600">Positive</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
+                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#FFE054' }}></div>
                   <span className="text-sm text-gray-600">Neutral</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#FF8F85' }}></div>
                   <span className="text-sm text-gray-600">Negative</span>
                 </div>
               </div>
 
               {/* Pie Chart */}
-              <div className="flex items-center justify-center">
+              <div className="flex items-center justify-center flex-1">
                 <ResponsiveContainer width="100%" height={320}>
                   <PieChart>
                     <Pie
@@ -823,6 +836,7 @@ export default function SentimentPulsePage() {
                     />
                   </PieChart>
                 </ResponsiveContainer>
+              </div>
               </div>
               </div>
             </div>

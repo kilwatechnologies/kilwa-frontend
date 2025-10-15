@@ -8,6 +8,8 @@ interface Country {
   isoCode: string
   region?: string
   isiScore?: number
+  metiScore?: number
+  sentimentPulse?: string
 }
 
 interface CountryTreemapProps {
@@ -234,17 +236,37 @@ export default function CountryTreemap({ countries, onCountryClick }: CountryTre
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">METI Signal</span>
                 <div className="flex items-center">
-                  <span className="text-sm font-semibold text-gray-900">--/100</span>
-                  <span className="text-xs text-gray-500 ml-2 px-2 py-1 bg-gray-100 rounded">
-                    Pending
+                  <span className="text-sm font-semibold text-gray-900">
+                    {hoveredCountry.metiScore ? `${hoveredCountry.metiScore.toFixed(0)}/100` : '--/100'}
                   </span>
+                  {hoveredCountry.metiScore ? (
+                    hoveredCountry.metiScore >= 60 ? (
+                      <span className="text-xs text-green-600 ml-2 px-2 py-1 bg-green-100 rounded">
+                        Favourable
+                      </span>
+                    ) : hoveredCountry.metiScore >= 40 ? (
+                      <span className="text-xs text-yellow-600 ml-2 px-2 py-1 bg-yellow-100 rounded">
+                        Neutral
+                      </span>
+                    ) : (
+                      <span className="text-xs text-red-600 ml-2 px-2 py-1 bg-red-100 rounded">
+                        Caution
+                      </span>
+                    )
+                  ) : (
+                    <span className="text-xs text-gray-500 ml-2 px-2 py-1 bg-gray-100 rounded">
+                      Pending
+                    </span>
+                  )}
                 </div>
               </div>
 
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Sentiment Pulse</span>
                 <div className="flex items-center">
-                  <span className="text-sm font-semibold text-gray-900">Positive</span>
+                  <span className="text-sm font-semibold text-gray-900">
+                    {hoveredCountry.sentimentPulse || 'Neutral'}
+                  </span>
                   <div className="w-8 h-4 ml-2">
                     <svg viewBox="0 0 32 16" className="w-full h-full">
                       <polyline
