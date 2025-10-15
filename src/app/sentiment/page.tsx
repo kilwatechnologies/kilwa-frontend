@@ -55,10 +55,10 @@ export default function SentimentPulsePage() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [showCalendar])
 
-  // Reset viewing month when calendar opens
+  // Sync viewing month with selected date when calendar opens
   useEffect(() => {
     if (showCalendar) {
-      setViewingMonth(new Date())
+      setViewingMonth(selectedDate)
     }
   }, [showCalendar])
 
@@ -398,7 +398,7 @@ export default function SentimentPulsePage() {
                       const country = countries.find(c => c.id === parseInt(e.target.value))
                       setSelectedCountry(country || null)
                     }}
-                    className="bg-white text-gray-900 pl-14 pr-10 py-2 rounded-lg border-2 border-gray-200 focus:outline-none focus:border-gray-200 appearance-none cursor-pointer"
+                    className="bg-white text-gray-900 pl-14 pr-10 py-2 rounded-lg border border-gray-200 focus:outline-none focus:border-gray-200 appearance-none cursor-pointer"
                   >
                     {countries.map(country => (
                       <option key={country.id} value={country.id}>{country.name}</option>
@@ -535,7 +535,7 @@ export default function SentimentPulsePage() {
           </div>
 
           {/* Main Grid */}
-          <div className="grid grid-cols-[1.2fr_0.8fr] gap-6">
+          <div className="grid grid-cols-[1.2fr_0.8fr] gap-6 mb-6">
             {/* Sentiment Over Time */}
             <div>
               <div className="mb-4">
@@ -661,18 +661,26 @@ export default function SentimentPulsePage() {
                       {sector.positive > 0 && (
                         <div
                           style={{ width: `${sector.positive}%`, backgroundColor: '#8FE36C' }}
-                          className="flex items-center justify-center relative"
+                          className="flex items-center justify-center relative group cursor-pointer"
                         >
-                          {sector.name === 'Agriculture' && (
-                            <span className="text-xs text-white font-semibold px-3 py-1 bg-gray-900 rounded-full absolute">30%</span>
-                          )}
+                          <span className="text-xs text-white font-semibold px-3 py-1 bg-gray-900 rounded-full absolute opacity-0 group-hover:opacity-100 transition-opacity">{sector.positive}%</span>
                         </div>
                       )}
                       {sector.neutral > 0 && (
-                        <div style={{ width: `${sector.neutral}%`, backgroundColor: '#FFE054' }}></div>
+                        <div
+                          style={{ width: `${sector.neutral}%`, backgroundColor: '#FFE054' }}
+                          className="flex items-center justify-center relative group cursor-pointer"
+                        >
+                          <span className="text-xs text-white font-semibold px-3 py-1 bg-gray-900 rounded-full absolute opacity-0 group-hover:opacity-100 transition-opacity">{sector.neutral}%</span>
+                        </div>
                       )}
                       {sector.negative > 0 && (
-                        <div style={{ width: `${sector.negative}%`, backgroundColor: '#FF8F85' }}></div>
+                        <div
+                          style={{ width: `${sector.negative}%`, backgroundColor: '#FF8F85' }}
+                          className="flex items-center justify-center relative group cursor-pointer"
+                        >
+                          <span className="text-xs text-white font-semibold px-3 py-1 bg-gray-900 rounded-full absolute opacity-0 group-hover:opacity-100 transition-opacity">{sector.negative}%</span>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -680,116 +688,91 @@ export default function SentimentPulsePage() {
               </div>
               </div>
             </div>
-            </div>
+          </div>
+</div>
+          {/* Bottom Grid - Signal Cards & Sentiment Mix */}
+       <div className="grid grid-cols-2 gap-6 items-stretch">
+  {/* Signal Cards */}
+  <div className="flex flex-col">
+    <div className="mb-4">
+      <h2 className="text-gray-900 text-xl font-semibold mb-1">Signal Cards</h2>
+      <p className="text-gray-500 text-sm">
+        Highlights why investor confidence is declining across sectors.
+      </p>
+    </div>
 
-            {/* Signal Cards */}
-            <div>
-              <div className="mb-4">
-                <h2 className="text-gray-900 text-xl font-semibold mb-1">Signal Cards</h2>
-                <p className="text-gray-500 text-sm">Highlights why investor confidence is declining across sectors.</p>
-              </div>
-
-              <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-                <div className="divide-y divide-gray-200">
-                {newsArticles.slice(0, 4).map((article, index) => (
-                  <div key={article.id} className={`py-4  transition-all cursor-pointer ${index === 0 ? 'pt-0' : ''}`}>
-                    <h3 className="text-gray-900 text-sm font-medium mb-3 leading-snug">{article.title}</h3>
-                    <div className="flex items-center justify-between flex-wrap gap-2">
-                      <div className="flex items-center gap-2">
-                        <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${getCategoryColor(article.topics?.[0] || 'Economics')}`}>
-                          {article.topics?.[0] || 'Economics'}
-                        </span>
-                        {article.sentiment_label && (
-                          <span className={`px-2.5 py-1 rounded-full text-xs font-medium capitalize ${getSentimentBadgeColor(article.sentiment_label)}`}>
-                            {article.sentiment_label}
-                          </span>
-                        )}
-                      </div>
-                      <span className="text-xs text-gray-500">{getRelativeTime(article.published_at)}</span>
-                    </div>
-                  </div>
-                ))}
-
-                {/* Fallback when no articles */}
-                {newsArticles.length === 0 && (
-                  <>
-                    <div className="py-4 hover:bg-gray-50 transition-all cursor-pointer pt-0">
-                      <h3 className="text-gray-900 text-sm font-medium mb-3 leading-snug">Central Bank of Ghana delays interest rate hike amid inflation surge</h3>
-                      <div className="flex items-center justify-between flex-wrap gap-2">
-                        <div className="flex items-center gap-2">
-                          <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">Economics</span>
-                          <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-yellow-50 text-yellow-700">Neutral</span>
-                        </div>
-                        <span className="text-xs text-gray-500">Today · 1h ago</span>
-                      </div>
-                    </div>
-
-                    <div className="py-4 hover:bg-gray-50 transition-all cursor-pointer">
-                      <h3 className="text-gray-900 text-sm font-medium mb-3 leading-snug">Kenya introduces tax holiday for renewable energy investors</h3>
-                      <div className="flex items-center justify-between flex-wrap gap-2">
-                        <div className="flex items-center gap-2">
-                          <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">Policy</span>
-                          <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-green-50 text-green-700">Positive</span>
-                        </div>
-                        <span className="text-xs text-gray-500">Today · 1h ago</span>
-                      </div>
-                    </div>
-
-                    <div className="py-4 hover:bg-gray-50 transition-all cursor-pointer">
-                      <h3 className="text-gray-900 text-sm font-medium mb-3 leading-snug">Protests erupt over subsidy rollback in Ethiopia's capital</h3>
-                      <div className="flex items-center justify-between flex-wrap gap-2">
-                        <div className="flex items-center gap-2">
-                          <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">Regulation</span>
-                          <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-red-50 text-red-700">Negative</span>
-                        </div>
-                        <span className="text-xs text-gray-500">Today · 1h ago</span>
-                      </div>
-                    </div>
-
-                    <div className="py-4 hover:bg-gray-50 transition-all cursor-pointer pb-0">
-                      <h3 className="text-gray-900 text-sm font-medium mb-3 leading-snug">Rwanda signs $200M deal to digitize public infrastructure</h3>
-                      <div className="flex items-center justify-between flex-wrap gap-2">
-                        <div className="flex items-center gap-2">
-                          <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">Infrastructure</span>
-                        </div>
-                        <span className="text-xs text-gray-500">Today · 2h ago</span>
-                      </div>
-                    </div>
-                  </>
+    {/* Make this div stretch to full height */}
+    <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm flex-1 flex flex-col">
+      <div className="divide-y divide-gray-200 flex-1 overflow-y-auto">
+        {newsArticles.slice(0, 4).map((article, index) => (
+          <div
+            key={article.id}
+            className={`py-4 transition-all cursor-pointer ${
+              index === 0 ? 'pt-0' : ''
+            }`}
+          >
+            <h3 className="text-gray-900 text-sm font-medium mb-3 leading-snug">
+              {article.title}
+            </h3>
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-2">
+                <span
+                  className={`px-2.5 py-1 rounded-full text-xs font-medium ${getCategoryColor(
+                    article.topics?.[0] || 'Economics'
+                  )}`}
+                >
+                  {article.topics?.[0] || 'Economics'}
+                </span>
+                {article.sentiment_label && (
+                  <span
+                    className={`px-2.5 py-1 rounded-full text-xs font-medium capitalize ${getSentimentBadgeColor(
+                      article.sentiment_label
+                    )}`}
+                  >
+                    {article.sentiment_label}
+                  </span>
                 )}
-                </div>
               </div>
+              <span className="text-xs text-gray-500">
+                {getRelativeTime(article.published_at)}
+              </span>
             </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
 
-            {/* Sentiment Mix */}
-            <div>
-              <div className="mb-4">
-                <h2 className="text-gray-900 text-xl font-semibold mb-1">Sentiment Mix</h2>
-                <p className="text-gray-500 text-sm">Confidence-based outlook for market entry over the next 6 months.</p>
-              </div>
+  {/* Sentiment Mix */}
+  <div className="flex flex-col">
+    <div className="mb-4">
+      <h2 className="text-gray-900 text-xl font-semibold mb-1">Sentiment Mix</h2>
+      <p className="text-gray-500 text-sm">
+        Confidence-based outlook for market entry over the next 6 months.
+      </p>
+    </div>
 
-              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-                <div className="p-6 h-[391px] flex flex-col">
+    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex-1 flex flex-col">
+      <div className="p-6 flex flex-col flex-1">
+        {/* Legend */}
+        <div className="flex gap-6 mb-6 flex-shrink-0">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#8FE36C' }}></div>
+            <span className="text-sm text-gray-600">Positive</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#FFE054' }}></div>
+            <span className="text-sm text-gray-600">Neutral</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#FF8F85' }}></div>
+            <span className="text-sm text-gray-600">Negative</span>
+          </div>
+        </div>
 
-              {/* Legend */}
-              <div className="flex gap-6 mb-6 flex-shrink-0">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#8FE36C' }}></div>
-                  <span className="text-sm text-gray-600">Positive</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#FFE054' }}></div>
-                  <span className="text-sm text-gray-600">Neutral</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#FF8F85' }}></div>
-                  <span className="text-sm text-gray-600">Negative</span>
-                </div>
-              </div>
-
-              {/* Pie Chart */}
-              <div className="flex items-center justify-center flex-1">
-                <ResponsiveContainer width="100%" height={320}>
+        {/* Pie Chart */}
+        <div className="flex items-center justify-center flex-1">
+          <ResponsiveContainer width="100%" height={320}>
                   <PieChart>
                     <Pie
                       data={sentimentMixData}
@@ -836,11 +819,13 @@ export default function SentimentPulsePage() {
                     />
                   </PieChart>
                 </ResponsiveContainer>
-              </div>
-              </div>
-              </div>
-            </div>
-          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+          
         </div>
       </div>
     </div>
