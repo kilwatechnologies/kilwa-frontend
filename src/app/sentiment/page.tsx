@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Sidebar from '@/components/dashboard/Sidebar'
 import DashboardHeader from '@/components/dashboard/DashboardHeader'
 import { sentimentApi, countriesApi } from '@/lib/api'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 import Image from 'next/image'
 
 interface Country {
@@ -33,12 +33,34 @@ export default function SentimentPulsePage() {
   const [selectedPeriod, setSelectedPeriod] = useState('6 M')
   const [sentimentTimelineData, setSentimentTimelineData] = useState<any[]>([])
   const [trendsLoading, setTrendsLoading] = useState(false)
+  const [showCalendar, setShowCalendar] = useState(false)
+  const [selectedDate, setSelectedDate] = useState(new Date())
 
   useEffect(() => {
     loadInitialData()
     const email = localStorage.getItem('user_email') || localStorage.getItem('userEmail') || 'user@example.com'
     setUserEmail(email)
   }, [])
+
+  // Close calendar when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement
+      if (showCalendar && !target.closest('.relative')) {
+        setShowCalendar(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [showCalendar])
+
+  // Reload data when date changes
+  useEffect(() => {
+    if (selectedCountry) {
+      loadSentimentData()
+      loadTrendsData(getPeriodDays(selectedPeriod))
+    }
+  }, [selectedDate])
 
   useEffect(() => {
     if (selectedCountry) {
@@ -348,18 +370,18 @@ export default function SentimentPulsePage() {
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-3">
               {selectedCountry && (
-                <>
-                  <div className="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center shadow-sm overflow-hidden">
+                <div className="relative">
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center overflow-hidden flex-shrink-0 pointer-events-none z-10">
                     {getCountryFlag(selectedCountry.name) ? (
                       <Image
                         src={getCountryFlag(selectedCountry.name)!}
                         alt={selectedCountry.name}
-                        width={40}
-                        height={40}
+                        width={32}
+                        height={32}
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <span className="text-lg">🌍</span>
+                      <span className="text-base">🌍</span>
                     )}
                   </div>
                   <select
@@ -368,49 +390,170 @@ export default function SentimentPulsePage() {
                       const country = countries.find(c => c.id === parseInt(e.target.value))
                       setSelectedCountry(country || null)
                     }}
-                    className="bg-white text-gray-900 px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
+                    className="bg-white text-gray-900 pl-14 pr-10 py-2 rounded-lg border-2 border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm appearance-none cursor-pointer"
                   >
                     {countries.map(country => (
                       <option key={country.id} value={country.id}>{country.name}</option>
                     ))}
                   </select>
-                </>
+                  <svg
+                    className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-600"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </div>
               )}
             </div>
-            <div className="flex items-center gap-2 text-gray-600 bg-white px-4 py-2 rounded-lg border border-gray-200 shadow-sm">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              <span className="text-sm font-medium">Sunday, 12 September, 2025</span>
+            <div className="relative">
+              <button
+                onClick={() => setShowCalendar(!showCalendar)}
+                className="flex items-center gap-2 text-gray-600 bg-white px-4 py-2 rounded-lg border border-gray-200 shadow-sm hover:border-gray-300 transition-colors cursor-pointer"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span className="text-sm font-medium">
+                  {selectedDate.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                </span>
+              </button>
+
+              {/* Calendar Dropdown */}
+              {showCalendar && (
+                <div className="absolute right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-xl p-4 z-50 w-80">
+                  <div className="flex items-center justify-between mb-4">
+                    <button
+                      onClick={() => {
+                        const newDate = new Date(selectedDate)
+                        newDate.setMonth(newDate.getMonth() - 1)
+                        setSelectedDate(newDate)
+                      }}
+                      className="p-1.5 hover:bg-gray-100 rounded transition-colors"
+                    >
+                      <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      </svg>
+                    </button>
+                    <span className="text-base font-semibold text-gray-900">
+                      {selectedDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                    </span>
+                    <button
+                      onClick={() => {
+                        const newDate = new Date(selectedDate)
+                        newDate.setMonth(newDate.getMonth() + 1)
+                        setSelectedDate(newDate)
+                      }}
+                      className="p-1.5 hover:bg-gray-100 rounded transition-colors"
+                    >
+                      <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  {/* Calendar Grid */}
+                  <div className="grid grid-cols-7 gap-1 text-center mb-2">
+                    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                      <div key={day} className="text-xs font-medium text-gray-500 p-2">{day}</div>
+                    ))}
+                    {(() => {
+                      const year = selectedDate.getFullYear()
+                      const month = selectedDate.getMonth()
+                      const firstDay = new Date(year, month, 1).getDay()
+                      const daysInMonth = new Date(year, month + 1, 0).getDate()
+                      const days = []
+
+                      // Empty cells for days before month starts
+                      for (let i = 0; i < firstDay; i++) {
+                        days.push(<div key={`empty-${i}`} className="p-2"></div>)
+                      }
+
+                      // Days of the month
+                      for (let day = 1; day <= daysInMonth; day++) {
+                        const date = new Date(year, month, day)
+                        const isSelected = date.toDateString() === selectedDate.toDateString()
+                        const isToday = date.toDateString() === new Date().toDateString()
+
+                        days.push(
+                          <button
+                            key={day}
+                            onClick={() => {
+                              setSelectedDate(date)
+                              setShowCalendar(false)
+                            }}
+                            className={`p-2 text-sm rounded-lg hover:bg-gray-100 transition-colors min-w-[32px] min-h-[32px] flex items-center justify-center ${
+                              isSelected ? 'bg-blue-500 text-white hover:bg-blue-600 font-semibold' :
+                              isToday ? 'bg-gray-100 font-semibold text-gray-900' : 'text-gray-700'
+                            }`}
+                          >
+                            {day}
+                          </button>
+                        )
+                      }
+
+                      return days
+                    })()}
+                  </div>
+
+                  <div className="mt-4 pt-4 border-t border-gray-200 flex justify-between">
+                    <button
+                      onClick={() => {
+                        setSelectedDate(new Date())
+                        setShowCalendar(false)
+                      }}
+                      className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                    >
+                      Today
+                    </button>
+                    <button
+                      onClick={() => setShowCalendar(false)}
+                      className="text-sm text-gray-600 hover:text-gray-700"
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
           {/* Main Grid */}
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-[1.2fr_0.8fr] gap-6">
             {/* Sentiment Over Time */}
-            <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-              <div className="mb-6">
+            <div>
+              <div className="mb-4">
                 <h2 className="text-gray-900 text-xl font-semibold mb-1">Sentiment Over Time</h2>
                 <p className="text-gray-500 text-sm">Confidence-based outlook for market entry over the next 6 months.</p>
               </div>
 
-              {/* Period Selector */}
-              <div className="flex gap-2 mb-6">
-                {periods.map(period => (
-                  <button
-                    key={period}
-                    onClick={() => handlePeriodChange(period)}
-                    className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
-                      selectedPeriod === period
-                        ? 'bg-gray-100 text-gray-900 font-medium'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                    }`}
-                  >
-                    {period}
-                  </button>
-                ))}
-              </div>
+              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                {/* Period Selector */}
+                <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+                  <div className="inline-flex gap-2">
+                    {periods.map(period => (
+                      <button
+                        key={period}
+                        onClick={() => handlePeriodChange(period)}
+                        className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
+                          selectedPeriod === period
+                            ? 'bg-white text-black shadow-sm'
+                            : 'text-gray-600 hover:text-black'
+                        }`}
+                      >
+                        {period}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
+                <div className="p-4">
               {/* Legend */}
               <div className="flex gap-6 mb-6">
                 <div className="flex items-center gap-2">
@@ -437,10 +580,9 @@ export default function SentimentPulsePage() {
                   <Tooltip
                     contentStyle={{ backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                     labelStyle={{ color: '#111827', fontWeight: 600 }}
-                    
+
                     itemStyle={{ color: '#6b7280' }}
                   />
-                  <Legend wrapperStyle={{ paddingTop: '20px' }} />
                   <Line type="monotone" dataKey="positive" stroke="#4ADE80" strokeWidth={2} dot={{ r: 4 }} />
                   <Line type="monotone" dataKey="neutral" stroke="#FBBF24" strokeWidth={2} dot={{ r: 4 }} />
                   <Line type="monotone" dataKey="negative" stroke="#F87171" strokeWidth={2} dot={{ r: 4 }} />
@@ -467,14 +609,18 @@ export default function SentimentPulsePage() {
                   </div>
                 </div>
               </div> */}
+                </div>
+              </div>
             </div>
 
             {/* Top Positive Sectors */}
-            <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-              <div className="mb-6">
+            <div>
+              <div className="mb-4">
                 <h2 className="text-gray-900 text-xl font-semibold mb-1">Top Positive Sectors by Sentiment</h2>
                 <p className="text-gray-500 text-sm">Highlights where investor confidence is rising or falling.</p>
               </div>
+
+              <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
 
               {/* Legend */}
               <div className="flex gap-6 mb-6">
@@ -521,26 +667,28 @@ export default function SentimentPulsePage() {
                   </div>
                 ))}
               </div>
+              </div>
             </div>
 
             {/* Signal Cards */}
-            <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-              <div className="mb-6">
+            <div>
+              <div className="mb-4">
                 <h2 className="text-gray-900 text-xl font-semibold mb-1">Signal Cards</h2>
                 <p className="text-gray-500 text-sm">Highlights why investor confidence is declining across sectors.</p>
               </div>
 
-              <div className="space-y-3">
-                {newsArticles.slice(0, 4).map((article) => (
-                  <div key={article.id} className="p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all cursor-pointer">
+              <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
+                <div className="divide-y divide-gray-200">
+                {newsArticles.slice(0, 4).map((article, index) => (
+                  <div key={article.id} className={`py-4 hover:bg-gray-50 transition-all cursor-pointer ${index === 0 ? 'pt-0' : ''}`}>
                     <h3 className="text-gray-900 text-sm font-medium mb-3 leading-snug">{article.title}</h3>
                     <div className="flex items-center justify-between flex-wrap gap-2">
                       <div className="flex items-center gap-2">
-                        <span className={`px-2.5 py-1 rounded-md text-xs font-medium ${getCategoryColor(article.topics?.[0] || 'Economics')}`}>
+                        <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${getCategoryColor(article.topics?.[0] || 'Economics')}`}>
                           {article.topics?.[0] || 'Economics'}
                         </span>
                         {article.sentiment_label && (
-                          <span className={`px-2.5 py-1 rounded-md text-xs font-medium capitalize ${getSentimentBadgeColor(article.sentiment_label)}`}>
+                          <span className={`px-2.5 py-1 rounded-full text-xs font-medium capitalize ${getSentimentBadgeColor(article.sentiment_label)}`}>
                             {article.sentiment_label}
                           </span>
                         )}
@@ -553,60 +701,62 @@ export default function SentimentPulsePage() {
                 {/* Fallback when no articles */}
                 {newsArticles.length === 0 && (
                   <>
-                    <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all cursor-pointer">
+                    <div className="py-4 hover:bg-gray-50 transition-all cursor-pointer pt-0">
                       <h3 className="text-gray-900 text-sm font-medium mb-3 leading-snug">Central Bank of Ghana delays interest rate hike amid inflation surge</h3>
                       <div className="flex items-center justify-between flex-wrap gap-2">
                         <div className="flex items-center gap-2">
-                          <span className="px-2.5 py-1 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">Economics</span>
-                          <span className="px-2.5 py-1 rounded-md text-xs font-medium bg-yellow-50 text-yellow-700 border border-yellow-200">EUR→X 0.15%</span>
-                          <span className="px-2.5 py-1 rounded-md text-xs font-medium bg-yellow-50 text-yellow-700 border border-yellow-200">Neutral</span>
+                          <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">Economics</span>
+                          <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-yellow-50 text-yellow-700">Neutral</span>
                         </div>
                         <span className="text-xs text-gray-500">Today · 1h ago</span>
                       </div>
                     </div>
 
-                    <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all cursor-pointer">
+                    <div className="py-4 hover:bg-gray-50 transition-all cursor-pointer">
                       <h3 className="text-gray-900 text-sm font-medium mb-3 leading-snug">Kenya introduces tax holiday for renewable energy investors</h3>
                       <div className="flex items-center justify-between flex-wrap gap-2">
                         <div className="flex items-center gap-2">
-                          <span className="px-2.5 py-1 rounded-md text-xs font-medium bg-green-50 text-green-700 border border-green-200">Policy</span>
-                          <span className="px-2.5 py-1 rounded-md text-xs font-medium bg-green-50 text-green-700 border border-green-200">Positive</span>
+                          <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">Policy</span>
+                          <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-green-50 text-green-700">Positive</span>
                         </div>
                         <span className="text-xs text-gray-500">Today · 1h ago</span>
                       </div>
                     </div>
 
-                    <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all cursor-pointer">
+                    <div className="py-4 hover:bg-gray-50 transition-all cursor-pointer">
                       <h3 className="text-gray-900 text-sm font-medium mb-3 leading-snug">Protests erupt over subsidy rollback in Ethiopia's capital</h3>
                       <div className="flex items-center justify-between flex-wrap gap-2">
                         <div className="flex items-center gap-2">
-                          <span className="px-2.5 py-1 rounded-md text-xs font-medium bg-orange-50 text-orange-700 border border-orange-200">Regulation</span>
-                          <span className="px-2.5 py-1 rounded-md text-xs font-medium bg-red-50 text-red-700 border border-red-200">Negative</span>
+                          <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">Regulation</span>
+                          <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-red-50 text-red-700">Negative</span>
                         </div>
                         <span className="text-xs text-gray-500">Today · 1h ago</span>
                       </div>
                     </div>
 
-                    <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all cursor-pointer">
+                    <div className="py-4 hover:bg-gray-50 transition-all cursor-pointer pb-0">
                       <h3 className="text-gray-900 text-sm font-medium mb-3 leading-snug">Rwanda signs $200M deal to digitize public infrastructure</h3>
                       <div className="flex items-center justify-between flex-wrap gap-2">
                         <div className="flex items-center gap-2">
-                          <span className="px-2.5 py-1 rounded-md text-xs font-medium bg-purple-50 text-purple-700 border border-purple-200">Infrastructure</span>
+                          <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">Infrastructure</span>
                         </div>
                         <span className="text-xs text-gray-500">Today · 2h ago</span>
                       </div>
                     </div>
                   </>
                 )}
+                </div>
               </div>
             </div>
 
             {/* Sentiment Mix */}
-            <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-              <div className="mb-6">
+            <div>
+              <div className="mb-4">
                 <h2 className="text-gray-900 text-xl font-semibold mb-1">Sentiment Mix</h2>
                 <p className="text-gray-500 text-sm">Confidence-based outlook for market entry over the next 6 months.</p>
               </div>
+
+              <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
 
               {/* Legend */}
               <div className="flex gap-6 mb-6">
@@ -636,7 +786,31 @@ export default function SentimentPulsePage() {
                       outerRadius={130}
                       paddingAngle={0}
                       dataKey="value"
-                      label={({ value }) => `${value}%`}
+                      label={({ cx, cy, midAngle, innerRadius, outerRadius, value }) => {
+                        const RADIAN = Math.PI / 180
+                        // Ensure cx, cy, midAngle, innerRadius, outerRadius are numbers and not undefined
+                        const cxNum = typeof cx === 'number' ? cx : 0
+                        const cyNum = typeof cy === 'number' ? cy : 0
+                        const midAngleNum = typeof midAngle === 'number' ? midAngle : 0
+                        const innerRadiusNum = typeof innerRadius === 'number' ? innerRadius : 0
+                        const outerRadiusNum = typeof outerRadius === 'number' ? outerRadius : 0
+                        const radius = innerRadiusNum + (outerRadiusNum - innerRadiusNum) * 0.5
+                        const x = cxNum + radius * Math.cos(-midAngleNum * RADIAN)
+                        const y = cyNum + radius * Math.sin(-midAngleNum * RADIAN)
+                        return (
+                          <text
+                            x={x}
+                            y={y}
+                            fill="black"
+                            textAnchor="middle"
+                            dominantBaseline="central"
+                            fontSize="16"
+                            fontWeight="400"
+                          >
+                            {`${value}%`}
+                          </text>
+                        )
+                      }}
                       labelLine={false}
                     >
                       {sentimentMixData.map((entry, index) => (
@@ -649,6 +823,7 @@ export default function SentimentPulsePage() {
                     />
                   </PieChart>
                 </ResponsiveContainer>
+              </div>
               </div>
             </div>
           </div>

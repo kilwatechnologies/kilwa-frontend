@@ -69,6 +69,9 @@ export const isiApi = {
   
   getComparison: (countryIds: number[], year: number) =>
     api.post<APIResponse<any>>('/isi/compare', { countryIds, year }),
+
+  getExplanation: (countryId: number, year: number) =>
+    api.get<APIResponse<any>>(`/isi/explain/${countryId}/${year}`),
 };
 
 // METI Scores API

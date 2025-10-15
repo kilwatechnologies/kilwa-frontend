@@ -1,12 +1,32 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { countriesApi } from '@/lib/api'
+import { countriesApi, metiApi, sentimentApi } from '@/lib/api'
 
 interface Country {
   id: number
   name: string
   isoCode: string
+}
+
+interface METIScoreData {
+  score: number
+  year: number
+  entryRecommendation: string
+  confidenceLevel: number
+  trendScore: number
+  volatilityScore: number
+  momentumScore: number
+}
+
+interface NewsArticle {
+  id: number
+  title: string
+  source: string
+  published_at: string
+  sentiment_label: string
+  topics: string[]
+  url: string
 }
 
 interface SectorData {
@@ -25,10 +45,51 @@ export default function METIContent() {
   const [selectedCountry, setSelectedCountry] = useState<Country | null>(null)
   const [countries, setCountries] = useState<Country[]>([])
   const [loading, setLoading] = useState(true)
+  const [metiScore, setMetiScore] = useState<METIScoreData | null>(null)
+  const [metiLoading, setMetiLoading] = useState(false)
+  const [newsArticles, setNewsArticles] = useState<NewsArticle[]>([])
+  const [sentimentLoading, setSentimentLoading] = useState(false)
+  const [sentimentPulse, setSentimentPulse] = useState<any>(null)
+  const [alerts, setAlerts] = useState<any[]>([])
+  const [pulseLoading, setPulseLoading] = useState(false)
+  const [alertsLoading, setAlertsLoading] = useState(false)
+  const [showCalendar, setShowCalendar] = useState(false)
+  const [selectedDate, setSelectedDate] = useState(new Date())
 
   useEffect(() => {
     loadCountries()
   }, [])
+
+  // Close calendar when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement
+      if (showCalendar && !target.closest('.calendar-container')) {
+        setShowCalendar(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [showCalendar])
+
+  // Reload data when date changes
+  useEffect(() => {
+    if (selectedCountry) {
+      loadMETIScore()
+      loadSentimentData()
+      loadSentimentPulse()
+      loadAlerts()
+    }
+  }, [selectedDate])
+
+  useEffect(() => {
+    if (selectedCountry) {
+      loadMETIScore()
+      loadSentimentData()
+      loadSentimentPulse()
+      loadAlerts()
+    }
+  }, [selectedCountry])
 
   const loadCountries = async () => {
     try {
@@ -44,6 +105,87 @@ export default function METIContent() {
       console.error('Error loading countries:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const loadMETIScore = async () => {
+    if (!selectedCountry) return
+
+    try {
+      setMetiLoading(true)
+      const response = await metiApi.getScoresByCountry(selectedCountry.id)
+
+      if (response.data.success && response.data.data && response.data.data.length > 0) {
+        const latestScore = response.data.data[0]
+        setMetiScore({
+          score: latestScore.score,
+          year: latestScore.year,
+          entryRecommendation: latestScore.entryRecommendation,
+          confidenceLevel: latestScore.confidenceLevel,
+          trendScore: latestScore.trendScore,
+          volatilityScore: latestScore.volatilityScore,
+          momentumScore: latestScore.momentumScore
+        })
+      }
+    } catch (error) {
+      console.error('Error loading METI score:', error)
+      setMetiScore(null)
+    } finally {
+      setMetiLoading(false)
+    }
+  }
+
+  const loadSentimentData = async () => {
+    if (!selectedCountry) return
+
+    try {
+      setSentimentLoading(true)
+      const response = await sentimentApi.getNews(selectedCountry.id, 30)
+
+      if (response.data.success && response.data.data) {
+        setNewsArticles(response.data.data)
+      }
+    } catch (error) {
+      console.error('Error loading sentiment data:', error)
+      setNewsArticles([])
+    } finally {
+      setSentimentLoading(false)
+    }
+  }
+
+  const loadSentimentPulse = async () => {
+    if (!selectedCountry) return
+
+    try {
+      setPulseLoading(true)
+      const response = await sentimentApi.getPulse(selectedCountry.id)
+
+      if (response.data.success && response.data.data) {
+        setSentimentPulse(response.data.data)
+      }
+    } catch (error) {
+      console.error('Error loading sentiment pulse:', error)
+      setSentimentPulse(null)
+    } finally {
+      setPulseLoading(false)
+    }
+  }
+
+  const loadAlerts = async () => {
+    if (!selectedCountry) return
+
+    try {
+      setAlertsLoading(true)
+      const response = await sentimentApi.getAlerts(selectedCountry.id)
+
+      if (response.data.success && response.data.data) {
+        setAlerts(response.data.data)
+      }
+    } catch (error) {
+      console.error('Error loading alerts:', error)
+      setAlerts([])
+    } finally {
+      setAlertsLoading(false)
     }
   }
 
@@ -65,6 +207,167 @@ export default function METIContent() {
     }
     return flagMap[countryName] || null
   }
+
+  // Calculate sentiment distribution from news articles
+  const calculateSentimentMix = () => {
+    if (newsArticles.length === 0) {
+      return { positive: 40, neutral: 25, negative: 35 }
+    }
+
+    const positive = newsArticles.filter(a => a.sentiment_label === 'positive').length
+    const negative = newsArticles.filter(a => a.sentiment_label === 'negative').length
+    const neutral = newsArticles.filter(a => a.sentiment_label === 'neutral').length
+    const total = newsArticles.length
+
+    return {
+      positive: Math.round((positive / total) * 100),
+      neutral: Math.round((neutral / total) * 100),
+      negative: Math.round((negative / total) * 100),
+    }
+  }
+
+  // Get dominant sentiment for Zawadi Signal card
+  const getDominantSentiment = () => {
+    const sentimentMix = calculateSentimentMix()
+    const max = Math.max(sentimentMix.positive, sentimentMix.neutral, sentimentMix.negative)
+
+    if (sentimentMix.positive === max) {
+      return { label: 'Strong Entry', badge: 'bg-green-100 text-green-800', signal: 'Bullish' }
+    } else if (sentimentMix.neutral === max) {
+      return { label: 'Neutral', badge: 'bg-yellow-100 text-yellow-800', signal: 'Neutral' }
+    } else {
+      return { label: 'Caution', badge: 'bg-red-100 text-red-800', signal: 'Bearish' }
+    }
+  }
+
+  // Get sentiment pulse display data
+  const getSentimentPulseDisplay = () => {
+    if (!sentimentPulse) {
+      return {
+        label: 'Positive',
+        color: 'text-green-600',
+        trend: 'Upward',
+        icon: '📈'
+      }
+    }
+
+    const sentiment = sentimentPulse.overall_sentiment || 0
+
+    if (sentiment > 20) {
+      return {
+        label: 'Positive',
+        color: 'text-green-600',
+        trend: sentimentPulse.sentiment_trend || 'Upward',
+        icon: '📈'
+      }
+    } else if (sentiment < -20) {
+      return {
+        label: 'Negative',
+        color: 'text-red-600',
+        trend: sentimentPulse.sentiment_trend || 'Downward',
+        icon: '📉'
+      }
+    } else {
+      return {
+        label: 'Neutral',
+        color: 'text-yellow-600',
+        trend: sentimentPulse.sentiment_trend || 'Stable',
+        icon: '📊'
+      }
+    }
+  }
+
+  // Generate alerts from news articles and METI score
+  const generateAlertsFromNews = () => {
+    if (newsArticles.length === 0) {
+      return []
+    }
+
+    const generatedAlerts = []
+    const sentimentMix = calculateSentimentMix()
+
+    // Alert if negative sentiment is high (>50%)
+    if (sentimentMix.negative > 50) {
+      generatedAlerts.push({
+        severity: 'critical',
+        message: `High negative sentiment detected: ${sentimentMix.negative}% of recent news is negative`
+      })
+    }
+
+    // Alert if negative sentiment is moderate (40-50%)
+    if (sentimentMix.negative >= 40 && sentimentMix.negative <= 50) {
+      generatedAlerts.push({
+        severity: 'warning',
+        message: `Elevated negative sentiment: ${sentimentMix.negative}% of recent news is negative`
+      })
+    }
+
+    // Alert if positive sentiment dropped significantly (< 30%)
+    if (sentimentMix.positive < 30) {
+      generatedAlerts.push({
+        severity: 'warning',
+        message: `Low positive sentiment: Only ${sentimentMix.positive}% of recent news is positive`
+      })
+    }
+
+    // Alert if METI score is below 50
+    if (metiScore && metiScore.score < 50) {
+      generatedAlerts.push({
+        severity: 'critical',
+        message: `METI score below 50: Current score is ${metiScore.score.toFixed(0)}`
+      })
+    }
+
+    return generatedAlerts
+  }
+
+  // Get alerts summary
+  const getAlertsSummary = () => {
+    const allAlerts = alerts.length > 0 ? alerts : generateAlertsFromNews()
+
+    if (allAlerts.length === 0) {
+      return {
+        critical: 0,
+        total: 0,
+        message: 'All systems operating normally'
+      }
+    }
+
+    const critical = allAlerts.filter(a => a.severity === 'critical' || a.severity === 'high').length
+
+    return {
+      critical,
+      total: allAlerts.length,
+      message: allAlerts[0]?.description || allAlerts[0]?.message || 'Recent alert detected'
+    }
+  }
+
+  // METI helpers
+  const getMETIStatus = (score: number) => {
+    if (score >= 70) return 'Strong Bullish'
+    if (score >= 60) return 'Bullish'
+    if (score >= 50) return 'Neutral'
+    if (score >= 40) return 'Bearish'
+    return 'Strong Bearish'
+  }
+
+  const getMETIColor = (score: number) => {
+    if (score >= 60) return '#10b981' // green
+    if (score >= 40) return '#f59e0b' // yellow
+    return '#ef4444' // red
+  }
+
+  const getMETITextColor = (score: number) => {
+    if (score >= 60) return 'text-green-600'
+    if (score >= 40) return 'text-yellow-600'
+    return 'text-red-600'
+  }
+
+  // Get display values
+  const displayScore = metiScore?.score ?? 72
+  const dominantSentiment = getDominantSentiment()
+  const sentimentPulseDisplay = getSentimentPulseDisplay()
+  const alertsSummary = getAlertsSummary()
 
   // Mock data
   const sectorData: SectorData[] = [
@@ -116,35 +419,156 @@ export default function METIContent() {
       {/* Country Selector and Date */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center overflow-hidden flex-shrink-0">
-            {getCountryFlag(selectedCountry.name) ? (
-              <img
-                src={getCountryFlag(selectedCountry.name)!}
-                alt={selectedCountry.name}
-                width="40"
-                height="40"
-                style={{ width: '40px', height: '40px', objectFit: 'cover', display: 'block' }}
-              />
-            ) : (
-              <span className="text-lg">🌍</span>
-            )}
+          <div className="relative">
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center overflow-hidden flex-shrink-0 pointer-events-none z-10">
+              {getCountryFlag(selectedCountry.name) ? (
+                <img
+                  src={getCountryFlag(selectedCountry.name)!}
+                  alt={selectedCountry.name}
+                  width="32"
+                  height="32"
+                  style={{ width: '32px', height: '32px', objectFit: 'cover', display: 'block' }}
+                />
+              ) : (
+                <span className="text-base">🌍</span>
+              )}
+            </div>
+            <select
+              value={selectedCountry.id}
+              onChange={(e) => {
+                const country = countries.find(c => c.id === parseInt(e.target.value))
+                setSelectedCountry(country || null)
+              }}
+              className="bg-white text-gray-900 pl-14 pr-10 py-2 rounded-lg border-2 border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm appearance-none cursor-pointer"
+            >
+              {countries.map(country => (
+                <option key={country.id} value={country.id}>{country.name}</option>
+              ))}
+            </select>
+            <svg
+              className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-600"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
           </div>
-          <select
-            value={selectedCountry.id}
-            onChange={(e) => {
-              const country = countries.find(c => c.id === parseInt(e.target.value))
-              setSelectedCountry(country || null)
-            }}
-            className="bg-white text-gray-900 px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
-          >
-            {countries.map(country => (
-              <option key={country.id} value={country.id}>{country.name}</option>
-            ))}
-          </select>
         </div>
-        <div className="flex items-center space-x-2 text-gray-600">
-          <span>📅</span>
-          <span>Sunday, 12 September, 2025</span>
+        <div className="relative calendar-container">
+          <button
+            onClick={() => setShowCalendar(!showCalendar)}
+            className="flex items-center gap-2 text-gray-600 bg-white px-4 py-2 rounded-lg border border-gray-200 shadow-sm hover:border-gray-300 transition-colors cursor-pointer"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <span className="text-sm font-medium">
+              {selectedDate.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+            </span>
+          </button>
+
+          {/* Calendar Dropdown */}
+          {showCalendar && (
+            <div className="absolute right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-xl p-4 z-50 w-80">
+              <div className="flex items-center justify-between mb-4">
+                <button
+                  onClick={() => {
+                    const newDate = new Date(selectedDate)
+                    newDate.setMonth(newDate.getMonth() - 1)
+                    setSelectedDate(newDate)
+                  }}
+                  className="p-1.5 hover:bg-gray-100 rounded transition-colors"
+                >
+                  <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <span className="text-base font-semibold text-gray-900">
+                  {selectedDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                </span>
+                <button
+                  onClick={() => {
+                    const newDate = new Date(selectedDate)
+                    newDate.setMonth(newDate.getMonth() + 1)
+                    setSelectedDate(newDate)
+                  }}
+                  className="p-1.5 hover:bg-gray-100 rounded transition-colors"
+                >
+                  <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Calendar Grid */}
+              <div className="grid grid-cols-7 gap-1 text-center mb-2">
+                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                  <div key={day} className="text-xs font-medium text-gray-500 p-2">{day}</div>
+                ))}
+                {(() => {
+                  const year = selectedDate.getFullYear()
+                  const month = selectedDate.getMonth()
+                  const firstDay = new Date(year, month, 1).getDay()
+                  const daysInMonth = new Date(year, month + 1, 0).getDate()
+                  const days = []
+
+                  // Empty cells for days before month starts
+                  for (let i = 0; i < firstDay; i++) {
+                    days.push(<div key={`empty-${i}`} className="p-2"></div>)
+                  }
+
+                  // Days of the month
+                  for (let day = 1; day <= daysInMonth; day++) {
+                    const date = new Date(year, month, day)
+                    const isSelected = date.toDateString() === selectedDate.toDateString()
+                    const isToday = date.toDateString() === new Date().toDateString()
+
+                    days.push(
+                      <button
+                        key={day}
+                        onClick={() => {
+                          setSelectedDate(date)
+                          setShowCalendar(false)
+                        }}
+                        className={`p-2 text-sm rounded-lg hover:bg-gray-100 transition-colors min-w-[32px] min-h-[32px] flex items-center justify-center ${
+                          isSelected ? 'bg-blue-500 text-white hover:bg-blue-600 font-semibold' :
+                          isToday ? 'bg-gray-100 font-semibold text-gray-900' : 'text-gray-700'
+                        }`}
+                      >
+                        {day}
+                      </button>
+                    )
+                  }
+
+                  return days
+                })()}
+              </div>
+
+              <div className="mt-4 pt-4 border-t border-gray-200 flex justify-between">
+                <button
+                  onClick={() => {
+                    setSelectedDate(new Date())
+                    setShowCalendar(false)
+                  }}
+                  className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                >
+                  Today
+                </button>
+                <button
+                  onClick={() => setShowCalendar(false)}
+                  className="text-sm text-gray-600 hover:text-gray-700"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -156,35 +580,45 @@ export default function METIContent() {
             <h3 className="text-sm font-medium text-gray-600">METI Score</h3>
           </div>
           <div className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-2xl font-bold text-black mb-2">Entry Timing</div>
-                <div className="text-sm text-gray-600">Strong Bullish</div>
+            {metiLoading ? (
+              <div className="flex items-center justify-center h-20">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
               </div>
+            ) : (
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-3xl font-bold text-black mb-1">
+                    {displayScore.toFixed(0)}/100
+                  </div>
+                  <div className="text-sm text-gray-600">{getMETIStatus(displayScore)}</div>
+                </div>
 
-              {/* Circular Progress */}
-              <div className="relative w-20 h-20 flex-shrink-0">
-                <svg className="w-20 h-20" viewBox="0 0 36 36">
-                  <path
-                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                    fill="none"
-                    stroke="#e5e7eb"
-                    strokeWidth="2"
-                  />
-                  <path
-                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                    fill="none"
-                    stroke="#10b981"
-                    strokeWidth="2"
-                    strokeDasharray="72, 100"
-                    strokeLinecap="round"
-                  />
-                </svg>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-lg font-bold text-green-600">72</span>
+                {/* Circular Progress */}
+                <div className="relative w-20 h-20 flex-shrink-0">
+                  <svg className="w-20 h-20 transform -rotate-90" viewBox="0 0 36 36">
+                    <path
+                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                      fill="none"
+                      stroke="#e5e7eb"
+                      strokeWidth="2"
+                    />
+                    <path
+                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                      fill="none"
+                      stroke={getMETIColor(displayScore)}
+                      strokeWidth="2"
+                      strokeDasharray={`${displayScore}, 100`}
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className={`text-lg font-bold ${getMETITextColor(displayScore)}`}>
+                      {displayScore.toFixed(0)}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
 
@@ -194,11 +628,19 @@ export default function METIContent() {
             <h3 className="text-sm font-medium text-gray-600">Zawadi Signal</h3>
           </div>
           <div className="p-4">
-            <div className="text-xl font-semibold text-black mb-2">Strong Entry</div>
-            <div className="text-sm text-gray-600 mb-2">Based on multi-signal strength</div>
-            <div className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
-              Bullish
-            </div>
+            {sentimentLoading ? (
+              <div className="flex items-center justify-center h-20">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+              </div>
+            ) : (
+              <>
+                <div className="text-xl font-semibold text-black mb-2">{dominantSentiment.label}</div>
+                <div className="text-sm text-gray-600 mb-2">Based on multi-signal strength</div>
+                <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${dominantSentiment.badge}`}>
+                  {dominantSentiment.signal}
+                </div>
+              </>
+            )}
           </div>
         </div>
 
@@ -208,27 +650,24 @@ export default function METIContent() {
             <h3 className="text-sm font-medium text-gray-600">Sentiment Pulse</h3>
           </div>
           <div className="p-4">
-            <div className="flex items-start justify-between">
-              <div>
-                <div className="text-xl font-semibold text-black mb-2">Positive</div>
+            {pulseLoading ? (
+              <div className="flex items-center justify-center h-20">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+              </div>
+            ) : (
+              <>
+                <div className={`text-xl font-semibold mb-2 ${sentimentPulseDisplay.color}`}>
+                  {sentimentPulseDisplay.label}
+                </div>
                 <div className="text-sm text-gray-600 mb-2">Based on last 30 days</div>
                 <div className="flex items-center space-x-2">
-                  <span className="text-sm text-green-600">Upward</span>
-                  <span className="text-green-600">📈</span>
+                  <span className={`text-sm ${sentimentPulseDisplay.color}`}>
+                    {sentimentPulseDisplay.trend}
+                  </span>
+                  <span>{sentimentPulseDisplay.icon}</span>
                 </div>
-              </div>
-              {/* Mini sentiment chart */}
-              <div className="w-16 h-12">
-                <svg viewBox="0 0 60 40" className="w-full h-full">
-                  <path
-                    d="M 0,35 Q 15,25 30,20 T 60,10"
-                    fill="none"
-                    stroke="#10b981"
-                    strokeWidth="2"
-                  />
-                </svg>
-              </div>
-            </div>
+              </>
+            )}
           </div>
         </div>
 
@@ -238,11 +677,29 @@ export default function METIContent() {
             <h3 className="text-sm font-medium text-gray-600">Alerts</h3>
           </div>
           <div className="p-4">
-            <div className="flex items-center space-x-2 mb-2">
-              <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-              <span className="text-lg font-semibold text-black">1 Critical / 3 New</span>
-            </div>
-            <div className="text-sm text-gray-600">METI dipped below 50 in Kenya</div>
+            {alertsLoading ? (
+              <div className="flex items-center justify-center h-20">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center space-x-2 mb-2">
+                  {alertsSummary.critical > 0 && (
+                    <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                  )}
+                  <span className="text-lg font-semibold text-black">
+                    {alertsSummary.critical > 0
+                      ? `${alertsSummary.critical} Critical / ${alertsSummary.total} New`
+                      : alertsSummary.total > 0
+                      ? `${alertsSummary.total} New`
+                      : 'No alerts'}
+                  </span>
+                </div>
+                <div className="text-sm text-gray-600">
+                  {alertsSummary.message}
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
