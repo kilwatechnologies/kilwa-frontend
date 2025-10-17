@@ -2,13 +2,15 @@ import Image from 'next/image'
 import { useState } from 'react'
 
 interface OnboardingStep3Props {
-  onNext: () => void
+  onNext: (jobTitle: string, industry: string, country: string) => void
   onBack: () => void
+  email: string
 }
 
-export default function OnboardingStep3({ onNext, onBack }: OnboardingStep3Props) {
+export default function OnboardingStep3({ onNext, onBack, email }: OnboardingStep3Props) {
   const [selectedCountry, setSelectedCountry] = useState('Select your country')
   const [selectedIndustry, setSelectedIndustry] = useState('Select your industry')
+  const [jobTitle, setJobTitle] = useState('')
 
   const countries = [
     'Select your country',
@@ -39,12 +41,12 @@ export default function OnboardingStep3({ onNext, onBack }: OnboardingStep3Props
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (selectedCountry && selectedIndustry && selectedCountry !== 'Select your country' && selectedIndustry !== 'Select your industry') {
-      onNext()
+    if (selectedCountry && selectedIndustry && jobTitle && selectedCountry !== 'Select your country' && selectedIndustry !== 'Select your industry') {
+      onNext(jobTitle, selectedIndustry, selectedCountry)
     }
   }
 
-  const isValid = selectedCountry && selectedIndustry && selectedCountry !== 'Select your country' && selectedIndustry !== 'Select your industry'
+  const isValid = selectedCountry && selectedIndustry && jobTitle && selectedCountry !== 'Select your country' && selectedIndustry !== 'Select your industry'
 
   return (
     <div className="w-full max-w-md mx-auto rounded-xl bg-white p-8">
@@ -71,6 +73,18 @@ export default function OnboardingStep3({ onNext, onBack }: OnboardingStep3Props
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Job Title Input */}
+        <div>
+          <input
+            type="text"
+            value={jobTitle}
+            onChange={(e) => setJobTitle(e.target.value)}
+            placeholder="Job Title"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none text-gray-900 bg-white"
+            required
+          />
+        </div>
+
         {/* Country Dropdown */}
         <div className="relative">
           <select

@@ -196,7 +196,25 @@ export const authApi = {
   // User profile
   getCurrentUser: (token: string) =>
     authInstance.get<APIResponse<any>>('/auth/me', { headers: { Authorization: `Bearer ${token}` } }),
-  
+
+  updateProfile: (email: string, firstName?: string, lastName?: string, profilePicture?: string, jobTitle?: string, industry?: string, country?: string) =>
+    authInstance.put<APIResponse<any>>('/auth/profile', {
+      email,
+      first_name: firstName,
+      last_name: lastName,
+      profile_picture: profilePicture,
+      job_title: jobTitle,
+      industry: industry,
+      country: country
+    }),
+
+  changePassword: (email: string, currentPassword: string, newPassword: string) =>
+    authInstance.put<APIResponse<any>>('/auth/change-password', {
+      email,
+      current_password: currentPassword,
+      new_password: newPassword
+    }),
+
   updatePreferences: (preferences: any, token: string) =>
     authInstance.put<APIResponse<any>>('/auth/preferences', preferences, { headers: { Authorization: `Bearer ${token}` } }),
 };

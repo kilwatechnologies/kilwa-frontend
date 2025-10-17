@@ -1,22 +1,24 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { authApi } from '@/lib/api'
 
 type Tab = 'profile' | 'account' | 'notifications'
 
 export default function SettingsContent() {
   const [activeTab, setActiveTab] = useState<Tab>('profile')
-  const [firstName, setFirstName] = useState('Jane')
-  const [lastName, setLastName] = useState('Doe')
-  const [email, setEmail] = useState('abc@gmail.com')
-  const [workplace, setWorkplace] = useState('Other')
-  const [country, setCountry] = useState('Kenya')
-  const [industry, setIndustry] = useState('Other')
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
+  const [email, setEmail] = useState('')
+  const [jobTitle, setJobTitle] = useState('')
+  const [country, setCountry] = useState('')
+  const [industry, setIndustry] = useState('')
   const [showOptions, setShowOptions] = useState(false)
   const [showChangePassword, setShowChangePassword] = useState(false)
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [loading, setLoading] = useState(true)
 
   const [focusAreas, setFocusAreas] = useState({
     macroeconomic: true,
@@ -57,24 +59,118 @@ export default function SettingsContent() {
     return flagMap[countryName] || null
   }
 
+  // Load user data on mount
+  useEffect(() => {
+    const loadUserData = async () => {
+      try {
+        const token = localStorage.getItem('access_token')
+        if (token) {
+          const response = await authApi.getCurrentUser(token)
+          console.log('User data response:', response.data)
+
+          // Handle both response.data.user and response.data.data.user
+          const responseData: any = response.data
+          const userData = responseData.user || responseData.data?.user
+
+          if (userData) {
+            setFirstName(userData.first_name || '')
+            setLastName(userData.last_name || '')
+            setEmail(userData.email || '')
+            setJobTitle(userData.job_title || '')
+            setCountry(userData.country || '')
+            setIndustry(userData.industry || '')
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load user data:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadUserData()
+  }, [])
+
   const handleReset = () => {
-    setFirstName('Jane')
-    setLastName('Doe')
-    setEmail('abc@gmail.com')
-    setWorkplace('Other')
-    setCountry('Kenya')
-    setIndustry('Other')
-    setFocusAreas({
-      macroeconomic: true,
-      optimalTimes: true,
-      political: true,
-      sentiment: false,
-    })
+    // Reset to original loaded values - would need to store original values
+    // For now, reload from API
+    const loadUserData = async () => {
+      try {
+        const token = localStorage.getItem('access_token')
+        if (token) {
+          const response = await authApi.getCurrentUser(token)
+          const responseData: any = response.data
+          const userData = responseData.user || responseData.data?.user
+
+          if (userData) {
+            setFirstName(userData.first_name || '')
+            setLastName(userData.last_name || '')
+            setEmail(userData.email || '')
+            setJobTitle(userData.job_title || '')
+            setCountry(userData.country || '')
+            setIndustry(userData.industry || '')
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load user data:', error)
+      }
+    }
+    loadUserData()
   }
 
-  const handleSave = () => {
-    console.log('Saving settings...')
-    // TODO: API call to save settings
+  const handleSave = async () => {
+    try {
+      const response = await authApi.updateProfile(email, firstName, lastName, undefined, jobTitle, industry, country)
+      console.log('Profile update response:', response)
+
+      // Update localStorage with new email if it was changed (though email is disabled)
+      if (email) {
+        localStorage.setItem('user_email', email)
+        localStorage.setItem('userEmail', email)
+      }
+
+      alert('Settings saved successfully!')
+
+      // Optionally reload the page to update header
+      // window.location.reload()
+    } catch (error) {
+      console.error('Failed to save settings:', error)
+      alert('Failed to save settings. Please try again.')
+    }
+  }
+
+  const handleChangePassword = async () => {
+    try {
+      // Validation
+      if (!currentPassword || !newPassword || !confirmPassword) {
+        alert('Please fill in all password fields')
+        return
+      }
+
+      if (newPassword !== confirmPassword) {
+        alert('New password and confirm password do not match')
+        return
+      }
+
+      if (newPassword.length < 8) {
+        alert('New password must be at least 8 characters long')
+        return
+      }
+
+      await authApi.changePassword(email, currentPassword, newPassword)
+
+      alert('Password changed successfully!')
+
+      // Clear form and go back
+      setShowChangePassword(false)
+      setCurrentPassword('')
+      setNewPassword('')
+      setConfirmPassword('')
+    } catch (error: any) {
+      console.error('Failed to change password:', error)
+      const errorMessage = error?.response?.data?.detail || 'Failed to change password. Please try again.'
+      alert(errorMessage)
+    }
   }
 
   return (
@@ -155,7 +251,7 @@ export default function SettingsContent() {
                   type="text"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
                 />
               </div>
 
@@ -166,7 +262,7 @@ export default function SettingsContent() {
                   type="text"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
                 />
               </div>
 
@@ -176,23 +272,37 @@ export default function SettingsContent() {
                 <input
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  readOnly
+                  disabled
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 bg-gray-100 cursor-not-allowed"
                 />
               </div>
 
-              {/* Workplace */}
+              {/* Job Title */}
               <div>
-                <label className="block text-sm text-gray-600 mb-2">Workplace</label>
+                <label className="block text-sm text-gray-600 mb-2">Job Title</label>
                 <select
-                  value={workplace}
-                  onChange={(e) => setWorkplace(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                  value={jobTitle}
+                  onChange={(e) => setJobTitle(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
                 >
+                  <option value="">Select your job title</option>
+                  <option value="CEO">CEO</option>
+                  <option value="CFO">CFO</option>
+                  <option value="CTO">CTO</option>
+                  <option value="Managing Director">Managing Director</option>
+                  <option value="Director">Director</option>
+                  <option value="Senior Manager">Senior Manager</option>
+                  <option value="Manager">Manager</option>
+                  <option value="Investment Analyst">Investment Analyst</option>
+                  <option value="Financial Analyst">Financial Analyst</option>
+                  <option value="Portfolio Manager">Portfolio Manager</option>
+                  <option value="Consultant">Consultant</option>
+                  <option value="Advisor">Advisor</option>
+                  <option value="Researcher">Researcher</option>
+                  <option value="Entrepreneur">Entrepreneur</option>
+                  <option value="Student">Student</option>
                   <option value="Other">Other</option>
-                  <option value="Startup">Startup</option>
-                  <option value="Corporate">Corporate</option>
-                  <option value="Government">Government</option>
                 </select>
               </div>
 
@@ -212,8 +322,9 @@ export default function SettingsContent() {
                   <select
                     value={country}
                     onChange={(e) => setCountry(e.target.value)}
-                    className="w-full pl-12 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white appearance-none"
+                    className="w-full pl-12 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white appearance-none text-gray-900"
                   >
+                    <option value="">Select your country</option>
                     <option value="Nigeria">Nigeria</option>
                     <option value="Ghana">Ghana</option>
                     <option value="Kenya">Kenya</option>
@@ -241,12 +352,19 @@ export default function SettingsContent() {
                 <select
                   value={industry}
                   onChange={(e) => setIndustry(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
                 >
-                  <option value="Other">Other</option>
-                  <option value="Finance">Finance</option>
+                  <option value="">Select your industry</option>
+                  <option value="Financial Services">Financial Services</option>
                   <option value="Technology">Technology</option>
                   <option value="Healthcare">Healthcare</option>
+                  <option value="Energy & Resources">Energy & Resources</option>
+                  <option value="Manufacturing">Manufacturing</option>
+                  <option value="Real Estate">Real Estate</option>
+                  <option value="Consulting">Consulting</option>
+                  <option value="Government">Government</option>
+                  <option value="Education">Education</option>
+                  <option value="Other">Other</option>
                 </select>
               </div>
               </div>
@@ -511,6 +629,7 @@ export default function SettingsContent() {
                   Back
                 </button>
                 <button
+                  onClick={handleChangePassword}
                   className="px-8 py-3 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
                 >
                   Save changes

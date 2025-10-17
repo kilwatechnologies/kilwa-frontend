@@ -8,9 +8,12 @@ interface OnboardingStep1Props {
   email: string
   userExists: boolean
   isOAuth?: boolean
+  firstName?: string
+  lastName?: string
+  profilePicture?: string
 }
 
-export default function OnboardingStep1({ onNext, onBack, email, userExists, isOAuth = false }: OnboardingStep1Props) {
+export default function OnboardingStep1({ onNext, onBack, email, userExists, isOAuth = false, firstName = '', lastName = '', profilePicture = '' }: OnboardingStep1Props) {
   const [password, setPassword] = useState('')
   const [hasMinLength, setHasMinLength] = useState(false)
   const [hasNumber, setHasNumber] = useState(false)
@@ -56,6 +59,16 @@ export default function OnboardingStep1({ onNext, onBack, email, userExists, isO
       const data = response.data
 
       if (data.success) {
+        // Update profile data if provided (from step-1a and step-1b)
+        if (!userExists && (firstName || lastName || profilePicture)) {
+          try {
+            await authApi.updateProfile(email, firstName, lastName, profilePicture)
+          } catch (profileErr) {
+            console.error('Profile update failed:', profileErr)
+            // Don't block the flow if profile update fails
+          }
+        }
+
         if (userExists && (data as any).tokens) {
           // Existing user logged in - go to dashboard
           const tokens = (data as any).tokens

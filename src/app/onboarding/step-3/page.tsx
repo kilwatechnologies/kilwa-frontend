@@ -1,18 +1,40 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { Suspense } from 'react'
 import OnboardingStep3 from '@/components/onboarding/OnboardingStep3'
+import { authApi } from '@/lib/api'
 
-export default function Step3Page() {
+function Step3Content() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const email = searchParams.get('email') || ''
 
-  const handleNext = () => {
-    router.push('/onboarding/step-4')
+  const handleNext = async (jobTitle: string, industry: string, country: string) => {
+    try {
+      // Update profile with job_title, industry, and country
+      if (email) {
+        await authApi.updateProfile(email, undefined, undefined, undefined, jobTitle, industry, country)
+      }
+      router.push('/onboarding/step-4')
+    } catch (err) {
+      console.error('Failed to update profile with job info:', err)
+      // Continue to next step even if update fails
+      router.push('/onboarding/step-4')
+    }
   }
 
   const handleBack = () => {
     router.push('/onboarding/step-2')
   }
 
-  return <OnboardingStep3 onNext={handleNext} onBack={handleBack} />
+  return <OnboardingStep3 onNext={handleNext} onBack={handleBack} email={email} />
+}
+
+export default function Step3Page() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div></div>}>
+      <Step3Content />
+    </Suspense>
+  )
 }

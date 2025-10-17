@@ -50,11 +50,15 @@ function AuthCallbackContent() {
 
           // For Google OAuth users:
           // - If user exists and verified: go to dashboard
-          // - If new user: go directly to onboarding step-2 (skip password/email verification entirely)
+          // - If new user needs onboarding: go to Personal Info (step-1a)
+          // - If user has completed profile: go to step-2
           if (user?.is_verified) {
             router.push('/dashboard')
+          } else if (!user?.first_name || !user?.last_name) {
+            // New Google user needs to complete Personal Info first
+            router.push(`/onboarding/step-1a?email=${encodeURIComponent(user?.email || '')}&oauth=google`)
           } else {
-            // New Google user - skip step-1 (password) and go directly to step-2
+            // User has profile info, continue with onboarding
             router.push(`/onboarding/step-2?email=${encodeURIComponent(user?.email || '')}&oauth=google`)
           }
         } else {
