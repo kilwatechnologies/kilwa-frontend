@@ -10,6 +10,10 @@ export default function SettingsContent() {
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
+  const [profilePicture, setProfilePicture] = useState('')
+  const [profilePictureBlob, setProfilePictureBlob] = useState('')
+  const [uploadingPhoto, setUploadingPhoto] = useState(false)
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   const [jobTitle, setJobTitle] = useState('')
   const [country, setCountry] = useState('')
   const [industry, setIndustry] = useState('')
@@ -39,6 +43,11 @@ export default function SettingsContent() {
 
   const toggleFocusArea = (key: keyof typeof focusAreas) => {
     setFocusAreas(prev => ({ ...prev, [key]: !prev[key] }))
+  }
+
+  const showToast = (message: string, type: 'success' | 'error') => {
+    setToast({ message, type })
+    setTimeout(() => setToast(null), 3000)
   }
 
   const getCountryFlag = (countryName: string): string | null => {
@@ -76,6 +85,8 @@ export default function SettingsContent() {
             setFirstName(userData.first_name || '')
             setLastName(userData.last_name || '')
             setEmail(userData.email || '')
+            setProfilePicture(userData.profile_picture || '')
+            setProfilePictureBlob(userData.profile_picture_blob || '')
             setJobTitle(userData.job_title || '')
             setCountry(userData.country || '')
             setIndustry(userData.industry || '')
@@ -106,6 +117,8 @@ export default function SettingsContent() {
             setFirstName(userData.first_name || '')
             setLastName(userData.last_name || '')
             setEmail(userData.email || '')
+            setProfilePicture(userData.profile_picture || '')
+            setProfilePictureBlob(userData.profile_picture_blob || '')
             setJobTitle(userData.job_title || '')
             setCountry(userData.country || '')
             setIndustry(userData.industry || '')
@@ -118,9 +131,69 @@ export default function SettingsContent() {
     loadUserData()
   }
 
+  const handleEditPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      showToast('Please select an image file', 'error')
+      return
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      showToast('Image size should be less than 5MB', 'error')
+      return
+    }
+
+    try {
+      setUploadingPhoto(true)
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH_URL}/upload/profile-picture`, {
+        method: 'POST',
+        body: formData,
+      })
+
+      const data = await response.json()
+
+      if (data.success && data.public_url) {
+        setProfilePicture(data.public_url)
+        setProfilePictureBlob(data.blob_name)
+
+        // Update profile immediately
+        await authApi.updateProfile(email, undefined, undefined, data.public_url, data.blob_name)
+        showToast('Profile picture updated successfully!', 'success')
+      } else {
+        showToast('Failed to upload image. Please try again.', 'error')
+      }
+    } catch (error) {
+      console.error('Upload error:', error)
+      showToast('Failed to upload image. Please try again.', 'error')
+    } finally {
+      setUploadingPhoto(false)
+    }
+  }
+
+  const handleRemovePhoto = async () => {
+    try {
+      setProfilePicture('')
+      setProfilePictureBlob('')
+
+      // Update profile to remove picture
+      await authApi.updateProfile(email, undefined, undefined, '', '')
+      showToast('Profile picture removed successfully!', 'success')
+    } catch (error) {
+      console.error('Remove error:', error)
+      showToast('Failed to remove profile picture. Please try again.', 'error')
+    }
+  }
+
   const handleSave = async () => {
     try {
-      const response = await authApi.updateProfile(email, firstName, lastName, undefined, jobTitle, industry, country)
+      const response = await authApi.updateProfile(email, firstName, lastName, undefined, undefined, jobTitle, industry, country)
       console.log('Profile update response:', response)
 
       // Update localStorage with new email if it was changed (though email is disabled)
@@ -129,13 +202,13 @@ export default function SettingsContent() {
         localStorage.setItem('userEmail', email)
       }
 
-      alert('Settings saved successfully!')
+      showToast('Settings saved successfully!', 'success')
 
       // Optionally reload the page to update header
       // window.location.reload()
     } catch (error) {
       console.error('Failed to save settings:', error)
-      alert('Failed to save settings. Please try again.')
+      showToast('Failed to save settings. Please try again.', 'error')
     }
   }
 
@@ -143,23 +216,23 @@ export default function SettingsContent() {
     try {
       // Validation
       if (!currentPassword || !newPassword || !confirmPassword) {
-        alert('Please fill in all password fields')
+        showToast('Please fill in all password fields', 'error')
         return
       }
 
       if (newPassword !== confirmPassword) {
-        alert('New password and confirm password do not match')
+        showToast('New password and confirm password do not match', 'error')
         return
       }
 
       if (newPassword.length < 8) {
-        alert('New password must be at least 8 characters long')
+        showToast('New password must be at least 8 characters long', 'error')
         return
       }
 
       await authApi.changePassword(email, currentPassword, newPassword)
 
-      alert('Password changed successfully!')
+      showToast('Password changed successfully!', 'success')
 
       // Clear form and go back
       setShowChangePassword(false)
@@ -169,7 +242,7 @@ export default function SettingsContent() {
     } catch (error: any) {
       console.error('Failed to change password:', error)
       const errorMessage = error?.response?.data?.detail || 'Failed to change password. Please try again.'
-      alert(errorMessage)
+      showToast(errorMessage, 'error')
     }
   }
 
@@ -220,21 +293,44 @@ export default function SettingsContent() {
             <div className="rounded-2xl p-6" style={{ backgroundColor: '#F8FAFB' }}>
               <h2 className="text-lg font-semibold text-black mb-4">Avatar</h2>
               <div className="flex items-center gap-4">
-                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-pink-400 to-orange-400 flex items-center justify-center text-white text-2xl font-bold">
-                  JD
-                </div>
-                <button className="px-4 py-2 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors flex items-center gap-2">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="stroke-current">
-                  <path d="M11.334 2.00004C11.5091 1.82494 11.7169 1.68605 11.9457 1.59129C12.1745 1.49653 12.4197 1.44775 12.6673 1.44775C12.9149 1.44775 13.1601 1.49653 13.3889 1.59129C13.6177 1.68605 13.8256 1.82494 14.0007 2.00004C14.1757 2.17513 14.3146 2.383 14.4094 2.61178C14.5042 2.84055 14.5529 3.08575 14.5529 3.33337C14.5529 3.58099 14.5042 3.82619 14.4094 4.05497C14.3146 4.28374 14.1757 4.49161 14.0007 4.66671L5.00065 13.6667L1.33398 14.6667L2.33398 11L11.334 2.00004Z" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                Edit photo
-              </button>
-              <button className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors flex items-center gap-2">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="stroke-current">
-                  <path d="M12 4L4 12M4 4L12 12" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                Remove
-              </button>
+                {profilePicture ? (
+                  <img
+                    src={profilePicture}
+                    alt="Profile"
+                    className="w-20 h-20 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-pink-400 to-orange-400 flex items-center justify-center text-white text-2xl font-bold">
+                    {firstName && lastName ? `${firstName.charAt(0)}${lastName.charAt(0)}` : 'JD'}
+                  </div>
+                )}
+                <input
+                  type="file"
+                  id="profile-picture-input"
+                  accept="image/*"
+                  onChange={handleEditPhoto}
+                  className="hidden"
+                />
+                <button
+                  onClick={() => document.getElementById('profile-picture-input')?.click()}
+                  disabled={uploadingPhoto}
+                  className="px-4 py-2 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="stroke-current">
+                    <path d="M11.334 2.00004C11.5091 1.82494 11.7169 1.68605 11.9457 1.59129C12.1745 1.49653 12.4197 1.44775 12.6673 1.44775C12.9149 1.44775 13.1601 1.49653 13.3889 1.59129C13.6177 1.68605 13.8256 1.82494 14.0007 2.00004C14.1757 2.17513 14.3146 2.383 14.4094 2.61178C14.5042 2.84055 14.5529 3.08575 14.5529 3.33337C14.5529 3.58099 14.5042 3.82619 14.4094 4.05497C14.3146 4.28374 14.1757 4.49161 14.0007 4.66671L5.00065 13.6667L1.33398 14.6667L2.33398 11L11.334 2.00004Z" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  {uploadingPhoto ? 'Uploading...' : 'Edit photo'}
+                </button>
+                <button
+                  onClick={handleRemovePhoto}
+                  disabled={!profilePicture || uploadingPhoto}
+                  className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="stroke-current">
+                    <path d="M12 4L4 12M4 4L12 12" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  Remove
+                </button>
               </div>
             </div>
           </div>
@@ -586,7 +682,9 @@ export default function SettingsContent() {
                   type="password"
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                  autoComplete="off"
+                  data-form-type="other"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
                   placeholder="**************"
                 />
               </div>
@@ -598,7 +696,9 @@ export default function SettingsContent() {
                   type="password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                  autoComplete="new-password"
+                  data-form-type="other"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
                   placeholder="Enter New Password"
                 />
               </div>
@@ -610,7 +710,9 @@ export default function SettingsContent() {
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                  autoComplete="new-password"
+                  data-form-type="other"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
                   placeholder="Re-enter your Password"
                 />
               </div>
@@ -816,6 +918,26 @@ export default function SettingsContent() {
               Save changes
             </button>
           </div>
+        </div>
+      )}
+
+      {/* Toast Notification */}
+      {toast && (
+        <div
+          className={`fixed bottom-8 right-8 px-6 py-4 rounded-lg shadow-lg flex items-center gap-3 animate-fade-in z-50 ${
+            toast.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+          }`}
+        >
+          {toast.type === 'success' ? (
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="flex-shrink-0">
+              <path d="M16.667 5L7.5 14.167L3.333 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          ) : (
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="flex-shrink-0">
+              <path d="M10 6V10M10 14H10.01M18 10C18 14.4183 14.4183 18 10 18C5.58172 18 2 14.4183 2 10C2 5.58172 5.58172 2 10 2C14.4183 2 18 5.58172 18 10Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          )}
+          <span className="font-medium">{toast.message}</span>
         </div>
       )}
     </div>

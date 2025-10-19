@@ -14,6 +14,7 @@ export default function OnboardingVerifyEmail({ onNext, onBack, email }: Onboard
   const [code, setCode] = useState(['', '', '', '', '', ''])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -72,6 +73,8 @@ export default function OnboardingVerifyEmail({ onNext, onBack, email }: Onboard
 
   const handleResendCode = async () => {
     try {
+      setError('')
+
       const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH_URL}/auth/resend-verification`, {
         method: 'POST',
         headers: {
@@ -81,15 +84,18 @@ export default function OnboardingVerifyEmail({ onNext, onBack, email }: Onboard
       })
 
       const data = await response.json()
-      
+
       if (data.success) {
+        setSuccessMessage('A new verification code has been sent to your email.')
         setError('')
-        // Show success message briefly
+        // Clear success message after 5 seconds
+        setTimeout(() => setSuccessMessage(''), 5000)
       } else {
-        setError('Failed to resend code')
+        setError(data.message || 'Failed to resend code')
+        setSuccessMessage('')
       }
     } catch (err) {
-      setError('Failed to resend code')
+      setError('Failed to resend code. Please try again.')
     }
   }
 
@@ -102,7 +108,7 @@ export default function OnboardingVerifyEmail({ onNext, onBack, email }: Onboard
         <div className="w-full max-w-md text-center">
           {/* Logo */}
           <div className="mb-8">
-             <div className="flex justify-center mb-8">
+             <div className="flex justify-center mb-4">
                             <Image 
                                        src="/assets/small-logo.svg" 
                                        alt="Kilwa Logo" 
@@ -111,11 +117,11 @@ export default function OnboardingVerifyEmail({ onNext, onBack, email }: Onboard
                                        className="object-contain"
                                      />
                          </div>
-            <h1 className="text-2xl font-semibold text-gray-900 mb-2">
+            <h1 className="text-[32px] font-semibold text-gray-900 mb-2">
               Verify your email
             </h1>
-            <p className="text-gray-600">
-              Enter the 6 digit code sent to {email}
+            <p className="text-[#989898]">
+              Enter the 6 digit code sent to <span className='text-[#686868]'>{email}</span>
               <br />
               within the next 30 minutes.
             </p>
@@ -164,18 +170,20 @@ export default function OnboardingVerifyEmail({ onNext, onBack, email }: Onboard
                     id={`code-${index}`}
                     className="w-12 h-12 border border-gray-300 rounded-lg bg-white text-gray-900 text-center text-xl font-medium focus:ring-2 focus:ring-black focus:border-transparent"
                     maxLength={1}
-                    required
                   />
                 ))}
               </div>
               {error && (
                 <p className="mt-2 text-sm text-red-600 text-center">{error}</p>
               )}
+              {successMessage && (
+                <p className="mt-2 text-sm text-green-600 text-center">{successMessage}</p>
+              )}
             </div>
 
             {/* Resend Code */}
             <div className="text-center">
-              <span className="text-gray-600">Didn't receive code? </span>
+              <span className="text-[#989898]">Didn't receive code? </span>
               <button
                 type="button"
                 onClick={handleResendCode}
@@ -188,7 +196,7 @@ export default function OnboardingVerifyEmail({ onNext, onBack, email }: Onboard
             {/* Continue Button */}
             <button
               type="submit"
-              disabled={loading || code.join('').length !== 6}
+              disabled={loading}
               className="w-full bg-black text-white py-3 px-4 rounded-lg font-medium hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Verifying...' : 'Continue'}

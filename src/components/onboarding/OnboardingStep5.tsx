@@ -57,7 +57,7 @@ export default function OnboardingStep5({ onComplete, onBack }: OnboardingStep5P
       icon: '/assets/card1.svg',
       price: { monthly: 2499, yearly: 24999 },
       description: 'All features, 15 countries, full dashboard access, export tools',
-      subDescription: 'Best for: Investment Teams & Corporations',
+      subDescription: 'Best for: Analysts, boutique investors, consultants',
       features: [
         'Basic ISI Scores',
         'Top-10 Rankings',
@@ -164,7 +164,7 @@ export default function OnboardingStep5({ onComplete, onBack }: OnboardingStep5P
       <div className="text-center py-8">
       
         
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+        <h1 className="text-[32px] font-bold text-gray-900 mb-2">
           Unlock Full Access to Kilwa
         </h1>
         <p className="text-gray-600">
@@ -199,23 +199,38 @@ export default function OnboardingStep5({ onComplete, onBack }: OnboardingStep5P
       </div>
 
       {/* Pricing Cards */}
-      <div className="max-w-6xl mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="max-w-6xl mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-12 mb-8">
         {plans.map((plan) => (
-          <div
-            key={plan.id}
-            className={`relative shadow-xl border rounded-xl p-6 ${
-              plan.highlighted ? 'border-gray-900 bg-gray-900 text-white' : 'bg-white border-gray-200'
-            }`}
-          >
+          <div key={plan.id} className="relative">
+            {/* Background color layer */}
+            <div
+              className="absolute -inset-2 rounded-2xl bg-gray-100"
+              style={{
+                zIndex: 0
+              }}
+            />
+            {/* Card */}
+            <div
+              className={`relative shadow-xl border rounded-xl p-6 flex flex-col h-full ${
+                plan.highlighted ? 'border-gray-900 bg-black text-white' : 'bg-white border-gray-200'
+              }`}
+              style={{
+                zIndex: 1
+              }}
+            >
             {/* Icon */}
             <div className="mb-4">
-              <Image 
-                src={plan.icon} 
-                alt={`${plan.name} plan icon`} 
-                width={24} 
-                height={24}
-                className="object-contain"
-              />
+              <div className={`inline-flex p-3 rounded-lg shadow-sm ${
+                plan.highlighted ? 'bg-[#2E2E2E] shadow-lg' : 'bg-white shadow-lg border border-gray-100'
+              }`}>
+                <Image
+                  src={plan.icon}
+                  alt={`${plan.name} plan icon`}
+                  width={24}
+                  height={24}
+                  className="object-contain"
+                />
+              </div>
             </div>
             
             {/* Plan Name & Price */}
@@ -246,17 +261,20 @@ export default function OnboardingStep5({ onComplete, onBack }: OnboardingStep5P
               </p>
             </div>
 
+            {/* Divider */}
+            <div className={`border-t mb-6 ${plan.highlighted ? 'border-gray-700' : 'border-gray-200'}`}></div>
+
             {/* Features */}
-            <div className="space-y-2 mb-6">
+            <div className="space-y-2 mb-6 flex-grow">
               {plan.features.map((feature) => (
                 <div key={feature} className="flex items-center">
-                  {(plan.id === 'free' || plan.id === 'platinum') ? (
+                  {(plan.id === 'free' || plan.id === 'diamond') ? (
                     <svg className={`w-4 h-4 mr-2 ${plan.highlighted ? 'text-gray-300' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 20 20">
                       <circle cx="10" cy="10" r="8" strokeWidth="1.5" />
                       <path d="M6.5 10.5l2.5 2.5 5-5" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   ) : (
-                    <span className={`text-sm mr-2 ${plan.highlighted ? 'text-gray-300' : 'text-gray-400'}`}>+</span>
+                    <span className={`text-sm mr-2 ${plan.highlighted ? 'text-gray-300' : 'text-[#1E1E1E]'}`}>+</span>
                   )}
                   <span className={`text-sm ${plan.highlighted ? 'text-gray-300' : 'text-gray-600'}`}>
                     {feature}
@@ -283,6 +301,7 @@ export default function OnboardingStep5({ onComplete, onBack }: OnboardingStep5P
                 plan.buttonText
               )}
             </button>
+            </div>
           </div>
         ))}
       </div>

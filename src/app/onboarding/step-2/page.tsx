@@ -12,13 +12,14 @@ function Step2Content() {
   const firstName = searchParams.get('firstName') || ''
   const lastName = searchParams.get('lastName') || ''
   const profilePicture = searchParams.get('profilePicture') || ''
+  const blobName = searchParams.get('blobName') || ''
 
   // Update profile for OAuth users when they reach step-2
   useEffect(() => {
     const updateOAuthProfile = async () => {
       if (email && (firstName || lastName || profilePicture)) {
         try {
-          await authApi.updateProfile(email, firstName, lastName, profilePicture)
+          await authApi.updateProfile(email, firstName, lastName, profilePicture, blobName)
         } catch (err) {
           console.error('Failed to update OAuth user profile:', err)
         }
@@ -26,13 +27,16 @@ function Step2Content() {
     }
 
     updateOAuthProfile()
-  }, [email, firstName, lastName, profilePicture])
+  }, [email, firstName, lastName, profilePicture, blobName])
 
   const handleNext = () => {
     // Pass email to step-3
+    console.log('Step 2 - Passing email to step 3:', email)
     const params = new URLSearchParams()
     if (email) params.append('email', email)
-    router.push(`/onboarding/step-3?${params.toString()}`)
+    const nextUrl = `/onboarding/step-3?${params.toString()}`
+    console.log('Step 2 - Navigating to:', nextUrl)
+    router.push(nextUrl)
   }
 
   const handleBack = () => {

@@ -37,14 +37,18 @@ export default function OnboardingWelcome({ onStart }: OnboardingWelcomeProps) {
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!email) return
+
+    if (!email) {
+      setError('Please enter your email address')
+      return
+    }
 
     setLoading(true)
     setError('')
 
     try {
       const response = await authApi.initiateAuth(email)
-      
+
       if (response.data.success) {
         const userExists = (response.data as any).user?.exists || false
         onStart(email, userExists)
@@ -62,7 +66,7 @@ export default function OnboardingWelcome({ onStart }: OnboardingWelcomeProps) {
   return (
     <div className="w-full max-w-md mx-auto p-8 bg-white rounded-xl">
         {/* Centered Logo */}
-        <div className="flex justify-center mb-8">
+        <div className="flex justify-center mb-4">
            <Image 
                       src="/assets/small-logo.svg" 
                       alt="Kilwa Logo" 
@@ -74,7 +78,7 @@ export default function OnboardingWelcome({ onStart }: OnboardingWelcomeProps) {
 
         {/* Title */}
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-semibold text-gray-900 mb-2">
+          <h1 className="text-[32px] font-semibold text-gray-900 mb-2">
             Get started with Kilwa
           </h1>
         </div>
@@ -83,7 +87,7 @@ export default function OnboardingWelcome({ onStart }: OnboardingWelcomeProps) {
         <button
           onClick={handleGoogleAuth}
           disabled={loading}
-          className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg shadow-sm bg-white text-gray-700 hover:bg-gray-50 transition-colors mb-4 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg shadow-sm bg-white text-gray-900 font-medium hover:bg-gray-50 transition-colors mb-4 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -106,21 +110,25 @@ export default function OnboardingWelcome({ onStart }: OnboardingWelcomeProps) {
 
         {/* Email Form */}
         <form onSubmit={handleEmailSubmit} className="space-y-4">
-          <div>
-            <input
-              type="email"
-              placeholder="Enter your email address"
-              value={email}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.currentTarget.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none bg-white text-gray-900 placeholder-gray-500"
-              required
-            />
-          </div>
+         <div className="relative w-full">
+  <img
+    src="/assets/email.svg"
+    alt="email icon"
+    className="absolute left-3 top-[51%] -translate-y-1/2 w-5 h-5 text-gray-500"
+  />
+  <input
+    type="email"
+    placeholder="Enter your email address"
+    value={email}
+    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.currentTarget.value)}
+    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg outline-none bg-white text-gray-900 placeholder-gray-500"
+  />
+</div>
           
           <button
             type="submit"
-            disabled={loading || !email}
-            className="w-full bg-gray-900 hover:bg-gray-800 text-white font-medium py-3 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={loading}
+            className="w-full bg-black hover:bg-gray-800 text-white font-medium py-3 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? 'Checking...' : 'Continue with email'}
           </button>

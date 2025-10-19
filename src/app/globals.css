@@ -5,8 +5,17 @@
 @layer base {
   body {
     @apply bg-black text-white;
+    font-family: var(--font-inter), sans-serif;
   }
+  
+  h1,h2, h3,h4 {
+    font-family: var(--font-geist-sans), sans-serif;
+  }
+
+
 }
+
+
 
 @layer components {
   .btn-primary {

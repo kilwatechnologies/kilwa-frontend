@@ -13,6 +13,7 @@ function Step1Content() {
   const firstName = searchParams.get('firstName') || ''
   const lastName = searchParams.get('lastName') || ''
   const profilePicture = searchParams.get('profilePicture') || ''
+  const blobName = searchParams.get('blobName') || ''
 
   const handleNext = (email: string, skipOnboarding: boolean = false) => {
     if (skipOnboarding) {
@@ -23,7 +24,7 @@ function Step1Content() {
         router.push(`/onboarding/step-2?email=${encodeURIComponent(email)}`)
       } else {
         // New email/password user - needs email verification
-        router.push(`/onboarding/verify-email?email=${encodeURIComponent(email)}&firstName=${encodeURIComponent(firstName)}&lastName=${encodeURIComponent(lastName)}&profilePicture=${encodeURIComponent(profilePicture)}`)
+        router.push(`/onboarding/verify-email?email=${encodeURIComponent(email)}&firstName=${encodeURIComponent(firstName)}&lastName=${encodeURIComponent(lastName)}&profilePicture=${encodeURIComponent(profilePicture)}&blobName=${encodeURIComponent(blobName)}`)
       }
     }
   }
@@ -32,7 +33,7 @@ function Step1Content() {
     router.push(`/onboarding/step-1b?email=${encodeURIComponent(email)}&firstName=${encodeURIComponent(firstName)}&lastName=${encodeURIComponent(lastName)}`)
   }
 
-  return <OnboardingStep1 onNext={handleNext} onBack={handleBack} email={email} userExists={userExists} isOAuth={isOAuth} firstName={firstName} lastName={lastName} profilePicture={profilePicture} />
+  return <OnboardingStep1 onNext={handleNext} onBack={handleBack} email={email} userExists={userExists} isOAuth={isOAuth} firstName={firstName} lastName={lastName} profilePicture={profilePicture} blobName={blobName} />
 }
 
 export default function Step1Page() {

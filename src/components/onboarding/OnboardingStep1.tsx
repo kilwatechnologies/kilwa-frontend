@@ -11,9 +11,10 @@ interface OnboardingStep1Props {
   firstName?: string
   lastName?: string
   profilePicture?: string
+  blobName?: string
 }
 
-export default function OnboardingStep1({ onNext, onBack, email, userExists, isOAuth = false, firstName = '', lastName = '', profilePicture = '' }: OnboardingStep1Props) {
+export default function OnboardingStep1({ onNext, onBack, email, userExists, isOAuth = false, firstName = '', lastName = '', profilePicture = '', blobName = '' }: OnboardingStep1Props) {
   const [password, setPassword] = useState('')
   const [hasMinLength, setHasMinLength] = useState(false)
   const [hasNumber, setHasNumber] = useState(false)
@@ -39,11 +40,18 @@ export default function OnboardingStep1({ onNext, onBack, email, userExists, isO
     setHasUpperCase(/[A-Z]/.test(value))
   }
 
-  const isValid = userExists ? password.length > 0 : (hasMinLength && hasNumber && hasUpperCase)
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!isValid) return
+
+    if (!password) {
+      setError('Please enter a password')
+      return
+    }
+
+    if (!userExists && (!hasMinLength || !hasNumber || !hasUpperCase)) {
+      setError('Password must meet all requirements')
+      return
+    }
 
     setLoading(true)
     setError('')
@@ -62,11 +70,15 @@ export default function OnboardingStep1({ onNext, onBack, email, userExists, isO
         // Update profile data if provided (from step-1a and step-1b)
         if (!userExists && (firstName || lastName || profilePicture)) {
           try {
-            await authApi.updateProfile(email, firstName, lastName, profilePicture)
+            console.log('Updating profile with:', { email, firstName, lastName, profilePicture, blobName })
+            await authApi.updateProfile(email, firstName, lastName, profilePicture, blobName)
+            console.log('Profile updated successfully')
           } catch (profileErr) {
             console.error('Profile update failed:', profileErr)
             // Don't block the flow if profile update fails
           }
+        } else {
+          console.log('Skipping profile update - conditions not met:', { userExists, firstName, lastName, profilePicture })
         }
 
         if (userExists && (data as any).tokens) {
@@ -96,7 +108,7 @@ export default function OnboardingStep1({ onNext, onBack, email, userExists, isO
   return (
     <div className="w-full max-w-md bg-white rounded-xl mx-auto p-8">
       {/* Centered Logo */}
-      <div className="flex justify-center mb-8">
+      <div className="flex justify-center mb-4">
                 <Image 
                            src="/assets/small-logo.svg" 
                            alt="Kilwa Logo" 
@@ -108,7 +120,7 @@ export default function OnboardingStep1({ onNext, onBack, email, userExists, isO
 
       {/* Title */}
       <div className="text-center mb-8">
-        <h1 className="text-2xl font-semibold text-gray-900 mb-2">
+        <h1 className="text-[32px] font-semibold text-gray-900 mb-2">
           {userExists ? 'Enter your password' : 'Set your password'}
         </h1>
       </div>
@@ -116,16 +128,15 @@ export default function OnboardingStep1({ onNext, onBack, email, userExists, isO
       {/* Password Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-[16px] font-medium text-[#989898] mb-2">
             Password
           </label>
           <input
             type="password"
-            placeholder={userExists ? "Enter your password" : "Create password"}
+            placeholder={userExists ? "Enter your password" : "Enter password"}
             value={password}
             onChange={handlePasswordChange}
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white text-gray-900 outline-none"
-            required
           />
         </div>
 
@@ -157,12 +168,8 @@ export default function OnboardingStep1({ onNext, onBack, email, userExists, isO
         
         <button
           type="submit"
-          disabled={!isValid || loading}
-          className={`w-full font-medium py-3 px-4 rounded-lg transition-colors ${
-            isValid && !loading
-              ? 'bg-gray-900 hover:bg-gray-800 text-white' 
-              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-          }`}
+          disabled={loading}
+          className="w-full font-medium py-3 px-4 rounded-lg transition-colors bg-black hover:bg-gray-800 text-white disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? 'Processing...' : 'Continue'}
         </button>

@@ -1,5 +1,6 @@
 import OnboardingNavbar from '@/components/onboarding/OnboardingNavbar'
 
+
 export default function OnboardingLayout({
   children,
 }: {

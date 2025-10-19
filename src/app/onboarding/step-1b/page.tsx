@@ -12,14 +12,14 @@ function Step1bContent() {
   const lastName = searchParams.get('lastName') || ''
   const isOAuth = searchParams.get('oauth') === 'google'
 
-  const handleNext = async (profilePicture: string | null) => {
+  const handleNext = async (profilePicture: string | null, blobName: string | null) => {
     // Move to password step for email signup or step-2 for OAuth
     if (isOAuth) {
       // For OAuth, go directly to step-2 with profile data
-      router.push(`/onboarding/step-2?email=${encodeURIComponent(email)}&firstName=${encodeURIComponent(firstName)}&lastName=${encodeURIComponent(lastName)}&profilePicture=${encodeURIComponent(profilePicture || '')}`)
+      router.push(`/onboarding/step-2?email=${encodeURIComponent(email)}&firstName=${encodeURIComponent(firstName)}&lastName=${encodeURIComponent(lastName)}&profilePicture=${encodeURIComponent(profilePicture || '')}&blobName=${encodeURIComponent(blobName || '')}`)
     } else {
       // For email signup, go to password step (step-1)
-      router.push(`/onboarding/step-1?email=${encodeURIComponent(email)}&firstName=${encodeURIComponent(firstName)}&lastName=${encodeURIComponent(lastName)}&profilePicture=${encodeURIComponent(profilePicture || '')}`)
+      router.push(`/onboarding/step-1?email=${encodeURIComponent(email)}&firstName=${encodeURIComponent(firstName)}&lastName=${encodeURIComponent(lastName)}&profilePicture=${encodeURIComponent(profilePicture || '')}&blobName=${encodeURIComponent(blobName || '')}`)
     }
   }
 

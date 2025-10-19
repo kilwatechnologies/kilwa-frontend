@@ -7,12 +7,12 @@ interface OnboardingStep2Props {
 }
 
 export default function OnboardingStep2({ onNext, onBack }: OnboardingStep2Props) {
-  const [selectedGoals, setSelectedGoals] = useState<string[]>(['macroeconomic', 'news'])
+  const [selectedGoals, setSelectedGoals] = useState<string[]>([])
 
   const goals = [
     { id: 'macroeconomic', label: 'Track macroeconomic risk' },
     { id: 'political', label: 'Monitor political & regulatory shifts' },
-    { id: 'timing', label: 'Find best times to enter a market' },
+    { id: 'timing', label: 'Find optimal times to enter a market' },
     { id: 'news', label: 'Analyze news & sentiment trends' },
   ]
 
@@ -32,7 +32,7 @@ export default function OnboardingStep2({ onNext, onBack }: OnboardingStep2Props
   return (
     <div className="w-full max-w-md mx-auto rounded-xl bg-white p-8">
       {/* Centered Logo */}
-      <div className="flex justify-center mb-8">
+      <div className="flex justify-center mb-4">
                 <Image 
                            src="/assets/small-logo.svg" 
                            alt="Kilwa Logo" 
@@ -44,8 +44,8 @@ export default function OnboardingStep2({ onNext, onBack }: OnboardingStep2Props
 
       {/* Title */}
       <div className="text-center mb-8">
-        <h1 className="text-2xl font-semibold text-gray-900 mb-2">
-          Let's tailor Kilwa to your goals
+        <h1 className="text-[32px] font-semibold text-gray-900 mb-2">
+         Customize Kilwa to <br/>your needs
         </h1>
         <p className="text-gray-600 text-sm">
           Select your primary markets to tailor a dashboard that aligns with your trading focus.

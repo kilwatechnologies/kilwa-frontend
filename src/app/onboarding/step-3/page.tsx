@@ -14,7 +14,11 @@ function Step3Content() {
     try {
       // Update profile with job_title, industry, and country
       if (email) {
-        await authApi.updateProfile(email, undefined, undefined, undefined, jobTitle, industry, country)
+        console.log('Updating profile with:', { email, jobTitle, industry, country })
+        const response = await authApi.updateProfile(email, undefined, undefined, undefined, undefined, jobTitle, industry, country)
+        console.log('Profile update response:', response)
+      } else {
+        console.error('No email provided to update profile')
       }
       router.push('/onboarding/step-4')
     } catch (err) {

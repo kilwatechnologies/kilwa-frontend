@@ -8,12 +8,16 @@ function VerifyEmailContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const email = searchParams.get('email') || ''
+  const firstName = searchParams.get('firstName') || ''
+  const lastName = searchParams.get('lastName') || ''
+  const profilePicture = searchParams.get('profilePicture') || ''
+  const blobName = searchParams.get('blobName') || ''
 
   const handleNext = (skipOnboarding: boolean = false) => {
     if (skipOnboarding) {
       router.push('/dashboard')
     } else {
-      router.push('/onboarding/step-2')
+      router.push(`/onboarding/step-2?email=${encodeURIComponent(email)}&firstName=${encodeURIComponent(firstName)}&lastName=${encodeURIComponent(lastName)}&profilePicture=${encodeURIComponent(profilePicture)}&blobName=${encodeURIComponent(blobName)}`)
     }
   }
 
