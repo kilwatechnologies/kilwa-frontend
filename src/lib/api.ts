@@ -252,4 +252,27 @@ export const sentimentApi = {
     api.get<APIResponse<any>>(`/sentiment/trends/${countryId}?days_back=${daysBack}`),
 };
 
+// Markets API
+export const marketsApi = {
+  // Get macroeconomic KPIs
+  getMacroeconomic: (countryId: number, year: number = 2023) =>
+    api.get<APIResponse<any[]>>(`/markets/macroeconomic?country_id=${countryId}&year=${year}`),
+
+  // Get investment & capital market KPIs
+  getInvestmentCapital: (countryId: number, year: number = 2023) =>
+    api.get<APIResponse<any[]>>(`/markets/investment-capital?country_id=${countryId}&year=${year}`),
+
+  // Get business environment KPIs
+  getBusinessEnvironment: (countryId: number, year: number = 2023) =>
+    api.get<APIResponse<any[]>>(`/markets/business-environment?country_id=${countryId}&year=${year}`),
+
+  // Get political & economic risk KPIs
+  getPoliticalEconomicRisk: (countryId: number, year: number = 2023) =>
+    api.get<APIResponse<any[]>>(`/markets/political-economic-risk?country_id=${countryId}&year=${year}`),
+
+  // Get industry & sector KPIs
+  getIndustrySector: (countryId: number, year: number = 2023) =>
+    api.get<APIResponse<any[]>>(`/markets/industry-sector?country_id=${countryId}&year=${year}`),
+};
+
 export default api;

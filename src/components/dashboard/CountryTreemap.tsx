@@ -15,9 +15,10 @@ interface Country {
 interface CountryTreemapProps {
   countries: Country[]
   onCountryClick?: (country: Country) => void
+  onToggleFilters?: () => void
 }
 
-export default function CountryTreemap({ countries, onCountryClick }: CountryTreemapProps) {
+export default function CountryTreemap({ countries, onCountryClick, onToggleFilters }: CountryTreemapProps) {
   const [hoveredCountry, setHoveredCountry] = useState<Country | null>(null)
 
   // Debug logging
@@ -63,7 +64,7 @@ export default function CountryTreemap({ countries, onCountryClick }: CountryTre
     
     return (
       <div key={regionName} className="mb-8">
-        <div className="text-sm text-gray-400 mb-3 font-medium">{regionName}</div>
+        <div className="text-sm text-white mb-3 font-medium">{regionName}</div>
         <div className="flex flex-wrap gap-1" style={{ alignItems: 'flex-start' }}>
           {regionCountries.map((country) => {
             const size = getCountrySize()
@@ -123,26 +124,29 @@ export default function CountryTreemap({ countries, onCountryClick }: CountryTre
         <div className="p-6 pb-8">
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-400">
+              <p className="text-sm" style={{ color: '#B0B2B2' }}>
                 African countries categorized by region and sector. Box size represents ISI score.
               </p>
             </div>
             <div className="flex items-center space-x-4">
               <button className="p-2 hover:bg-gray-800 rounded-lg">
-                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-[#B0B2B2]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </button>
-              <button className="px-3 py-1 bg-gray-800 border border-gray-600 text-white rounded-lg text-sm hover:bg-gray-700">
+              <button
+                onClick={onToggleFilters}
+                className="px-3 py-1  text-[#B0B2B2] rounded-lg text-sm "
+              >
                 Fullscreen
               </button>
               <button className="p-2 hover:bg-gray-800 rounded-lg">
-                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-[#B0B2B2]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
               </button>
               <button className="p-2 hover:bg-gray-800 rounded-lg">
-                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-[#B0B2B2]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
                 </svg>
               </button>
@@ -160,7 +164,7 @@ export default function CountryTreemap({ countries, onCountryClick }: CountryTre
 
       {/* Legend - Fixed at bottom of main content area */}
       <div className=" border-t border-gray-700 px-6 py-3 flex items-center justify-between text-xs z-20">
-        <div className="flex items-center text-gray-300 flex-1 min-w-0 mr-4">
+        <div className="flex items-center text-[#B0B2B2] flex-1 min-w-0 mr-4">
           <svg className="w-4 h-4 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
@@ -170,7 +174,7 @@ export default function CountryTreemap({ countries, onCountryClick }: CountryTre
         <div className="flex items-center">
           <div className="flex rounded overflow-hidden border border-gray-600">
             <div className="bg-red-700 px-4 py-3 text-white text-xs font-medium">0-50</div>           
-            <div className="bg-green-600 px-4 py-3 text-black text-xs font-medium">50-60</div>
+            <div className="bg-green-600 px-4 py-3 text-white text-xs font-medium">50-60</div>
             <div className="bg-gray-800 px-4 py-3 text-white text-xs font-medium">60-70</div>
             <div className="bg-green-900 px-4 py-3 text-white text-xs font-medium">70-100</div>
           </div>

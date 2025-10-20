@@ -3,11 +3,23 @@
 import { useState, useEffect } from 'react'
 import Sidebar from '@/components/dashboard/Sidebar'
 import DashboardHeader from '@/components/dashboard/DashboardHeader'
+import { loadUserData, getFormattedName, getUserInitials, getUsernameFromEmail, type UserData } from '@/lib/userUtils'
+
+
 import SettingsContent from '@/components/settings/SettingsContent'
 
 export default function SettingsPage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [userEmail, setUserEmail] = useState<string>('')
+    const [userData, setUserData] = useState<UserData>({ email: '', firstName: '', lastName: '' })
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const data = await loadUserData()
+      setUserData(data)
+    }
+    fetchUserData()
+  }, [])
 
   useEffect(() => {
     const email = localStorage.getItem('user_email') || localStorage.getItem('userEmail') || 'user@example.com'
@@ -43,9 +55,9 @@ export default function SettingsPage() {
       <div className="flex-1 flex flex-col min-h-0">
         {/* Header - Fixed */}
         <DashboardHeader
-          userName={getUsernameFromEmail(userEmail)}
-          userInitials={getInitialsFromEmail(userEmail)}
-          truncatedName={getTruncatedUsername(userEmail)}
+          userName={getUsernameFromEmail(userData.email)}
+          userInitials={getUserInitials(userData)}
+          truncatedName={getFormattedName(userData)}
         />
 
         {/* Settings Content Area - Scrollable */}

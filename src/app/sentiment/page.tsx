@@ -3,6 +3,9 @@
 import { useState, useEffect } from 'react'
 import Sidebar from '@/components/dashboard/Sidebar'
 import DashboardHeader from '@/components/dashboard/DashboardHeader'
+import { loadUserData, getFormattedName, getUserInitials, getUsernameFromEmail, type UserData } from '@/lib/userUtils'
+
+
 import { sentimentApi, countriesApi } from '@/lib/api'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 import Image from 'next/image'
@@ -431,7 +434,7 @@ export default function SentimentPulsePage() {
     const sectors = []
     for (const sector of sectorDefinitions) {
       const sentiment = calculateTopicSentiment(sector.keywords)
-      if (sentiment && sentiment.count >= 2) { // Only include if at least 2 articles
+      if (sentiment && sentiment.count >= 1) { // Only include if at least 1 article (lowered from 2 for countries with limited news)
         sectors.push({
           name: sector.name,
           positive: sentiment.positive,
@@ -444,8 +447,8 @@ export default function SentimentPulsePage() {
     // Sort by positive sentiment (descending)
     sectors.sort((a, b) => b.positive - a.positive)
 
-    // If we have real data, use it; otherwise use fallback
-    return sectors.length >= 3 ? sectors : fallbackData
+    // If we have real data, use it; otherwise use fallback (lowered from 3 to 1 sector minimum)
+    return sectors.length >= 1 ? sectors : fallbackData
   }
 
   const sectorsData = getSectorsData()

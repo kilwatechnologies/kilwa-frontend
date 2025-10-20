@@ -19,18 +19,47 @@ interface Country {
 
 export default function DashboardPage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [filtersCollapsed, setFiltersCollapsed] = useState(false)
   const [countries, setCountries] = useState<Country[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [, setFilters] = useState({})
   const [userEmail, setUserEmail] = useState<string>('')
+  const [userFirstName, setUserFirstName] = useState<string>('')
+  const [userLastName, setUserLastName] = useState<string>('')
 
   useEffect(() => {
     loadDashboardData()
-    // Get user email from localStorage 
+    loadUserData()
+  }, [])
+
+  const loadUserData = async () => {
+    // Get user email from localStorage
     const email = localStorage.getItem('user_email') || localStorage.getItem('userEmail') || 'user@example.com'
     setUserEmail(email)
-  }, [])
+
+    // Fetch user data from API to get first name and last name
+    const token = localStorage.getItem('access_token')
+    if (token) {
+      try {
+        const { authApi } = await import('@/lib/api')
+        const response = await authApi.getCurrentUser(token)
+        console.log('User data response:', response.data)
+
+        // Handle both response.data.user and response.data.data.user (like settings page)
+        const responseData: any = response.data
+        const userData = responseData.user || responseData.data?.user
+
+        if (userData) {
+          setUserFirstName(userData.first_name || '')
+          setUserLastName(userData.last_name || '')
+          console.log('User name loaded:', userData.first_name, userData.last_name)
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error)
+      }
+    }
+  }
 
   const loadDashboardData = async () => {
     try {
@@ -226,9 +255,26 @@ export default function DashboardPage() {
     return localPart.slice(0, 2).toUpperCase()
   }
 
-  const getTruncatedUsername = (email: string) => {
-    const username = getUsernameFromEmail(email)
+  const getFormattedName = () => {
+    // Use first name + first letter of last name if available
+    if (userFirstName && userLastName) {
+      return `${userFirstName} ${userLastName.charAt(0)}.`
+    }
+    // Fallback to email-based username
+    if (userFirstName) {
+      return userFirstName
+    }
+    const username = getUsernameFromEmail(userEmail)
     return username.length > 5 ? username.slice(0, 5) + '...' : username
+  }
+
+  const getUserInitials = () => {
+    // Use initials from first and last name if available
+    if (userFirstName && userLastName) {
+      return `${userFirstName.charAt(0)}${userLastName.charAt(0)}`.toUpperCase()
+    }
+    // Fallback to email-based initials
+    return getInitialsFromEmail(userEmail)
   }
 
   if (loading) {
@@ -250,23 +296,27 @@ export default function DashboardPage() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-h-0">
         {/* Header - Fixed */}
-        <DashboardHeader 
+        <DashboardHeader
           userName={getUsernameFromEmail(userEmail)}
-          userInitials={getInitialsFromEmail(userEmail)}
-          truncatedName={getTruncatedUsername(userEmail)}
+          userInitials={getUserInitials()}
+          truncatedName={getFormattedName()}
         />
         
         {/* Content Area - Scrollable */}
         <div className="flex-1 flex min-h-0">
           {/* Filters Sidebar - Fixed */}
-          <DashboardFilters onFiltersChange={handleFiltersChange} />
-          
+          <DashboardFilters
+            onFiltersChange={handleFiltersChange}
+            isCollapsed={filtersCollapsed}
+            onToggleCollapse={() => setFiltersCollapsed(!filtersCollapsed)}
+          />
+
           {/* Main Map/Treemap Area - Scrollable */}
           {error ? (
             <div className="flex-1 flex items-center justify-center bg-black">
               <div className="text-center">
                 <div className="text-red-600 mb-2">{error}</div>
-                <button 
+                <button
                   onClick={loadDashboardData}
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                 >
@@ -275,9 +325,10 @@ export default function DashboardPage() {
               </div>
             </div>
           ) : (
-            <CountryTreemap 
-              countries={countries} 
-              onCountryClick={handleCountryClick} 
+            <CountryTreemap
+              countries={countries}
+              onCountryClick={handleCountryClick}
+              onToggleFilters={() => setFiltersCollapsed(!filtersCollapsed)}
             />
           )}
         </div>

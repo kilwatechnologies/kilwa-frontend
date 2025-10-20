@@ -4,32 +4,19 @@ import { useState, useEffect } from 'react'
 import Sidebar from '@/components/dashboard/Sidebar'
 import DashboardHeader from '@/components/dashboard/DashboardHeader'
 import ISIContent from '@/components/isi/ISIContent'
+import { loadUserData, getFormattedName, getUserInitials, getUsernameFromEmail, type UserData } from '@/lib/userUtils'
 
 export default function ISIPage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
-  const [userEmail, setUserEmail] = useState<string>('')
+  const [userData, setUserData] = useState<UserData>({ email: '', firstName: '', lastName: '' })
 
   useEffect(() => {
-    const email = localStorage.getItem('user_email') || localStorage.getItem('userEmail') || 'user@example.com'
-    setUserEmail(email)
+    const fetchUserData = async () => {
+      const data = await loadUserData()
+      setUserData(data)
+    }
+    fetchUserData()
   }, [])
-
-  const getUsernameFromEmail = (email: string) => {
-    if (!email || !email.includes('@')) return 'User'
-    const [localPart] = email.split('@')
-    return localPart
-  }
-
-  const getInitialsFromEmail = (email: string) => {
-    if (!email || !email.includes('@')) return 'US'
-    const [localPart] = email.split('@')
-    return localPart.slice(0, 2).toUpperCase()
-  }
-
-  const getTruncatedUsername = (email: string) => {
-    const username = getUsernameFromEmail(email)
-    return username.length > 5 ? username.slice(0, 5) + '...' : username
-  }
 
   return (
     <div className="h-screen flex bg-black overflow-hidden">
@@ -43,9 +30,9 @@ export default function ISIPage() {
       <div className="flex-1 flex flex-col min-h-0">
         {/* Header - Fixed */}
         <DashboardHeader
-          userName={getUsernameFromEmail(userEmail)}
-          userInitials={getInitialsFromEmail(userEmail)}
-          truncatedName={getTruncatedUsername(userEmail)}
+          userName={getUsernameFromEmail(userData.email)}
+          userInitials={getUserInitials(userData)}
+          truncatedName={getFormattedName(userData)}
         />
 
         {/* ISI Content Area - Scrollable */}

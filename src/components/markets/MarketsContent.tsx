@@ -1,6 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { marketsApi, countriesApi } from '@/lib/api'
+
+interface Country {
+  id: number
+  name: string
+  isoCode: string
+}
 
 interface NewsItem {
   title: string
@@ -23,38 +30,123 @@ interface SectorETF {
   change: string
 }
 
-interface GovernanceIndicator {
+interface MarketKPI {
+  code: string
   name: string
+  unit: string
   value: number
-  forecast: number
-  change: string
+  normalizedValue: number
+  year: number
 }
 
 export default function MarketsContent() {
-  const [selectedCountry] = useState('Kenya')
-  const [, setSelectedTab] = useState('overview')
+  const [selectedCountry, setSelectedCountry] = useState<Country | null>(null)
+  const [countries, setCountries] = useState<Country[]>([])
+  const [loading, setLoading] = useState(true)
 
-  // Mock data based on the design
-  const macroeconomicData = [
-    { metric: 'GDP (current KES)', value: '$114.9B', forecast: '$118.3B', change: '+1.21%' },
-    { metric: 'GDP per capita', value: '$2,150', forecast: '$2,310', change: '+1.21%' },
-    { metric: 'GDP growth (annual %)', value: '5.1%', forecast: '5.6%', change: '+1.21%' },
-    { metric: 'Inflation rate (CPI, %)', value: '7.8%', forecast: '6.4%', change: '-2.31%' },
-  ]
+  // API data states
+  const [macroeconomicData, setMacroeconomicData] = useState<MarketKPI[]>([])
+  const [financeData, setFinanceData] = useState<MarketKPI[]>([])
+  const [governanceData, setGovernanceData] = useState<MarketKPI[]>([])
+  const [dataLoading, setDataLoading] = useState(true)
+
+  // Historical chart data
+  const [historicalMacroData, setHistoricalMacroData] = useState<{[year: number]: MarketKPI[]}>({})
+  const [historicalLoading, setHistoricalLoading] = useState(false)
+  const [selectedYearRange, setSelectedYearRange] = useState(5)
+  const [hoveredYear, setHoveredYear] = useState<number | null>(null)
+
+  // Load countries on mount
+  useEffect(() => {
+    loadCountries()
+  }, [])
+
+  // Load market data when country changes
+  useEffect(() => {
+    if (selectedCountry) {
+      loadMarketData()
+      loadHistoricalMacroData()
+    }
+  }, [selectedCountry])
+
+  const loadCountries = async () => {
+    try {
+      setLoading(true)
+      const response = await countriesApi.getAfricanCountries()
+      if (response.data.success && response.data.data && response.data.data.length > 0) {
+        setCountries(response.data.data)
+        setSelectedCountry(response.data.data[0])
+      }
+    } catch (error) {
+      console.error('Error loading countries:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const loadMarketData = async () => {
+    if (!selectedCountry) return
+
+    try {
+      setDataLoading(true)
+
+      // Load macroeconomic data (using 2021 - most recent year with complete data)
+      const macroResponse = await marketsApi.getMacroeconomic(selectedCountry.id, 2021)
+      if (macroResponse.data.success && macroResponse.data.data) {
+        setMacroeconomicData(macroResponse.data.data)
+      }
+
+      // Load finance (investment & capital) data
+      const financeResponse = await marketsApi.getInvestmentCapital(selectedCountry.id, 2021)
+      if (financeResponse.data.success && financeResponse.data.data) {
+        setFinanceData(financeResponse.data.data)
+      }
+
+      // Load governance & risk data
+      const governanceResponse = await marketsApi.getPoliticalEconomicRisk(selectedCountry.id, 2021)
+      if (governanceResponse.data.success && governanceResponse.data.data) {
+        setGovernanceData(governanceResponse.data.data)
+      }
+
+      setDataLoading(false)
+    } catch (error) {
+      console.error('Error loading market data:', error)
+      setDataLoading(false)
+    }
+  }
+
+  const loadHistoricalMacroData = async () => {
+    if (!selectedCountry) return
+
+    try {
+      setHistoricalLoading(true)
+      const years = [2019, 2020, 2021, 2022, 2023]
+      const historicalData: {[year: number]: MarketKPI[]} = {}
+
+      for (const year of years) {
+        try {
+          const response = await marketsApi.getMacroeconomic(selectedCountry.id, year)
+          if (response.data.success && response.data.data) {
+            historicalData[year] = response.data.data
+          }
+        } catch (error) {
+          console.error(`Error loading macroeconomic data for ${year}:`, error)
+        }
+      }
+
+      setHistoricalMacroData(historicalData)
+      setHistoricalLoading(false)
+    } catch (error) {
+      console.error('Error loading historical macro data:', error)
+      setHistoricalLoading(false)
+    }
+  }
 
   const currencies = [
     { pair: 'USD/KES', price: '114.9', change: '+1.21%' },
     { pair: 'EUR/KES', price: '124', change: '+1.21%' },
     { pair: 'GBP/KES', price: '145', change: '+1.21%' },
     { pair: 'JPY/KES', price: '1.0', change: '-2.31%' },
-  ]
-
-  const financeData = [
-    { metric: 'Debt stock (% of GNI)', value: '$114.9B', forecast: '$118.3B', change: '+1.21%', icon: '🔵' },
-    { metric: 'FDI net inflows (KES)', value: '$2,150', forecast: '$2,310', change: '+1.21%', icon: '🟠' },
-    { metric: 'Current balance (% GDP)', value: '5.1%', forecast: '5.6%', change: '-2.31%' },
-    { metric: 'Domestic credit to private sector (% of GDP)', value: '$114.9B', forecast: '$114.9B', change: '-2.31%' },
-    { metric: 'Depth of capital markets (Market cap / GDP)', value: '5.1%', forecast: '5.1%', change: '+1.21%' },
   ]
 
   const marketNews: NewsItem[] = [
@@ -106,42 +198,116 @@ export default function MarketsContent() {
     { name: 'Financial Markets & Investment', value: '7.8%', forecast: '6.4%', change: '-2.31%' },
   ]
 
-  const governanceIndicators: GovernanceIndicator[] = [
-    { name: 'Voice & Accountability', value: 43.2, forecast: 49, change: '+1.9%' },
-    { name: 'Absence of Violence', value: 38.7, forecast: 40.5, change: '+1.6%' },
-    { name: 'Government Effectiveness', value: 48.6, forecast: 49, change: '+0.6%' },
-    { name: 'Regulatory Quality', value: 52.4, forecast: 55.6, change: '+0.7%' },
-    { name: 'Rule of Law', value: 41.8, forecast: 42.8, change: '+0.8%' },
-    { name: 'Control of Corruption', value: 39.5, forecast: 41.2, change: '-3.1%' },
-    { name: 'Political Stability Rating', value: 0, forecast: 0, change: '-3.1%' },
-  ]
-
   const getChangeColor = (change: string) => {
     if (change.startsWith('+')) return 'text-green-500'
     if (change.startsWith('-')) return 'text-red-500'
     return 'text-gray-400'
   }
 
-  const getChangeBackground = (change: string) => {
-    if (change.startsWith('+')) return 'bg-green-500/10'
-    if (change.startsWith('-')) return 'bg-red-500/10'
-    return 'bg-gray-500/10'
+  // Helper function to get country flag
+  const getCountryFlag = (countryName: string) => {
+    const flagMap: { [key: string]: string } = {
+      'Nigeria': '/assets/nigeria.svg',
+      'Ghana': '/assets/ghana.svg',
+      'Kenya': '/assets/kenya.svg',
+      'South Africa': '/assets/south-africa.svg',
+      'Egypt': '/assets/egypt.svg',
+      'Morocco': '/assets/morocco.svg',
+      'Ethiopia': '/assets/ethiopia.svg',
+      'Tanzania': '/assets/tanzania.svg',
+      'Botswana': '/assets/botswana.svg',
+      'Rwanda': '/assets/rwanda.svg',
+      'Tunisia': '/assets/tunisia.svg',
+      'Mauritius': '/assets/mauritius.svg',
+    }
+    return flagMap[countryName]
+  }
+
+  // Get filtered years based on selected range
+  const getFilteredYears = () => {
+    const allYears = Object.keys(historicalMacroData).map(Number).sort()
+    if (allYears.length === 0) return []
+    const latestYear = Math.max(...allYears)
+    const startYear = latestYear - selectedYearRange + 1
+    return allYears.filter(y => y >= startYear)
+  }
+
+  // Get KPI colors
+  const getKPIColor = (kpiCode: string) => {
+    const colorMap: {[key: string]: string} = {
+      'GDP_GROWTH': '#a855f7',
+      'INFLATION_RATE': '#3b82f6',
+      'EXCHANGE_RATE_VOLATILITY': '#f97316',
+      'FDI_INFLOWS': '#06b6d4',
+      'DEBT_TO_GDP': '#ec4899',
+      'TAX_BURDEN': '#10b981',
+      'TRADE_BALANCE': '#f59e0b'
+    }
+    return colorMap[kpiCode] || '#6b7280'
+  }
+
+  // Get all unique KPIs from historical data
+  const getAllKPIs = () => {
+    const kpiMap = new Map<string, MarketKPI>()
+    Object.values(historicalMacroData).forEach(yearData => {
+      yearData.forEach(kpi => {
+        if (!kpiMap.has(kpi.code)) {
+          kpiMap.set(kpi.code, kpi)
+        }
+      })
+    })
+    return Array.from(kpiMap.values())
+  }
+
+  if (loading || !selectedCountry) {
+    return (
+      <div className="bg-white text-black p-6 flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    )
   }
 
   return (
     <div className="bg-white text-black p-6">
       {/* Country Selector and Date */}
       <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center space-x-2">
-          <div className="w-6 h-6 rounded-full bg-red-600 flex items-center justify-center">
-            <span className="text-xs">🇰🇪</span>
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center overflow-hidden flex-shrink-0 pointer-events-none z-10">
+              {getCountryFlag(selectedCountry.name) ? (
+                <img
+                  src={getCountryFlag(selectedCountry.name)!}
+                  alt={selectedCountry.name}
+                  width="32"
+                  height="32"
+                  style={{ width: '32px', height: '32px', objectFit: 'cover', display: 'block' }}
+                />
+              ) : (
+                <span className="text-base">🌍</span>
+              )}
+            </div>
+            <select
+              value={selectedCountry.id}
+              onChange={(e) => {
+                const country = countries.find(c => c.id === parseInt(e.target.value))
+                setSelectedCountry(country || null)
+              }}
+              className="bg-white text-gray-900 pl-14 pr-10 py-2 rounded-lg border-2 border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm appearance-none cursor-pointer"
+            >
+              {countries.map(country => (
+                <option key={country.id} value={country.id}>{country.name}</option>
+              ))}
+            </select>
+            <svg
+              className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-600"
+              width="12"
+              height="8"
+              viewBox="0 0 12 8"
+              fill="none"
+            >
+              <path d="M1 1L6 6L11 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
           </div>
-          <select 
-            className="bg-transparent text-black rounded px-3 py-1"
-            value={selectedCountry}
-          >
-            <option value="Kenya">Kenya</option>
-          </select>
         </div>
         <div className="flex items-center space-x-2 text-gray-600">
           <span>📅</span>
@@ -157,24 +323,28 @@ export default function MarketsContent() {
             <h3 className="text-lg font-semibold text-black">Macroeconomic Overview</h3>
           </div>
           <div className="p-4">
-            <div className="grid grid-cols-4 gap-4 text-xs text-gray-500 mb-3 pb-2 border-b border-gray-100">
+            <div className="grid grid-cols-3 gap-4 text-xs text-gray-500 mb-3 pb-2 border-b border-gray-100">
               <span>Metric</span>
               <span>Value</span>
-              <span>Forecast</span>
-              <span>%</span>
+              <span>Score</span>
             </div>
-            {macroeconomicData.map((item, index) => (
-              <div key={index} className={`grid grid-cols-4 gap-4 items-center py-2 ${index !== macroeconomicData.length - 1 ? 'border-b border-gray-100' : ''}`}>
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm text-black">{item.metric}</span>
+            {dataLoading ? (
+              <div className="text-center py-4 text-gray-500">Loading...</div>
+            ) : macroeconomicData.length > 0 ? (
+              macroeconomicData.map((kpi, index) => (
+                <div key={kpi.code} className={`grid grid-cols-3 gap-4 items-center py-2 ${index !== macroeconomicData.length - 1 ? 'border-b border-gray-100' : ''}`}>
+                  <span className="text-sm text-black">{kpi.name}</span>
+                  <span className="text-sm text-black">
+                    {kpi.value ? `${kpi.value.toFixed(2)} ${kpi.unit || ''}` : 'N/A'}
+                  </span>
+                  <span className="text-sm text-black">
+                    {kpi.normalizedValue ? kpi.normalizedValue.toFixed(1) : 'N/A'}
+                  </span>
                 </div>
-                <span className="text-sm text-black">{item.value}</span>
-                <span className="text-sm text-black">{item.forecast}</span>
-                <span className={`text-sm ${getChangeColor(item.change)}`}>
-                  {item.change}
-                </span>
-              </div>
-            ))}
+              ))
+            ) : (
+              <div className="text-center py-4 text-gray-500">No data available</div>
+            )}
           </div>
         </div>
 
@@ -207,24 +377,28 @@ export default function MarketsContent() {
             <h3 className="text-lg font-semibold text-black">Finance</h3>
           </div>
           <div className="p-4">
-            <div className="grid grid-cols-4 gap-4 text-xs text-gray-500 mb-3 pb-2 border-b border-gray-100">
+            <div className="grid grid-cols-3 gap-4 text-xs text-gray-500 mb-3 pb-2 border-b border-gray-100">
               <span>External Finance</span>
               <span>Value</span>
-              <span>Forecast</span>
-              <span>%</span>
+              <span>Score</span>
             </div>
-            {financeData.map((item, index) => (
-              <div key={index} className={`grid grid-cols-4 gap-4 items-center py-2 ${index !== financeData.length - 1 ? 'border-b border-gray-100' : ''}`}>
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm text-black">{item.metric}</span>
+            {dataLoading ? (
+              <div className="text-center py-4 text-gray-500">Loading...</div>
+            ) : financeData.length > 0 ? (
+              financeData.map((kpi, index) => (
+                <div key={kpi.code} className={`grid grid-cols-3 gap-4 items-center py-2 ${index !== financeData.length - 1 ? 'border-b border-gray-100' : ''}`}>
+                  <span className="text-sm text-black">{kpi.name}</span>
+                  <span className="text-sm text-black">
+                    {kpi.value ? `${kpi.value.toFixed(2)} ${kpi.unit || ''}` : 'N/A'}
+                  </span>
+                  <span className="text-sm text-black">
+                    {kpi.normalizedValue ? kpi.normalizedValue.toFixed(1) : 'N/A'}
+                  </span>
                 </div>
-                <span className="text-sm text-black">{item.value}</span>
-                <span className="text-sm text-black">{item.forecast}</span>
-                <span className={`text-sm ${getChangeColor(item.change)}`}>
-                  {item.change}
-                </span>
-              </div>
-            ))}
+              ))
+            ) : (
+              <div className="text-center py-4 text-gray-500">No data available</div>
+            )}
           </div>
         </div>
       </div>
@@ -237,60 +411,173 @@ export default function MarketsContent() {
             <h3 className="text-lg font-semibold text-black">Macroeconomic Overview</h3>
           </div>
           <div className="p-4">
-            {/* Time Period Selector */}
+            {/* Year Range Selector */}
             <div className="flex space-x-2 mb-4">
-              {['1 D', '5 D', '1 M', '3 M', '6 M', 'YTD', '1 Y', '5 Y', '10 Y'].map((period) => (
+              {[1, 2, 3, 4, 5].map((years) => (
                 <button
-                  key={period}
-                  className="px-2 py-1 text-xs bg-gray-200 hover:bg-gray-300 text-black rounded"
+                  key={years}
+                  onClick={() => setSelectedYearRange(years)}
+                  className={`px-3 py-1 text-xs rounded ${
+                    selectedYearRange === years
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-200 hover:bg-gray-300 text-black'
+                  }`}
                 >
-                  {period}
+                  {years}Y
                 </button>
               ))}
             </div>
 
-            {/* Chart Legend */}
-            <div className="flex flex-wrap gap-4 mb-4 text-sm text-black">
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 bg-purple-500 rounded"></div>
-                <span>Inflation rate</span>
+            {historicalLoading ? (
+              <div className="h-80 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
               </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 bg-blue-500 rounded"></div>
-                <span>GDP growth (KES)</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 bg-orange-500 rounded"></div>
-                <span>FDI net inflows</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 bg-cyan-500 rounded"></div>
-                <span>Debt stock</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 bg-pink-500 rounded"></div>
-                <span>Energy & renewable</span>
-              </div>
-            </div>
+            ) : Object.keys(historicalMacroData).length > 0 && getFilteredYears().length > 0 ? (
+              <>
+                {/* Chart Legend */}
+                <div className="flex flex-wrap gap-4 mb-4 text-sm text-black">
+                  {getAllKPIs().map((kpi) => (
+                    <div key={kpi.code} className="flex items-center space-x-2">
+                      <div className="w-3 h-3 rounded" style={{ backgroundColor: getKPIColor(kpi.code) }}></div>
+                      <span>{kpi.name}</span>
+                    </div>
+                  ))}
+                </div>
 
-            {/* Mock Chart Area */}
-            <div className="h-64 bg-gray-100 rounded flex items-center justify-center relative">
-              <div className="absolute top-4 left-4 text-right">
-                <div className="text-sm text-gray-600">+200%</div>
-                <div className="text-sm text-gray-600">+000%</div>
-                <div className="text-sm text-gray-600">-200%</div>
-                <div className="text-sm text-gray-600">+000%</div>
-                <div className="text-sm text-gray-600">-600%</div>
+                {/* Chart Area */}
+                <div className="h-80 bg-gray-50 rounded relative p-8">
+                  <svg width="100%" height="100%" style={{ overflow: 'visible' }}>
+                    {(() => {
+                      const filteredYears = getFilteredYears()
+                      const allKPIs = getAllKPIs()
+                      const width = 100
+                      const height = 100
+                      const padding = 10
+
+                      return (
+                        <>
+                          {/* Grid lines */}
+                          {[0, 25, 50, 75, 100].map((val) => {
+                            const y = height - padding - ((val / 100) * (height - 2 * padding))
+                            return (
+                              <g key={val}>
+                                <line
+                                  x1={`${padding}%`}
+                                  y1={`${y}%`}
+                                  x2={`${width - padding}%`}
+                                  y2={`${y}%`}
+                                  stroke="#e5e7eb"
+                                  strokeWidth="1"
+                                />
+                                <text
+                                  x={`${padding - 2}%`}
+                                  y={`${y}%`}
+                                  textAnchor="end"
+                                  dominantBaseline="middle"
+                                  className="text-xs fill-gray-600"
+                                >
+                                  {val}
+                                </text>
+                              </g>
+                            )
+                          })}
+
+                          {/* Draw lines and points for each KPI */}
+                          {allKPIs.map((kpi) => {
+                            const points: {x: number, y: number, year: number, value: number}[] = []
+                            filteredYears.forEach((year, idx) => {
+                              const yearData = historicalMacroData[year]
+                              if (yearData) {
+                                const kpiData = yearData.find(k => k.code === kpi.code)
+                                if (kpiData && kpiData.normalizedValue != null) {
+                                  const x = padding + (filteredYears.length > 1 ? (idx / (filteredYears.length - 1)) * (width - 2 * padding) : (width - 2 * padding) / 2)
+                                  const y = height - padding - ((kpiData.normalizedValue / 100) * (height - 2 * padding))
+                                  points.push({ x, y, year, value: kpiData.normalizedValue })
+                                }
+                              }
+                            })
+
+                            if (points.length === 0) return null
+
+                            return (
+                              <g key={kpi.code}>
+                                {/* Lines connecting consecutive points */}
+                                {points.map((point, index) => {
+                                  if (index === points.length - 1) return null
+                                  const nextPoint = points[index + 1]
+                                  return (
+                                    <line
+                                      key={`${kpi.code}-line-${point.year}`}
+                                      x1={`${point.x}%`}
+                                      y1={`${point.y}%`}
+                                      x2={`${nextPoint.x}%`}
+                                      y2={`${nextPoint.y}%`}
+                                      stroke={getKPIColor(kpi.code)}
+                                      strokeWidth="2"
+                                      strokeLinecap="round"
+                                    />
+                                  )
+                                })}
+                                {/* Data points */}
+                                {points.map((point) => (
+                                  <circle
+                                    key={`${kpi.code}-${point.year}`}
+                                    cx={`${point.x}%`}
+                                    cy={`${point.y}%`}
+                                    r="5"
+                                    fill={getKPIColor(kpi.code)}
+                                    onMouseEnter={() => setHoveredYear(point.year)}
+                                    onMouseLeave={() => setHoveredYear(null)}
+                                    className="cursor-pointer"
+                                    style={{ cursor: 'pointer' }}
+                                  />
+                                ))}
+                              </g>
+                            )
+                          })}
+
+                          {/* X-axis labels */}
+                          {filteredYears.map((year, idx) => {
+                            const x = padding + ((idx / (filteredYears.length - 1)) * (width - 2 * padding))
+                            return (
+                              <text
+                                key={year}
+                                x={`${x}%`}
+                                y={`${height - padding + 5}%`}
+                                textAnchor="middle"
+                                className="text-xs fill-gray-600"
+                              >
+                                {year}
+                              </text>
+                            )
+                          })}
+                        </>
+                      )
+                    })()}
+                  </svg>
+
+                  {/* Hover tooltip */}
+                  {hoveredYear && historicalMacroData[hoveredYear] && (
+                    <div className="absolute top-4 right-4 bg-white border rounded p-3 text-xs shadow-lg z-10">
+                      <div className="font-semibold mb-2">{hoveredYear}</div>
+                      {historicalMacroData[hoveredYear].map((kpi) => (
+                        <div key={kpi.code} className="flex items-center justify-between gap-4 mb-1">
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: getKPIColor(kpi.code) }}></div>
+                            <span>{kpi.name}:</span>
+                          </div>
+                          <strong>{kpi.normalizedValue ? kpi.normalizedValue.toFixed(1) : 'N/A'}</strong>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : (
+              <div className="h-80 flex items-center justify-center text-gray-500">
+                No historical data available
               </div>
-              <div className="absolute bottom-4 left-0 right-0 flex justify-between text-xs text-gray-600 px-8">
-                <span>8/17</span>
-                <span>8/18</span>
-                <span>8/19</span>
-                <span>8/20</span>
-                <span>8/21</span>
-              </div>
-              <span className="text-gray-500">Chart visualization would go here</span>
-            </div>
+            )}
           </div>
         </div>
 
@@ -324,22 +611,28 @@ export default function MarketsContent() {
             <h3 className="text-lg font-semibold text-black">Governance & Risk</h3>
           </div>
           <div className="p-4">
-            <div className="grid grid-cols-4 gap-4 text-xs text-gray-500 mb-3 pb-2 border-b border-gray-100">
+            <div className="grid grid-cols-3 gap-4 text-xs text-gray-500 mb-3 pb-2 border-b border-gray-100">
               <span>Indicator</span>
               <span>Value</span>
-              <span>Forecast</span>
-              <span>%</span>
+              <span>Score</span>
             </div>
-            {governanceIndicators.map((indicator, index) => (
-              <div key={index} className={`grid grid-cols-4 gap-4 items-center py-2 ${index !== governanceIndicators.length - 1 ? 'border-b border-gray-100' : ''}`}>
-                <span className="text-sm text-black">{indicator.name}</span>
-                <span className="text-sm text-black">{indicator.value}</span>
-                <span className="text-sm text-black">{indicator.forecast}</span>
-                <span className={`text-sm ${getChangeColor(indicator.change)}`}>
-                  {indicator.change}
-                </span>
-              </div>
-            ))}
+            {dataLoading ? (
+              <div className="text-center py-4 text-gray-500">Loading...</div>
+            ) : governanceData.length > 0 ? (
+              governanceData.map((kpi, index) => (
+                <div key={kpi.code} className={`grid grid-cols-3 gap-4 items-center py-2 ${index !== governanceData.length - 1 ? 'border-b border-gray-100' : ''}`}>
+                  <span className="text-sm text-black">{kpi.name}</span>
+                  <span className="text-sm text-black">
+                    {kpi.value ? `${kpi.value.toFixed(2)} ${kpi.unit || ''}` : 'N/A'}
+                  </span>
+                  <span className="text-sm text-black">
+                    {kpi.normalizedValue ? kpi.normalizedValue.toFixed(1) : 'N/A'}
+                  </span>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-4 text-gray-500">No data available</div>
+            )}
           </div>
         </div>
 

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { countriesApi, isiApi, sentimentApi } from '@/lib/api'
+import { generateInvestmentBrief } from '@/lib/zwadiService'
 
 interface Country {
   id: number
@@ -12,6 +13,12 @@ interface Country {
 interface ISIScoreData {
   score: number
   year: number
+}
+
+interface HistoricalISIData {
+  year: number
+  score: number
+  countryId: number
 }
 
 interface NewsArticle {
@@ -52,6 +59,12 @@ export default function ISIContent() {
   const [driverLoading, setDriverLoading] = useState(false)
   const [showCalendar, setShowCalendar] = useState(false)
   const [selectedDate, setSelectedDate] = useState(new Date())
+  const [aiBrief, setAiBrief] = useState<{ setup: string; positioning: string; confidence: string; updatedAt: string } | null>(null)
+  const [aiBriefLoading, setAiBriefLoading] = useState(false)
+  const [historicalData, setHistoricalData] = useState<HistoricalISIData[]>([])
+  const [historicalLoading, setHistoricalLoading] = useState(false)
+  const [selectedYearRange, setSelectedYearRange] = useState(5) // Default to 5 years
+  const [hoveredPoint, setHoveredPoint] = useState<HistoricalISIData | null>(null)
 
   useEffect(() => {
     loadCountries()
@@ -87,6 +100,8 @@ export default function ISIContent() {
       loadSentimentPulse()
       loadAlerts()
       loadDriverData()
+      loadAIBrief()
+      loadHistoricalISIData()
     }
   }, [selectedCountry])
 
@@ -211,6 +226,70 @@ export default function ISIContent() {
     } finally {
       setDriverLoading(false)
     }
+  }
+
+  const loadAIBrief = async () => {
+    if (!selectedCountry) return
+
+    try {
+      setAiBriefLoading(true)
+      const brief = await generateInvestmentBrief(selectedCountry.name, 'ISI')
+      if (brief) {
+        setAiBrief(brief)
+      }
+    } catch (error) {
+      console.error('Error loading AI brief:', error)
+      setAiBrief(null)
+    } finally {
+      setAiBriefLoading(false)
+    }
+  }
+
+  const loadHistoricalISIData = async () => {
+    if (!selectedCountry) return
+
+    try {
+      setHistoricalLoading(true)
+      const years = [2019, 2020, 2021, 2022, 2023]
+
+      const allData: HistoricalISIData[] = []
+
+      // Fetch data for each year
+      for (const year of years) {
+        try {
+          const response = await isiApi.getScores(year)
+          if (response.data.success && response.data.data) {
+            const countryScore = response.data.data.find(
+              (score: any) => score.countryId === selectedCountry.id
+            )
+            if (countryScore) {
+              allData.push({
+                year,
+                score: countryScore.score,
+                countryId: selectedCountry.id
+              })
+            }
+          }
+        } catch (error) {
+          console.error(`Error loading ISI score for ${year}:`, error)
+        }
+      }
+
+      setHistoricalData(allData.sort((a, b) => a.year - b.year))
+    } catch (error) {
+      console.error('Error loading historical ISI data:', error)
+      setHistoricalData([])
+    } finally {
+      setHistoricalLoading(false)
+    }
+  }
+
+  // Get filtered historical data based on selected year range
+  const getFilteredHistoricalData = () => {
+    if (historicalData.length === 0) return []
+    const latestYear = Math.max(...historicalData.map(d => d.year))
+    const startYear = latestYear - selectedYearRange + 1
+    return historicalData.filter(d => d.year >= startYear)
   }
 
   // Helper function to get country flag
@@ -853,64 +932,181 @@ export default function ISIContent() {
           {/* Chart Section */}
           <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
             <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
-              {/* Time Period Selector */}
+              {/* Year Range Selector */}
               <div className="inline-flex space-x-2">
-                {['1 D', '5 D', '1 M', '3 M', '6 M', 'YTD', '1 Y', '5 Y', '10 Y'].map((period, index) => (
+                {[
+                  { label: '2Y', value: 2 },
+                  { label: '3Y', value: 3 },
+                  { label: '4Y', value: 4 },
+                  { label: '5Y', value: 5 }
+                ].map((period) => (
                   <button
-                    key={period}
+                    key={period.label}
+                    onClick={() => setSelectedYearRange(period.value)}
                     className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
-                      index === 2 ? 'bg-white text-black shadow-sm' : 'text-gray-600 hover:text-black'
+                      selectedYearRange === period.value ? 'bg-white text-black shadow-sm' : 'text-gray-600 hover:text-black'
                     }`}
                   >
-                    {period}
+                    {period.label}
                   </button>
                 ))}
               </div>
             </div>
             <div className="p-4">
-              {/* Chart Legend */}
-              <div className="flex items-center space-x-4 mb-4">
-                <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 bg-purple-500 rounded"></div>
-                  <span className="text-sm">Technology & Fintech</span>
+              {historicalLoading ? (
+                <div className="h-80 flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
                 </div>
-              </div>
-
-              {/* Mock Chart Area with Data Point */}
-              <div className="h-80 bg-gray-50 rounded relative">
-                <div className="absolute top-4 right-4 bg-white border rounded p-2 text-xs">
-                  <div className="flex items-center space-x-2 mb-1">
-                    <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                    <span>Technology & Fintech 03/05/25</span>
+              ) : (
+                <>
+                  {/* Chart Legend */}
+                  <div className="flex items-center space-x-4 mb-4">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 bg-purple-500 rounded"></div>
+                      <span className="text-sm">ISI Score - {selectedCountry?.name}</span>
+                    </div>
                   </div>
-                  <div>ISI Score: <strong>87</strong></div>
-                  <div>Status: <span className="text-green-600">Optimal</span></div>
-                  <div>Change: <span className="text-green-600">+1.21%</span></div>
-                </div>
-                
-                {/* Y-axis labels */}
-                <div className="absolute left-2 top-0 h-full flex flex-col justify-between text-xs text-gray-500 py-4">
-                  <span>100.00</span>
-                  <span>75.00</span>
-                  <span>50.00</span>
-                  <span>25.00</span>
-                  <span>0.00</span>
-                </div>
 
-                {/* X-axis labels */}
-                <div className="absolute bottom-2 left-0 right-0 flex justify-between text-xs text-gray-500 px-8">
-                  <span>Oct 2024</span>
-                  <span>Jan 2025</span>
-                  <span>Apr 2025</span>
-                  <span>Jul 2025</span>
-                  <span>Aug 2025</span>
-                </div>
+                  {/* Chart Area */}
+                  <div className="h-80 bg-gray-50 rounded relative p-8">
+                    {(() => {
+                      const filteredData = getFilteredHistoricalData()
+                      if (filteredData.length === 0) {
+                        return (
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <span className="text-gray-500">No historical data available</span>
+                          </div>
+                        )
+                      }
 
-                {/* Mock chart line */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-gray-500">ISI Score Chart Visualization</span>
-                </div>
-              </div>
+                      return (
+                        <>
+                          {/* Y-axis labels */}
+                          <div className="absolute left-2 top-8 bottom-12 flex flex-col justify-between text-xs text-gray-500">
+                            <span>100</span>
+                            <span>75</span>
+                            <span>50</span>
+                            <span>25</span>
+                            <span>0</span>
+                          </div>
+
+                          {/* X-axis labels */}
+                          <div className="absolute bottom-2 left-12 right-8 flex justify-between text-xs text-gray-500">
+                            {filteredData.map((point) => (
+                              <span key={point.year}>{point.year}</span>
+                            ))}
+                          </div>
+
+                          {/* Chart SVG */}
+                          <svg className="absolute left-12 top-8 right-8 bottom-12" style={{ width: 'calc(100% - 5rem)', height: 'calc(100% - 5rem)' }}>
+                            <defs>
+                              <clipPath id="chart-clip">
+                                <rect x="0" y="0" width="100%" height="100%" />
+                              </clipPath>
+                            </defs>
+
+                            {/* Grid lines */}
+                            {[0, 25, 50, 75, 100].map((value) => (
+                              <line
+                                key={value}
+                                x1="0%"
+                                y1={`${100 - value}%`}
+                                x2="100%"
+                                y2={`${100 - value}%`}
+                                stroke="#e5e7eb"
+                                strokeWidth="1"
+                              />
+                            ))}
+
+                            <g clipPath="url(#chart-clip)">
+                              {/* Line connecting points */}
+                              {filteredData.length > 1 && filteredData.map((point, index) => {
+                                if (index === filteredData.length - 1) return null
+                                const padding = 3
+                                const totalPoints = filteredData.length
+                                const x1Percent = padding + (index / (totalPoints - 1)) * (100 - 2 * padding)
+                                const y1Percent = 100 - point.score
+                                const x2Percent = padding + ((index + 1) / (totalPoints - 1)) * (100 - 2 * padding)
+                                const y2Percent = 100 - filteredData[index + 1].score
+                                return (
+                                  <line
+                                    key={`line-${point.year}`}
+                                    x1={`${x1Percent}%`}
+                                    y1={`${y1Percent}%`}
+                                    x2={`${x2Percent}%`}
+                                    y2={`${y2Percent}%`}
+                                    stroke="#a855f7"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                  />
+                                )
+                              })}
+
+                              {/* Data points with hover */}
+                              {filteredData.map((point, index) => {
+                                const padding = 3
+                                const totalPoints = filteredData.length
+                                const xPercent = totalPoints === 1 ? 50 : padding + (index / (totalPoints - 1)) * (100 - 2 * padding)
+                                const yPercent = 100 - point.score
+                                return (
+                                  <g
+                                    key={point.year}
+                                    onMouseEnter={() => setHoveredPoint(point)}
+                                    onMouseLeave={() => setHoveredPoint(null)}
+                                    style={{ cursor: 'pointer' }}
+                                  >
+                                    {/* Invisible larger circle for easier hovering */}
+                                    <circle
+                                      cx={`${xPercent}%`}
+                                      cy={`${yPercent}%`}
+                                      r="15"
+                                      fill="transparent"
+                                    />
+                                    {/* Visible data point */}
+                                    <circle
+                                      cx={`${xPercent}%`}
+                                      cy={`${yPercent}%`}
+                                      r="5"
+                                      fill="#a855f7"
+                                      stroke="white"
+                                      strokeWidth="2"
+                                    />
+                                  </g>
+                                )
+                              })}
+                            </g>
+                          </svg>
+
+                          {/* Hover tooltip */}
+                          {hoveredPoint && (
+                            <div className="absolute top-4 right-4 bg-white border rounded p-2 text-xs shadow-lg z-10">
+                              <div className="flex items-center space-x-2 mb-1">
+                                <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                                <span className="font-semibold">{selectedCountry?.name} - {hoveredPoint.year}</span>
+                              </div>
+                              <div>ISI Score: <strong>{hoveredPoint.score.toFixed(2)}</strong></div>
+                              <div>Status: <span className={getISIStatusColor(hoveredPoint.score)}>{getISIStatus(hoveredPoint.score)}</span></div>
+                              {(() => {
+                                const currentIndex = filteredData.findIndex(d => d.year === hoveredPoint.year)
+                                if (currentIndex > 0) {
+                                  const previousScore = filteredData[currentIndex - 1].score
+                                  const change = hoveredPoint.score - previousScore
+                                  return (
+                                    <div>Change: <span className={change >= 0 ? 'text-green-600' : 'text-red-600'}>
+                                      {change >= 0 ? '+' : ''}{change.toFixed(2)}
+                                    </span></div>
+                                  )
+                                }
+                                return null
+                              })()}
+                            </div>
+                          )}
+                        </>
+                      )
+                    })()}
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
@@ -974,87 +1170,54 @@ export default function ISIContent() {
             </div>
             <div className="flex-1 overflow-y-auto">
               <div className="p-4 space-y-6">
-                {/* Kenya Brief */}
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="font-semibold text-black">Kenya</h4>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm text-green-600">High Confidence</span>
-                      <span className="text-xs text-gray-500">Updated 2 hours ago</span>
-                    </div>
+                {aiBriefLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
                   </div>
-
-                  <div className="space-y-4">
-                    <div>
-                      <h5 className="font-medium text-black mb-2 flex items-center">
-                        <div className="w-2 h-2 bg-black rounded-full mr-2"></div>
-                        Setup
-                      </h5>
-                      <p className="text-sm text-gray-700 leading-relaxed">
-                        Macro is stabilizing: headline CPI is 4.5% y/y (Aug-2025), within target, and the CBK has begun 
-                        measured easing to 9.50%—a supportive backdrop for duration and capex plans. Recent liability-management 
-                        steps (Eurobond refinancing/buybacks) and a steadier shilling have reduced near-term funding risk.
-                      </p>
+                ) : aiBrief ? (
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="font-semibold text-black">{selectedCountry?.name}</h4>
+                      <div className="flex items-center space-x-2">
+                        <span className={`text-sm ${aiBrief.confidence === 'High Confidence' ? 'text-green-600' : 'text-yellow-600'}`}>
+                          {aiBrief.confidence}
+                        </span>
+                        <span className="text-xs text-gray-500">{aiBrief.updatedAt}</span>
+                      </div>
                     </div>
 
-                    <div>
-                      <h5 className="font-medium text-black mb-2 flex items-center">
-                        <div className="w-2 h-2 bg-black rounded-full mr-2"></div>
-                        Positioning
-                      </h5>
-                      <p className="text-sm text-gray-700 leading-relaxed">
-                        Macro is stabilizing: headline CPI is 4.5% y/y (Aug-2025), within target, and the CBK has begun 
-                        measured easing to 9.50%—a supportive backdrop for duration and capex plans. Recent liability-management 
-                        steps (Eurobond refinancing/buybacks) and a steadier shilling have reduced near-term funding risk.
-                      </p>
-                    </div>
-                  </div>
+                    <div className="space-y-4">
+                      <div>
+                        <h5 className="font-medium text-black mb-2 flex items-center">
+                          <div className="w-2 h-2 bg-black rounded-full mr-2"></div>
+                          Setup
+                        </h5>
+                        <p className="text-sm text-gray-700 leading-relaxed">
+                          {aiBrief.setup}
+                        </p>
+                      </div>
 
-                  <div className="mt-4 pt-3 border-t border-gray-100 text-xs text-gray-500">
-                    Generated by Zawadi AI using NLG models.
-                  </div>
-                </div>
-
-                {/* Additional content to demonstrate scrolling */}
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="font-semibold text-black">Nigeria</h4>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm text-yellow-600">Medium Confidence</span>
-                      <span className="text-xs text-gray-500">Updated 4 hours ago</span>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div>
-                      <h5 className="font-medium text-black mb-2 flex items-center">
-                        <div className="w-2 h-2 bg-black rounded-full mr-2"></div>
-                        Market Overview
-                      </h5>
-                      <p className="text-sm text-gray-700 leading-relaxed">
-                        Nigeria's economic indicators show mixed signals with inflation remaining elevated at 24.08% y/y 
-                        but showing signs of deceleration. The CBN has maintained a hawkish stance with rates at 26.75%, 
-                        supporting the naira's stability in recent months.
-                      </p>
+                      <div>
+                        <h5 className="font-medium text-black mb-2 flex items-center">
+                          <div className="w-2 h-2 bg-black rounded-full mr-2"></div>
+                          Positioning
+                        </h5>
+                        <p className="text-sm text-gray-700 leading-relaxed">
+                          {aiBrief.positioning}
+                        </p>
+                      </div>
                     </div>
 
-                    <div>
-                      <h5 className="font-medium text-black mb-2 flex items-center">
-                        <div className="w-2 h-2 bg-black rounded-full mr-2"></div>
-                        Investment Outlook
-                      </h5>
-                      <p className="text-sm text-gray-700 leading-relaxed">
-                        Focus on oil and gas sector resilience alongside emerging fintech opportunities. 
-                        Infrastructure investments remain challenging but offer long-term value creation potential 
-                        for patient capital strategies.
-                      </p>
+                    <div className="mt-4 pt-3 border-t border-gray-100 text-xs text-gray-500">
+                      Generated by Zawadi AI using real-time ISI data and market indicators.
                     </div>
                   </div>
-
-                  <div className="mt-4 pt-3 border-t border-gray-100 text-xs text-gray-500">
-                    Generated by Zawadi AI using NLG models.
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <p>Unable to generate investment brief.</p>
+                    <p className="text-xs mt-2">Please check your authentication and try again.</p>
                   </div>
-                </div>
+                )}
               </div>
             </div>
           </div>

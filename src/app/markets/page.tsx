@@ -3,10 +3,22 @@
 import { useState, useEffect } from 'react'
 import Sidebar from '@/components/dashboard/Sidebar'
 import DashboardHeader from '@/components/dashboard/DashboardHeader'
+import { loadUserData, getFormattedName, getUserInitials, getUsernameFromEmail, type UserData } from '@/lib/userUtils'
+
+
 import MarketsContent from '@/components/markets/MarketsContent'
 
 export default function MarketsPage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+    const [userData, setUserData] = useState<UserData>({ email: '', firstName: '', lastName: '' })
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const data = await loadUserData()
+      setUserData(data)
+    }
+    fetchUserData()
+  }, [])
   const [userEmail, setUserEmail] = useState<string>('')
 
   useEffect(() => {
@@ -43,9 +55,9 @@ export default function MarketsPage() {
       <div className="flex-1 flex flex-col min-h-0">
         {/* Header - Fixed */}
         <DashboardHeader
-          userName={getUsernameFromEmail(userEmail)}
-          userInitials={getInitialsFromEmail(userEmail)}
-          truncatedName={getTruncatedUsername(userEmail)}
+          userName={getUsernameFromEmail(userData.email)}
+          userInitials={getUserInitials(userData)}
+          truncatedName={getFormattedName(userData)}
         />
 
         {/* Markets Content Area - Scrollable */}
