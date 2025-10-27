@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { countriesApi, metiApi, sentimentApi } from '@/lib/api'
 import { generateInvestmentBrief } from '@/lib/zwadiService'
+import { getCountryPreference } from '@/lib/countryPreference'
 
 interface Country {
   id: number
@@ -112,8 +113,26 @@ export default function METIContent() {
       const response = await countriesApi.getAfricanCountries()
       if (response.data.success && response.data.data) {
         setCountries(response.data.data)
-        if (response.data.data.length > 0) {
-          setSelectedCountry(response.data.data[0])
+
+        // Check for preferred country from settings
+        const preferredCountry = getCountryPreference()
+        let countryToSelect = null
+
+        if (preferredCountry) {
+          // Find the preferred country in the list
+          countryToSelect = response.data.data.find(
+            (c: Country) => c.id === preferredCountry.id || c.name === preferredCountry.name
+          )
+          console.log('Preferred country found:', countryToSelect?.name || 'None')
+        }
+
+        // Fall back to first country if no preference or preference not found
+        if (!countryToSelect && response.data.data.length > 0) {
+          countryToSelect = response.data.data[0]
+        }
+
+        if (countryToSelect) {
+          setSelectedCountry(countryToSelect)
         }
       }
     } catch (error) {
@@ -336,21 +355,21 @@ export default function METIContent() {
       return {
         label: 'Positive',
         color: 'text-green-600',
-        trend: sentimentPulse.sentiment_trend || 'Upward',
+        trend: 'Upward',
         icon: '📈'
       }
     } else if (sentiment < -20) {
       return {
         label: 'Negative',
         color: 'text-red-600',
-        trend: sentimentPulse.sentiment_trend || 'Downward',
+        trend: 'Downward',
         icon: '📉'
       }
     } else {
       return {
         label: 'Neutral',
         color: 'text-yellow-600',
-        trend: sentimentPulse.sentiment_trend || 'Stable',
+        trend: 'Stable',
         icon: '📊'
       }
     }
@@ -714,9 +733,11 @@ export default function METIContent() {
             ) : (
               <>
                 <div className="text-xl font-semibold text-black mb-2">{dominantSentiment.label}</div>
-                <div className="text-sm text-gray-600 mb-2">Based on multi-signal strength</div>
-                <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${dominantSentiment.badge}`}>
-                  {dominantSentiment.signal}
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-gray-600">Based on multi-signal strength</div>
+                  <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${dominantSentiment.badge}`}>
+                    {dominantSentiment.signal}
+                  </div>
                 </div>
               </>
             )}
@@ -735,15 +756,57 @@ export default function METIContent() {
               </div>
             ) : (
               <>
-                <div className={`text-xl font-semibold mb-2 ${sentimentPulseDisplay.color}`}>
-                  {sentimentPulseDisplay.label}
+                <div className="flex items-start justify-between mb-2">
+                  <div className={`text-lg font-semibold`}>
+                    {sentimentPulseDisplay.label}
+                  </div>
+                  <div className={`text-sm ${sentimentPulseDisplay.color} flex items-center gap-1 flex-shrink-0 ml-2`}>
+                    <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      {sentimentPulseDisplay.trend === 'Upward' ? (
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
+                      ) : sentimentPulseDisplay.trend === 'Downward' ? (
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 13l-5 5m0 0l-5-5m5 5V6" />
+                      ) : (
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                      )}
+                    </svg>
+                    <span className="whitespace-nowrap">{sentimentPulseDisplay.trend}</span>
+                  </div>
                 </div>
-                <div className="text-sm text-gray-600 mb-2">Based on last 30 days</div>
-                <div className="flex items-center space-x-2">
-                  <span className={`text-sm ${sentimentPulseDisplay.color}`}>
-                    {sentimentPulseDisplay.trend}
-                  </span>
-                  <span>{sentimentPulseDisplay.icon}</span>
+                <div className="flex items-center gap-2">
+                  <div className="text-sm text-gray-600">Based on last 30 days</div>
+                  <div className="flex-1 h-8 ml-16">
+                    <svg viewBox="0 0 200 50" className="w-full h-full">
+                      {sentimentPulseDisplay.trend === 'Upward' ? (
+                        <polyline
+                          points="0,45 40,35 80,30 120,20 160,15 200,10"
+                          fill="none"
+                          stroke="#10b981"
+                          strokeWidth="2.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      ) : sentimentPulseDisplay.trend === 'Downward' ? (
+                        <polyline
+                          points="0,10 40,15 80,20 120,30 160,35 200,45"
+                          fill="none"
+                          stroke="#ef4444"
+                          strokeWidth="2.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      ) : (
+                        <polyline
+                          points="0,25 40,22 80,28 120,25 160,23 200,25"
+                          fill="none"
+                          stroke="#6b7280"
+                          strokeWidth="2.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      )}
+                    </svg>
+                  </div>
                 </div>
               </>
             )}

@@ -9,9 +9,10 @@ interface DashboardHeaderProps {
   userInitials?: string
   truncatedName?: string
   onMobileMenuToggle?: () => void
+  profilePicture?: string
 }
 
-export default function DashboardHeader({ userName, userInitials, truncatedName, onMobileMenuToggle }: DashboardHeaderProps) {
+export default function DashboardHeader({ userName, userInitials, truncatedName, onMobileMenuToggle, profilePicture }: DashboardHeaderProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [showUserDropdown, setShowUserDropdown] = useState(false)
   const [showZwadiModal, setShowZwadiModal] = useState(false)
@@ -40,8 +41,8 @@ export default function DashboardHeader({ userName, userInitials, truncatedName,
   }, [])
 
   return (
-    <header className="bg-black border-b border-gray-700 px-6 py-6">
-      <div className="flex items-center justify-between">
+    <header className="bg-black border-b border-gray-700 px-6 h-[84px] flex items-center">
+      <div className="flex items-center justify-between w-full">
         {/* Mobile menu button + Title */}
         <div className="flex items-center">
           <button
@@ -63,20 +64,7 @@ export default function DashboardHeader({ userName, userInitials, truncatedName,
         {/* Right side - Search and Profile */}
         <div className="flex items-center space-x-4">
           {/* Search */}
-          <div className="relative hidden md:block">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg className="h-5 w-5 text-[#B0B2B2]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </div>
-            <input
-              type="text"
-              placeholder="Search ISI scores, signals, or insights"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 py-2 w-80 bg-transparent border border-[#B0B2B2] text-white rounded-lg  text-sm placeholder-[#B0B2B2]"
-            />
-          </div>
+   
 
           {/* Ask Zawadi AI Button */}
           <button
@@ -100,19 +88,27 @@ export default function DashboardHeader({ userName, userInitials, truncatedName,
               onClick={() => setShowUserDropdown(!showUserDropdown)}
               className="flex items-center hover:bg-gray-800 rounded-lg px-3 py-2 transition-colors"
             >
-              <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
-                <span className="text-white text-sm font-medium">
-                  {userInitials || userName.slice(0, 2).toUpperCase()}
-                </span>
-              </div>
+              {profilePicture ? (
+                <img
+                  src={profilePicture}
+                  alt="Profile"
+                  className="w-8 h-8 rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-8 h-8 bg-gradient-to-br from-pink-400 to-orange-400 rounded-full flex items-center justify-center">
+                  <span className="text-white text-sm font-medium">
+                    {userInitials || userName.slice(0, 2).toUpperCase()}
+                  </span>
+                </div>
+              )}
               <div className="ml-3 text-right">
                 <div className="text-sm font-medium text-white">{truncatedName || userName}</div>
                 <div className="text-xs text-gray-300 mr-1.5">Premium</div>
               </div>
-              <svg 
-                className={`ml-2 w-4 h-4 text-gray-400 transition-transform ${showUserDropdown ? 'rotate-180' : 'rotate-0'}`} 
-                fill="none" 
-                stroke="currentColor" 
+              <svg
+                className={`ml-2 w-4 h-4 text-gray-400 transition-transform ${showUserDropdown ? 'rotate-180' : 'rotate-0'}`}
+                fill="none"
+                stroke="currentColor"
                 viewBox="0 0 24 24"
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />

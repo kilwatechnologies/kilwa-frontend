@@ -103,21 +103,21 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
   return (
     <div className={`bg-black text-white transition-all duration-300 flex flex-col ${isCollapsed ? 'w-16' : 'w-64'} ${isCollapsed ? 'md:w-16' : 'md:w-64'} hidden md:flex border-r border-gray-800 relative`}>
       {/* Header */}
-      <div className={`${isCollapsed ? 'py-[30px] px-2' : 'py-[26px] px-4'} border-b border-gray-700 relative`}>
-        <div className="flex items-center justify-center">
+      <div className="px-4 border-b border-gray-700 relative flex items-center h-[84px]">
+        <div className="flex items-center justify-center w-full">
           {isCollapsed ? (
-            <Image 
-              src="/assets/kilwa-mini.svg" 
-              alt="Kilwa Mini" 
-              width={20} 
+            <Image
+              src="/assets/kilwa-mini.svg"
+              alt="Kilwa Mini"
+              width={20}
               height={20}
               className="object-contain"
             />
           ) : (
-            <Image 
-              src="/assets/kilwa-logo-dash.svg" 
-              alt="Kilwa" 
-              width={80} 
+            <Image
+              src="/assets/kilwa-logo-dash.svg"
+              alt="Kilwa"
+              width={80}
               height={32}
               className="object-contain"
             />

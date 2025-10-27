@@ -3,10 +3,12 @@
 import { useState, useEffect } from 'react'
 import Sidebar from '@/components/dashboard/Sidebar'
 import DashboardHeader from '@/components/dashboard/DashboardHeader'
+import SentimentFilters from '@/components/sentiment/SentimentFilters'
 import { loadUserData, getFormattedName, getUserInitials, getUsernameFromEmail, type UserData } from '@/lib/userUtils'
 
 
 import { sentimentApi, countriesApi } from '@/lib/api'
+import { getCountryPreference } from '@/lib/countryPreference'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 import Image from 'next/image'
 
@@ -28,11 +30,14 @@ interface NewsArticle {
 
 export default function SentimentPulsePage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [filtersCollapsed, setFiltersCollapsed] = useState(false)
+  const [filters, setFilters] = useState<any>({})
   const [selectedCountry, setSelectedCountry] = useState<Country | null>(null)
   const [countries, setCountries] = useState<Country[]>([])
   const [newsArticles, setNewsArticles] = useState<NewsArticle[]>([])
+  const [filteredNewsArticles, setFilteredNewsArticles] = useState<NewsArticle[]>([])
   const [loading, setLoading] = useState(true)
-  const [userEmail, setUserEmail] = useState<string>('')
+  const [userData, setUserData] = useState<UserData>({ email: '', firstName: '', lastName: '' })
   const [selectedPeriod, setSelectedPeriod] = useState('6 M')
   const [sentimentTimelineData, setSentimentTimelineData] = useState<any[]>([])
   const [trendsLoading, setTrendsLoading] = useState(false)
@@ -42,8 +47,11 @@ export default function SentimentPulsePage() {
 
   useEffect(() => {
     loadInitialData()
-    const email = localStorage.getItem('user_email') || localStorage.getItem('userEmail') || 'user@example.com'
-    setUserEmail(email)
+    const fetchUserData = async () => {
+      const data = await loadUserData()
+      setUserData(data)
+    }
+    fetchUserData()
   }, [])
 
   // Close calendar when clicking outside
@@ -79,6 +87,52 @@ export default function SentimentPulsePage() {
       loadTrendsData(getPeriodDays(selectedPeriod))
     }
   }, [selectedCountry])
+
+  // Apply filters to news articles
+  useEffect(() => {
+    if (!newsArticles || newsArticles.length === 0) {
+      setFilteredNewsArticles([])
+      return
+    }
+
+    let filtered = [...newsArticles]
+
+    // Filter by sectors
+    if (filters.sectors) {
+      const selectedSectors = Object.entries(filters.sectors)
+        .filter(([_, isSelected]) => isSelected)
+        .map(([sector, _]) => sector)
+
+      if (selectedSectors.length > 0) {
+        // Map filter sectors to topic keywords
+        const sectorMapping: Record<string, string[]> = {
+          energy: ['Energy', 'Oil & Gas', 'Renewable Energy', 'Power'],
+          technology: ['Technology', 'Fintech', 'Digital Economy', 'Telecom', 'ICT', 'Innovation'],
+          infrastructure: ['Infrastructure', 'Real Estate', 'Construction', 'Transport', 'Transportation'],
+          agriculture: ['Agriculture', 'Agribusiness', 'Food Security', 'Farming'],
+          manufacturing: ['Manufacturing', 'Industrial', 'Production', 'Industry'],
+          tourism: ['Tourism', 'Hospitality', 'Travel', 'Culture'],
+          financial: ['Finance', 'Banking', 'Investment', 'Capital Markets', 'Economics', 'Economy'],
+          healthcare: ['Healthcare', 'Health', 'Pharmaceutical', 'Medical']
+        }
+
+        filtered = filtered.filter(article => {
+          const topics = article.topics || []
+          return selectedSectors.some(sector => {
+            const sectorValues = sectorMapping[sector] || []
+            return sectorValues.some(val =>
+              topics.some((topic: string) =>
+                topic.toLowerCase().includes(val.toLowerCase()) ||
+                val.toLowerCase().includes(topic.toLowerCase())
+              )
+            )
+          })
+        })
+      }
+    }
+
+    setFilteredNewsArticles(filtered)
+  }, [newsArticles, filters])
 
   const getPeriodDays = (period: string) => {
     const daysMap: { [key: string]: number } = {
@@ -261,9 +315,28 @@ export default function SentimentPulsePage() {
       const response = await countriesApi.getAfricanCountries()
       if (response.data.success && response.data.data) {
         setCountries(response.data.data)
-        // Default to Kenya
-        const kenya = response.data.data.find((c: Country) => c.name === 'Kenya')
-        setSelectedCountry(kenya || response.data.data[0])
+
+        // Check for preferred country from settings
+        const preferredCountry = getCountryPreference()
+        let countryToSelect = null
+
+        if (preferredCountry) {
+          // Find the preferred country in the list
+          countryToSelect = response.data.data.find(
+            (c: Country) => c.id === preferredCountry.id || c.name === preferredCountry.name
+          )
+          console.log('Preferred country found:', countryToSelect?.name || 'None')
+        }
+
+        // Fall back to Kenya or first country if no preference or preference not found
+        if (!countryToSelect) {
+          const kenya = response.data.data.find((c: Country) => c.name === 'Kenya')
+          countryToSelect = kenya || response.data.data[0]
+        }
+
+        if (countryToSelect) {
+          setSelectedCountry(countryToSelect)
+        }
       }
     } catch (error) {
       console.error('Error loading countries:', error)
@@ -292,23 +365,6 @@ export default function SentimentPulsePage() {
     } catch (error) {
       console.error('Error loading sentiment data:', error)
     }
-  }
-
-  const getUsernameFromEmail = (email: string) => {
-    if (!email || !email.includes('@')) return 'User'
-    const [localPart] = email.split('@')
-    return localPart
-  }
-
-  const getInitialsFromEmail = (email: string) => {
-    if (!email || !email.includes('@')) return 'US'
-    const [localPart] = email.split('@')
-    return localPart.slice(0, 2).toUpperCase()
-  }
-
-  const getTruncatedUsername = (email: string) => {
-    const username = getUsernameFromEmail(email)
-    return username.length > 5 ? username.slice(0, 5) + '...' : username
   }
 
   const getCountryFlag = (countryName: string) => {
@@ -466,6 +522,8 @@ export default function SentimentPulsePage() {
     )
   }
 
+  const displayArticles = filteredNewsArticles.length > 0 ? filteredNewsArticles : newsArticles
+
   return (
     <div className="h-screen flex bg-white overflow-hidden">
       {/* Sidebar */}
@@ -478,17 +536,102 @@ export default function SentimentPulsePage() {
       <div className="flex-1 flex flex-col min-h-0">
         {/* Header */}
         <DashboardHeader
-          userName={getUsernameFromEmail(userEmail)}
-          userInitials={getInitialsFromEmail(userEmail)}
-          truncatedName={getTruncatedUsername(userEmail)}
+          userName={getUsernameFromEmail(userData.email)}
+          userInitials={getUserInitials(userData)}
+          truncatedName={getFormattedName(userData)}
+          profilePicture={userData.profilePicture}
         />
 
-        {/* Content Area */}
-        <div className="flex-1 overflow-y-auto p-8 bg-white">
-          {/* Country Selector and Date */}
+        {/* Content Area with Filters */}
+        <div className="flex-1 flex min-h-0">
+          {/* Filters Sidebar - Only show when NOT collapsed */}
+          {!filtersCollapsed && (
+            <SentimentFilters
+              onFiltersChange={setFilters}
+              isCollapsed={filtersCollapsed}
+              onToggleCollapse={() => setFiltersCollapsed(!filtersCollapsed)}
+            />
+          )}
+
+          {/* Main scrollable content */}
+          <div className="flex-1 w-full overflow-y-auto p-8 bg-white">
+          {/* Top Bar: Filters button (when collapsed) OR Country Selector (when open) + Date */}
           <div className="flex items-center justify-between mb-8">
+            {/* Left side: Filters button when collapsed, Country selector when open */}
             <div className="flex items-center gap-3">
-              {selectedCountry && (
+              {filtersCollapsed ? (
+                <button
+                  onClick={() => setFiltersCollapsed(false)}
+                  className="bg-black rounded-md px-4 py-2 cursor-pointer flex items-center gap-2"
+                  aria-label="Expand filters"
+                >
+                  <Image
+                    src="/assets/flask.svg"
+                    alt="Filter"
+                    width={20}
+                    height={20}
+                    className="text-white"
+                  />
+                  <span className="text-white font-semibold text-sm mr-8">Filters</span>
+                  <Image
+                    src="/assets/filter.svg"
+                    alt="Expand"
+                    width={16}
+                    height={16}
+                    className="text-white"
+                  />
+                </button>
+              ) : (
+                /* Country Selector - shown on left when filters are open */
+                selectedCountry && (
+                  <div className="relative">
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center overflow-hidden flex-shrink-0 pointer-events-none z-10">
+                      {getCountryFlag(selectedCountry.name) ? (
+                        <Image
+                          src={getCountryFlag(selectedCountry.name)!}
+                          alt={selectedCountry.name}
+                          width={32}
+                          height={32}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-base">🌍</span>
+                      )}
+                    </div>
+                    <select
+                      value={selectedCountry.id}
+                      onChange={(e) => {
+                        const country = countries.find(c => c.id === parseInt(e.target.value))
+                        setSelectedCountry(country || null)
+                      }}
+                      className="bg-white text-gray-900 pl-14 pr-10 py-2 rounded-lg border border-gray-200 focus:outline-none focus:border-gray-200 appearance-none cursor-pointer"
+                    >
+                      {countries.map(country => (
+                        <option key={country.id} value={country.id}>{country.name}</option>
+                      ))}
+                    </select>
+                    <svg
+                      className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-600"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </div>
+                )
+              )}
+            </div>
+
+            {/* Right side: Calendar (and Country selector if filters collapsed) */}
+            <div className="flex items-center gap-3">
+              {/* Country Selector - shown on right when filters are collapsed */}
+              {filtersCollapsed && selectedCountry && (
                 <div className="relative">
                   <div className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center overflow-hidden flex-shrink-0 pointer-events-none z-10">
                     {getCountryFlag(selectedCountry.name) ? (
@@ -530,8 +673,8 @@ export default function SentimentPulsePage() {
                   </svg>
                 </div>
               )}
-            </div>
-            <div className="relative">
+              {/* Calendar - always on the right */}
+              <div className="relative">
               <button
                 onClick={() => setShowCalendar(!showCalendar)}
                 className="flex items-center gap-2 text-gray-600 bg-white px-4 py-2 rounded-lg border border-gray-200 shadow-sm hover:border-gray-300 transition-colors cursor-pointer"
@@ -642,8 +785,9 @@ export default function SentimentPulsePage() {
                   </div>
                 </div>
               )}
-            </div>
-          </div>
+            </div> {/* End Calendar relative */}
+            </div> {/* End Country Selector and Date */}
+          </div> {/* End Top Bar */}
 
           {/* Main Grid */}
           <div className="grid grid-cols-[1.2fr_0.8fr] gap-6 mb-6">
@@ -806,100 +950,100 @@ export default function SentimentPulsePage() {
               </div>
             </div>
           </div>
-</div>
+ </div>
           {/* Bottom Grid - Signal Cards & Sentiment Mix */}
-       <div className="grid grid-cols-2 gap-6 items-stretch">
-  {/* Signal Cards */}
-  <div className="flex flex-col">
-    <div className="mb-4">
-      <h2 className="text-gray-900 text-xl font-semibold mb-1">Signal Cards</h2>
-      <p className="text-gray-500 text-sm">
-        Highlights why investor confidence is declining across sectors.
-      </p>
-    </div>
-
-    {/* Make this div stretch to full height */}
-    <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm flex-1 flex flex-col">
-      <div className="divide-y divide-gray-200 flex-1 overflow-y-auto">
-        {newsArticles.slice(0, 4).map((article, index) => (
-          <div
-            key={article.id}
-            className={`py-4 transition-all cursor-pointer ${
-              index === 0 ? 'pt-0' : ''
-            }`}
-          >
-            <h3 className="text-gray-900 text-sm font-medium mb-3 leading-snug">
-              {article.title}
-            </h3>
-            <div className="flex items-center justify-between flex-wrap gap-2">
-              <div className="flex items-center gap-2">
-                <span
-                  className={`px-2.5 py-1 rounded-full text-xs font-medium ${getCategoryColor(
-                    article.topics?.[0] || 'Economics'
-                  )}`}
-                >
-                  {article.topics?.[0] || 'Economics'}
-                </span>
-                {article.sentiment_label && (
-                  <span
-                    className={`px-2.5 py-1 rounded-full text-xs font-medium capitalize ${getSentimentBadgeColor(
-                      article.sentiment_label
-                    )}`}
-                  >
-                    {article.sentiment_label}
-                  </span>
-                )}
+          <div className="grid grid-cols-2 gap-6 items-stretch mb-6">
+            {/* Signal Cards */}
+            <div className="flex flex-col">
+              <div className="mb-4">
+                <h2 className="text-gray-900 text-xl font-semibold mb-1">Signal Cards</h2>
+                <p className="text-gray-500 text-sm">
+                  Highlights why investor confidence is declining across sectors.
+                </p>
               </div>
-              <span className="text-xs text-gray-500">
-                {getRelativeTime(article.published_at)}
-              </span>
+
+              {/* Make this div stretch to full height */}
+              <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm flex-1 flex flex-col">
+                <div className="divide-y divide-gray-200 flex-1 overflow-y-auto">
+                  {displayArticles.slice(0, 4).map((article, index) => (
+                    <div
+                      key={article.id}
+                      className={`py-4 transition-all cursor-pointer ${
+                        index === 0 ? 'pt-0' : ''
+                      }`}
+                    >
+                      <h3 className="text-gray-900 text-sm font-medium mb-3 leading-snug">
+                        {article.title}
+                      </h3>
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`px-2.5 py-1 rounded-full text-xs font-medium ${getCategoryColor(
+                              article.topics?.[0] || 'Economics'
+                            )}`}
+                          >
+                            {article.topics?.[0] || 'Economics'}
+                          </span>
+                          {article.sentiment_label && (
+                            <span
+                              className={`px-2.5 py-1 rounded-full text-xs font-medium capitalize ${getSentimentBadgeColor(
+                                article.sentiment_label
+                              )}`}
+                            >
+                              {article.sentiment_label}
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-xs text-gray-500">
+                          {getRelativeTime(article.published_at)}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  </div>
 
-  {/* Sentiment Mix */}
-  <div className="flex flex-col">
-    <div className="mb-4">
-      <h2 className="text-gray-900 text-xl font-semibold mb-1">Sentiment Mix</h2>
-      <p className="text-gray-500 text-sm">
-        Confidence-based outlook for market entry over the next 6 months.
-      </p>
-    </div>
+            {/* Sentiment Mix */}
+            <div className="flex flex-col">
+              <div className="mb-4">
+                <h2 className="text-gray-900 text-xl font-semibold mb-1">Sentiment Mix</h2>
+                <p className="text-gray-500 text-sm">
+                  Confidence-based outlook for market entry over the next 6 months.
+                </p>
+              </div>
 
-    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex-1 flex flex-col">
-      <div className="p-6 flex flex-col flex-1">
-        {/* Legend */}
-        <div className="flex gap-6 mb-6 flex-shrink-0">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#8FE36C' }}></div>
-            <span className="text-sm text-gray-600">Positive</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#FFE054' }}></div>
-            <span className="text-sm text-gray-600">Neutral</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#FF8F85' }}></div>
-            <span className="text-sm text-gray-600">Negative</span>
-          </div>
-        </div>
+              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex-1 flex flex-col">
+                <div className="p-6 flex flex-col flex-1">
+                  {/* Legend */}
+                  <div className="flex gap-6 mb-6 flex-shrink-0">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#8FE36C' }}></div>
+                      <span className="text-sm text-gray-600">Positive</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#FFE054' }}></div>
+                      <span className="text-sm text-gray-600">Neutral</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#FF8F85' }}></div>
+                      <span className="text-sm text-gray-600">Negative</span>
+                    </div>
+                  </div>
 
-        {/* Pie Chart */}
-        <div className="flex items-center justify-center flex-1">
-          <ResponsiveContainer width="100%" height={320}>
-                  <PieChart>
-                    <Pie
-                      data={sentimentMixData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={0}
-                      outerRadius={130}
-                      paddingAngle={0}
-                      dataKey="value"
-                      label={({ cx, cy, midAngle, innerRadius, outerRadius, value }) => {
+                  {/* Pie Chart */}
+                  <div className="flex items-center justify-center flex-1">
+                    <ResponsiveContainer width="100%" height={320}>
+                      <PieChart>
+                        <Pie
+                          data={sentimentMixData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={0}
+                          outerRadius={130}
+                          paddingAngle={0}
+                          dataKey="value"
+                          label={({ cx, cy, midAngle, innerRadius, outerRadius, value }) => {
                         const RADIAN = Math.PI / 180
                         // Ensure cx, cy, midAngle, innerRadius, outerRadius are numbers and not undefined
                         const cxNum = typeof cx === 'number' ? cx : 0
@@ -936,15 +1080,16 @@ export default function SentimentPulsePage() {
                     />
                   </PieChart>
                 </ResponsiveContainer>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+                  </div> {/* End chart wrapper */}
+                </div> {/* End p-6 padding */}
+              </div> {/* End card */}
+            </div> {/* End Sentiment Mix flex-col */}
+          </div> {/* End Bottom grid */}
 
-          
-        </div>
-      </div>
+          {/* End Main scrollable content */}
+        </div> {/* End Content Area with Filters */}
+      </div> {/* End Main Content */}
+    </div> {/* End Main container */}
     </div>
   )
 }

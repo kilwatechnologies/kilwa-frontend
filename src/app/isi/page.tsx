@@ -9,14 +9,24 @@ import { loadUserData, getFormattedName, getUserInitials, getUsernameFromEmail, 
 export default function ISIPage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [userData, setUserData] = useState<UserData>({ email: '', firstName: '', lastName: '' })
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const fetchUserData = async () => {
       const data = await loadUserData()
       setUserData(data)
+      setLoading(false)
     }
     fetchUserData()
   }, [])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      </div>
+    )
+  }
 
   return (
     <div className="h-screen flex bg-black overflow-hidden">
@@ -33,6 +43,7 @@ export default function ISIPage() {
           userName={getUsernameFromEmail(userData.email)}
           userInitials={getUserInitials(userData)}
           truncatedName={getFormattedName(userData)}
+          profilePicture={userData.profilePicture}
         />
 
         {/* ISI Content Area - Scrollable */}

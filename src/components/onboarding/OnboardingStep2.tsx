@@ -44,7 +44,7 @@ export default function OnboardingStep2({ onNext, onBack }: OnboardingStep2Props
 
       {/* Title */}
       <div className="text-center mb-8">
-        <h1 className="text-[32px] font-semibold text-gray-900 mb-2">
+        <h1 className="text-[32px] font-semibold text-gray-900 mb-2 leading-[120%]">
          Customize Kilwa to <br/>your needs
         </h1>
         <p className="text-gray-600 text-sm">

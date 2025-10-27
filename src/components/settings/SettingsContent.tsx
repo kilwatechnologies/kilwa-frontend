@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { authApi } from '@/lib/api'
+import { authApi, countriesApi, stripeApi, notificationApi } from '@/lib/api'
+import { saveCountryPreference } from '@/lib/countryPreference'
 
 type Tab = 'profile' | 'account' | 'notifications'
 
@@ -23,6 +24,10 @@ export default function SettingsContent() {
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(true)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [userId, setUserId] = useState<number | null>(null)
+  const [userPlan, setUserPlan] = useState<string>('free')
+  const [managingSubscription, setManagingSubscription] = useState(false)
 
   const [focusAreas, setFocusAreas] = useState({
     macroeconomic: true,
@@ -38,6 +43,7 @@ export default function SettingsContent() {
   const [metiNotifications, setMetiNotifications] = useState(true)
   const [metiAlert, setMetiAlert] = useState('Optimal Entry')
   const [weeklyUpdates, setWeeklyUpdates] = useState(true)
+  const [savingNotifications, setSavingNotifications] = useState(false)
 
   const selectedCount = Object.values(focusAreas).filter(Boolean).length
 
@@ -90,6 +96,26 @@ export default function SettingsContent() {
             setJobTitle(userData.job_title || '')
             setCountry(userData.country || '')
             setIndustry(userData.industry || '')
+            setUserId(userData.id || null)
+            setUserPlan(userData.subscription_plan || 'free')
+
+            // Load notification preferences
+            if (userData.id) {
+              try {
+                const prefsResponse = await notificationApi.getPreferences(userData.id)
+                if (prefsResponse.data.success && prefsResponse.data.data) {
+                  const prefs = prefsResponse.data.data
+                  setEmailNotifications(prefs.email_notifications ?? true)
+                  setWeeklyUpdates(prefs.weekly_isi_updates ?? true)
+                  setIsiNotifications(prefs.isi_notifications ?? true)
+                  setIsiThreshold(prefs.isi_threshold?.toString() ?? '50')
+                  setMetiNotifications(prefs.meti_notifications ?? true)
+                  setMetiAlert(prefs.meti_alert_type ?? 'Optimal Entry')
+                }
+              } catch (error) {
+                console.error('Failed to load notification preferences:', error)
+              }
+            }
           }
         }
       } catch (error) {
@@ -202,6 +228,28 @@ export default function SettingsContent() {
         localStorage.setItem('userEmail', email)
       }
 
+      // Save country preference to localStorage for use across the app
+      if (country) {
+        try {
+          const countriesResponse = await countriesApi.getAfricanCountries()
+          if (countriesResponse.data.success && countriesResponse.data.data) {
+            const selectedCountry = countriesResponse.data.data.find(
+              (c: any) => c.name === country
+            )
+            if (selectedCountry) {
+              saveCountryPreference({
+                id: selectedCountry.id,
+                name: selectedCountry.name,
+                isoCode: selectedCountry.isoCode
+              })
+              console.log('Country preference saved:', selectedCountry.name)
+            }
+          }
+        } catch (error) {
+          console.error('Failed to save country preference:', error)
+        }
+      }
+
       showToast('Settings saved successfully!', 'success')
 
       // Optionally reload the page to update header
@@ -243,6 +291,118 @@ export default function SettingsContent() {
       console.error('Failed to change password:', error)
       const errorMessage = error?.response?.data?.detail || 'Failed to change password. Please try again.'
       showToast(errorMessage, 'error')
+    }
+  }
+
+  const handleDeleteAccount = async () => {
+    try {
+      const token = localStorage.getItem('access_token')
+      if (!token) {
+        showToast('Authentication required', 'error')
+        return
+      }
+
+      await authApi.deleteAccount(token)
+
+      // Clear all user data from localStorage
+      localStorage.removeItem('access_token')
+      localStorage.removeItem('refresh_token')
+      localStorage.removeItem('user_email')
+      localStorage.removeItem('userEmail')
+      localStorage.removeItem('country_preference')
+
+      showToast('Account deleted successfully', 'success')
+
+      // Redirect to home/login page after a short delay
+      setTimeout(() => {
+        window.location.href = '/'
+      }, 2000)
+    } catch (error: any) {
+      console.error('Failed to delete account:', error)
+      const errorMessage = error?.response?.data?.detail || 'Failed to delete account. Please try again.'
+      showToast(errorMessage, 'error')
+    }
+  }
+
+  const handleSaveNotifications = async () => {
+    try {
+      setSavingNotifications(true)
+
+      if (!userId) {
+        showToast('User ID not found. Please refresh the page.', 'error')
+        return
+      }
+
+      await notificationApi.updatePreferences(userId, {
+        email_notifications: emailNotifications,
+        weekly_isi_updates: weeklyUpdates,
+        isi_notifications: isiNotifications,
+        isi_threshold: parseInt(isiThreshold),
+        meti_notifications: metiNotifications,
+        meti_alert_type: metiAlert
+      })
+
+      showToast('Notification preferences saved successfully!', 'success')
+    } catch (error: any) {
+      console.error('Failed to save notification preferences:', error)
+      const errorMessage = error?.response?.data?.detail || 'Failed to save notification preferences. Please try again.'
+      showToast(errorMessage, 'error')
+    } finally {
+      setSavingNotifications(false)
+    }
+  }
+
+  const handleManageSubscription = async () => {
+    try {
+      setManagingSubscription(true)
+
+      if (!userId) {
+        showToast('User ID not found. Please refresh the page.', 'error')
+        return
+      }
+
+      console.log('Managing subscription for user:', userId, 'plan:', userPlan)
+
+      // Temporary: Redirect all users to plan selection until Customer Portal is configured
+      // TODO: Once Stripe Customer Portal is configured, use the code below for paid users
+      window.location.href = '/onboarding/step-5'
+      return
+
+      // // For free tier users, redirect to onboarding step 5 to select a plan
+      // if (userPlan === 'free') {
+      //   window.location.href = '/onboarding/step-5'
+      //   return
+      // }
+
+      // // For paid users, open Stripe Customer Portal
+      // console.log('Creating portal session...')
+      // const response = await stripeApi.createPortalSession(
+      //   userId,
+      //   `${window.location.origin}/settings?tab=account`
+      // )
+
+      // console.log('Portal session response:', response.data)
+
+      // if (response.data.success && response.data.data?.portal_url) {
+      //   // Redirect to Stripe Customer Portal
+      //   window.location.href = response.data.data.portal_url
+      // } else if (!response.data.success) {
+      //   // Subscription record missing in database - redirect to re-purchase
+      //   const errorMsg = (response.data as any).error || 'Failed to create portal session'
+      //   showToast(`Subscription issue: ${errorMsg}. Redirecting to upgrade page...`, 'error')
+      //   setTimeout(() => {
+      //     window.location.href = '/onboarding/step-5'
+      //   }, 2000)
+      // } else {
+      //   throw new Error('Failed to create portal session')
+      // }
+    } catch (error: any) {
+      console.error('Failed to manage subscription:', error)
+      console.error('Error response:', error?.response)
+      const errorMessage = error?.response?.data?.detail || error?.response?.data?.error || 'Failed to open subscription management. Please try again.'
+      showToast(errorMessage, 'error')
+    } finally {
+      setManagingSubscription(false)
     }
   }
 
@@ -632,9 +792,9 @@ export default function SettingsContent() {
                       <h3 className="text-base font-semibold text-black mb-1">Two Factor Authentication (2FA)</h3>
                       <p className="text-sm text-gray-600">You have enabled the two step verification</p>
                     </div>
-                    <button className="relative inline-flex h-8 w-14 items-center rounded-full bg-black transition-colors">
-                      <span className="inline-block h-6 w-6 transform rounded-full bg-white transition-transform translate-x-7 shadow-sm">
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="absolute inset-0 m-auto">
+                    <button className="relative inline-flex h-6 w-10 items-center rounded-full bg-black transition-colors">
+                      <span className="inline-block h-5 w-5 transform rounded-full bg-white transition-transform translate-x-[18px] shadow-sm">
+                        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="absolute inset-0 m-auto">
                           <path d="M13.3346 4L6.0013 11.3333L2.66797 8" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>
                       </span>
@@ -648,10 +808,18 @@ export default function SettingsContent() {
                 <div className="rounded-2xl p-6 flex items-center justify-between" style={{ backgroundColor: '#F8FAFB' }}>
                   <div>
                     <h3 className="text-base font-semibold text-black mb-1">Subscription</h3>
-                    <p className="text-sm text-gray-600">Update your current subscription plan</p>
+                    <p className="text-sm text-gray-600">
+                      {userPlan === 'free'
+                        ? 'Upgrade your plan to unlock more features'
+                        : `Current plan: ${userPlan.charAt(0).toUpperCase() + userPlan.slice(1)}`}
+                    </p>
                   </div>
-                  <button className="px-6 py-2.5 bg-white border border-gray-300 text-black rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">
-                    Manage subscription
+                  <button
+                    onClick={handleManageSubscription}
+                    disabled={managingSubscription}
+                    className="px-6 py-2.5 bg-white border border-gray-300 text-black rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {managingSubscription ? 'Loading...' : (userPlan === 'free' ? 'Upgrade plan' : 'Manage subscription')}
                   </button>
                 </div>
               </div>
@@ -663,7 +831,10 @@ export default function SettingsContent() {
                     <h3 className="text-base font-semibold text-black mb-1">Delete account</h3>
                     <p className="text-sm text-gray-600">You can delete your account permanently.</p>
                   </div>
-                  <button className="px-6 py-2.5 bg-white border border-red-500 text-red-500 rounded-lg text-sm font-medium hover:bg-red-50 transition-colors">
+                  <button
+                    onClick={() => setShowDeleteConfirm(true)}
+                    className="px-6 py-2.5 bg-white border border-red-500 text-red-500 rounded-lg text-sm font-medium hover:bg-red-50 transition-colors"
+                  >
                     Delete account
                   </button>
                 </div>
@@ -769,17 +940,17 @@ export default function SettingsContent() {
                 </div>
                 <button
                   onClick={() => setEmailNotifications(!emailNotifications)}
-                  className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${
+                  className={`relative inline-flex h-6 w-10 items-center rounded-full transition-colors ${
                     emailNotifications ? 'bg-black' : 'bg-gray-300'
                   }`}
                 >
                   <span
-                    className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform shadow-sm ${
-                      emailNotifications ? 'translate-x-7' : 'translate-x-1'
+                    className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform shadow-sm ${
+                      emailNotifications ? 'translate-x-[18px]' : 'translate-x-[2px]'
                     }`}
                   >
                     {emailNotifications && (
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="absolute inset-0 m-auto">
+                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="absolute inset-0 m-auto">
                         <path d="M13.3346 4L6.0013 11.3333L2.66797 8" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
                     )}
@@ -792,13 +963,13 @@ export default function SettingsContent() {
             <div className="mb-6 pb-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
-                  <h3 className="text-base font-semibold text-black mb-3">ISI Notifications</h3>
+                  <h3 className="text-base font-semibold text-black mb-2">ISI Notifications</h3>
                   <div className="flex items-center gap-3">
                     <span className="text-sm text-gray-600">Notify when ISI drops below</span>
                     <select
                       value={isiThreshold}
                       onChange={(e) => setIsiThreshold(e.target.value)}
-                      className="px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 bg-transparent text-sm text-gray-900"
+                      className="px-4 py-1 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 bg-transparent text-sm text-gray-900"
                     >
                       <option value="30">30</option>
                       <option value="40">40</option>
@@ -810,17 +981,17 @@ export default function SettingsContent() {
                 </div>
                 <button
                   onClick={() => setIsiNotifications(!isiNotifications)}
-                  className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${
+                  className={`relative inline-flex h-6 w-10 items-center rounded-full transition-colors ${
                     isiNotifications ? 'bg-black' : 'bg-gray-300'
                   }`}
                 >
                   <span
-                    className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform shadow-sm ${
-                      isiNotifications ? 'translate-x-7' : 'translate-x-1'
+                    className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform shadow-sm ${
+                      isiNotifications ? 'translate-x-[18px]' : 'translate-x-[2px]'
                     }`}
                   >
                     {isiNotifications && (
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="absolute inset-0 m-auto">
+                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="absolute inset-0 m-auto">
                         <path d="M13.3346 4L6.0013 11.3333L2.66797 8" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
                     )}
@@ -833,13 +1004,13 @@ export default function SettingsContent() {
             <div className="mb-6 pb-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
-                  <h3 className="text-base font-semibold text-black mb-3">METI Notifications</h3>
+                  <h3 className="text-base font-semibold text-black mb-2">METI Notifications</h3>
                   <div className="flex items-center gap-3">
                     <span className="text-sm text-gray-600">Alert me when METI shifts to</span>
                     <select
                       value={metiAlert}
                       onChange={(e) => setMetiAlert(e.target.value)}
-                      className="px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 bg-transparent text-sm text-gray-900"
+                      className="px-4 py-1 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 bg-transparent text-sm text-gray-900"
                     >
                       <option value="Optimal Entry">Optimal Entry</option>
                       <option value="Caution">Caution</option>
@@ -849,17 +1020,17 @@ export default function SettingsContent() {
                 </div>
                 <button
                   onClick={() => setMetiNotifications(!metiNotifications)}
-                  className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${
+                  className={`relative inline-flex h-6 w-10 items-center rounded-full transition-colors ${
                     metiNotifications ? 'bg-black' : 'bg-gray-300'
                   }`}
                 >
                   <span
-                    className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform shadow-sm ${
-                      metiNotifications ? 'translate-x-7' : 'translate-x-1'
+                    className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform shadow-sm ${
+                      metiNotifications ? 'translate-x-[18px]' : 'translate-x-[2px]'
                     }`}
                   >
                     {metiNotifications && (
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="absolute inset-0 m-auto">
+                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="absolute inset-0 m-auto">
                         <path d="M13.3346 4L6.0013 11.3333L2.66797 8" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
                     )}
@@ -877,17 +1048,17 @@ export default function SettingsContent() {
                 </div>
                 <button
                   onClick={() => setWeeklyUpdates(!weeklyUpdates)}
-                  className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${
+                  className={`relative inline-flex h-6 w-10 items-center rounded-full transition-colors ${
                     weeklyUpdates ? 'bg-black' : 'bg-gray-300'
                   }`}
                 >
                   <span
-                    className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform shadow-sm ${
-                      weeklyUpdates ? 'translate-x-7' : 'translate-x-1'
+                    className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform shadow-sm ${
+                      weeklyUpdates ? 'translate-x-[18px]' : 'translate-x-[2px]'
                     }`}
                   >
                     {weeklyUpdates && (
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="absolute inset-0 m-auto">
+                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="absolute inset-0 m-auto">
                         <path d="M13.3346 4L6.0013 11.3333L2.66797 8" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
                     )}
@@ -913,9 +1084,11 @@ export default function SettingsContent() {
               Cancel
             </button>
             <button
-              className="px-8 py-3 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+              onClick={handleSaveNotifications}
+              disabled={savingNotifications}
+              className="px-8 py-3 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Save changes
+              {savingNotifications ? 'Saving...' : 'Save changes'}
             </button>
           </div>
         </div>
@@ -938,6 +1111,35 @@ export default function SettingsContent() {
             </svg>
           )}
           <span className="font-medium">{toast.message}</span>
+        </div>
+      )}
+
+      {/* Delete Account Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4">
+            <h3 className="text-2xl font-bold text-black mb-4">Delete Account</h3>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to delete your account? This action cannot be undone. All your data will be permanently removed.
+            </p>
+            <div className="flex gap-4">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setShowDeleteConfirm(false)
+                  handleDeleteAccount()
+                }}
+                className="flex-1 px-6 py-3 bg-red-500 text-white rounded-lg text-sm font-medium hover:bg-red-600 transition-colors"
+              >
+                Delete Account
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

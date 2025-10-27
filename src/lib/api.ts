@@ -218,6 +218,9 @@ export const authApi = {
 
   updatePreferences: (preferences: any, token: string) =>
     authInstance.put<APIResponse<any>>('/auth/preferences', preferences, { headers: { Authorization: `Bearer ${token}` } }),
+
+  deleteAccount: (token: string) =>
+    authInstance.delete<APIResponse<any>>('/auth/account', { headers: { Authorization: `Bearer ${token}` } }),
 };
 
 // Sentiment API
@@ -273,6 +276,77 @@ export const marketsApi = {
   // Get industry & sector KPIs
   getIndustrySector: (countryId: number, year: number = 2023) =>
     api.get<APIResponse<any[]>>(`/markets/industry-sector?country_id=${countryId}&year=${year}`),
+};
+
+// Currency API
+export const currencyApi = {
+  // Get currency exchange rates for a country
+  getRates: (country: string, targetCurrencies: string = 'USD,EUR,GBP,JPY') =>
+    api.get<APIResponse<any>>(`/currencies?country=${encodeURIComponent(country)}&target_currencies=${targetCurrencies}`),
+
+  // Get supported currencies
+  getSupportedCurrencies: () =>
+    api.get<APIResponse<any>>('/currencies/supported'),
+};
+
+// Stripe Payment API
+export const stripeApi = {
+  // Create checkout session for new subscriptions
+  createCheckoutSession: (userId: number, planType: string, billingPeriod: string, successUrl?: string, cancelUrl?: string) =>
+    api.post<APIResponse<{ checkout_url: string; session_id: string }>>('/stripe/create-checkout-session', {
+      user_id: userId,
+      plan_type: planType,
+      billing_period: billingPeriod,
+      success_url: successUrl,
+      cancel_url: cancelUrl
+    }),
+
+  // Get user's subscription details
+  getSubscription: (userId: number) =>
+    api.get<APIResponse<any>>(`/stripe/subscription/${userId}`),
+
+  // Create customer portal session for subscription management
+  createPortalSession: (userId: number, returnUrl?: string) =>
+    api.post<APIResponse<{ portal_url: string }>>('/stripe/create-portal-session', {
+      user_id: userId,
+      return_url: returnUrl
+    }),
+
+  // Cancel subscription
+  cancelSubscription: (userId: number, cancelAtPeriodEnd: boolean = true) =>
+    api.post<APIResponse<any>>('/stripe/cancel-subscription', {
+      user_id: userId,
+      cancel_at_period_end: cancelAtPeriodEnd
+    }),
+
+  // Get available plans
+  getPlans: () =>
+    api.get<APIResponse<any[]>>('/stripe/plans'),
+
+  // Get payment history
+  getPayments: (userId: number, limit: number = 10) =>
+    api.get<APIResponse<any[]>>(`/stripe/payments/${userId}?limit=${limit}`)
+};
+
+// Notification Preferences API
+export const notificationApi = {
+  // Get user's notification preferences
+  getPreferences: (userId: number) =>
+    api.get<APIResponse<any>>(`/notifications/preferences/${userId}`),
+
+  // Update notification preferences
+  updatePreferences: (
+    userId: number,
+    preferences: {
+      email_notifications?: boolean;
+      weekly_isi_updates?: boolean;
+      isi_notifications?: boolean;
+      isi_threshold?: number;
+      meti_notifications?: boolean;
+      meti_alert_type?: string;
+    }
+  ) =>
+    api.put<APIResponse<any>>(`/notifications/preferences/${userId}`, null, { params: preferences })
 };
 
 export default api;

@@ -27,6 +27,8 @@ export default function DashboardFilters({ onFiltersChange, isCollapsed = false,
     }
   })
 
+  const [hoveredInfo, setHoveredInfo] = useState<string | null>(null)
+
   const updateFilter = (key: string, value: any) => {
     const newFilters = { ...filters, [key]: value }
     setFilters(newFilters)
@@ -34,7 +36,19 @@ export default function DashboardFilters({ onFiltersChange, isCollapsed = false,
   }
 
   const updateSector = (sector: string, checked: boolean) => {
-    const newSectors = { ...filters.sectors, [sector]: checked }
+    // Only allow one sector to be selected at a time
+    let newSectors = { ...filters.sectors }
+    if (checked) {
+      // Uncheck all other sectors
+      Object.keys(newSectors).forEach(key => {
+        newSectors[key as keyof typeof newSectors] = false
+      })
+      // Check the selected sector
+      newSectors[sector as keyof typeof newSectors] = true
+    } else {
+      // Uncheck the sector
+      newSectors[sector as keyof typeof newSectors] = false
+    }
     const newFilters = { ...filters, sectors: newSectors }
     setFilters(newFilters)
     onFiltersChange(newFilters)
@@ -102,36 +116,75 @@ export default function DashboardFilters({ onFiltersChange, isCollapsed = false,
         <h3 className="text-base font-semibold text-[#686969] mb-4">Map Filters</h3>
         
         {/* Where to invest - ISI */}
-        <div className="mb-6">
+        <div className="mb-6 relative">
           <label className="flex items-center text-sm text-[#B0B2B2] mb-2">
             <span>Where to invest - ISI</span>
-            <svg className="w-4 h-4 ml-1 text-[#B0B2B2]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+            <div
+              className="relative"
+              onMouseEnter={() => setHoveredInfo('isi')}
+              onMouseLeave={() => setHoveredInfo(null)}
+            >
+              <svg className="w-4 h-4 ml-1 text-[#B0B2B2] cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {hoveredInfo === 'isi' && (
+                <div className="fixed left-80 w-72 bg-white text-black p-4 rounded-lg shadow-xl z-[100] text-xs border border-gray-200">
+                  <div className="font-semibold mb-2">Investment Stability Index (ISI)</div>
+                  <div className="text-gray-700">
+                    ISI measures a country's overall investment climate by analyzing macroeconomic, financial, and governance indicators. Higher scores indicate more favorable conditions for investment.
+                  </div>
+                </div>
+              )}
+            </div>
           </label>
-
         </div>
 
         {/* When to invest - METI */}
-        <div className="mb-6">
+        <div className="mb-6 relative">
           <label className="flex items-center text-sm text-[#B0B2B2] mb-2">
             <span>When to invest - METI</span>
-            <svg className="w-4 h-4 ml-1 text-[#B0B2B2]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+            <div
+              className="relative"
+              onMouseEnter={() => setHoveredInfo('meti')}
+              onMouseLeave={() => setHoveredInfo(null)}
+            >
+              <svg className="w-4 h-4 ml-1 text-[#B0B2B2] cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {hoveredInfo === 'meti' && (
+                <div className="fixed left-80 w-72 bg-white text-black p-4 rounded-lg shadow-xl z-[100] text-xs border border-gray-200">
+                  <div className="font-semibold mb-2">Market Entry Timing Index (METI)</div>
+                  <div className="text-gray-700">
+                    METI analyzes market momentum and timing signals to identify optimal entry points for investments. It considers economic trends, market cycles, and timing indicators.
+                  </div>
+                </div>
+              )}
+            </div>
           </label>
-       
         </div>
 
         {/* Market mood */}
-        <div className="mb-6">
+        <div className="mb-6 relative">
           <label className="flex items-center text-sm text-[#B0B2B2] mb-2">
             <span>Market mood - Sentiment Pulse</span>
-            <svg className="w-4 h-4 ml-1 text-[#B0B2B2]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+            <div
+              className="relative"
+              onMouseEnter={() => setHoveredInfo('sentiment')}
+              onMouseLeave={() => setHoveredInfo(null)}
+            >
+              <svg className="w-4 h-4 ml-1 text-[#B0B2B2] cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {hoveredInfo === 'sentiment' && (
+                <div className="fixed left-80 w-72 bg-white text-black p-4 rounded-lg shadow-xl z-[100] text-xs border border-gray-200">
+                  <div className="font-semibold mb-2">Sentiment Pulse</div>
+                  <div className="text-gray-700">
+                    Sentiment Pulse tracks market sentiment by analyzing news articles, social media, and financial reports. It provides real-time insights into positive, negative, or neutral market perceptions.
+                  </div>
+                </div>
+              )}
+            </div>
           </label>
-         
         </div>
 
         {/* Performance dropdown */}
@@ -175,7 +228,7 @@ export default function DashboardFilters({ onFiltersChange, isCollapsed = false,
                   type="checkbox"
                   checked={filters.sectors[sector.key as keyof typeof filters.sectors]}
                   onChange={(e) => updateSector(sector.key, e.target.checked)}
-                  className="h-4 w-4 appearance-none border-2 border-[#B0B2B2] rounded bg-transparent focus:ring-2 focus:ring-gray-500 focus:ring-offset-0"
+                  className="h-4 w-4 appearance-none border-2 border-[#B0B2B2] rounded bg-transparent focus:ring-2 focus:ring-gray-500 focus:ring-offset-0 cursor-pointer"
                 />
                 {filters.sectors[sector.key as keyof typeof filters.sectors] && (
                   <div className="absolute top-2.5 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none">

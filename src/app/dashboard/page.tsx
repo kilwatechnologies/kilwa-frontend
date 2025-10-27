@@ -5,7 +5,7 @@ import Sidebar from '@/components/dashboard/Sidebar'
 import DashboardHeader from '@/components/dashboard/DashboardHeader'
 import DashboardFilters from '@/components/dashboard/DashboardFilters'
 import CountryTreemap from '@/components/dashboard/CountryTreemap'
-import { countriesApi, isiApi, metiApi, sentimentApi } from '@/lib/api'
+import { countriesApi, isiApi, metiApi, sentimentApi, marketsApi } from '@/lib/api'
 
 interface Country {
   id: number
@@ -15,23 +15,143 @@ interface Country {
   isiScore?: number
   metiScore?: number
   sentimentPulse?: string
+  debtToGDP?: number
 }
 
 export default function DashboardPage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [filtersCollapsed, setFiltersCollapsed] = useState(false)
   const [countries, setCountries] = useState<Country[]>([])
+  const [originalCountries, setOriginalCountries] = useState<Country[]>([])
+  const [newsData, setNewsData] = useState<Record<number, any[]>>({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [, setFilters] = useState({})
+  const [filters, setFilters] = useState<any>({})
   const [userEmail, setUserEmail] = useState<string>('')
   const [userFirstName, setUserFirstName] = useState<string>('')
   const [userLastName, setUserLastName] = useState<string>('')
+  const [userProfilePicture, setUserProfilePicture] = useState<string>('')
 
   useEffect(() => {
     loadDashboardData()
     loadUserData()
   }, [])
+
+  // Watch for sector filter changes and recalculate rankings
+  useEffect(() => {
+    if (!filters.sectors || originalCountries.length === 0) return
+
+    const selectedSectors = Object.entries(filters.sectors)
+      .filter(([_, isSelected]) => isSelected)
+      .map(([sector, _]) => sector)
+
+    console.log('🔄 Sector filter changed:', filters.sectors)
+    console.log('🔄 Selected sectors:', selectedSectors)
+    console.log('🔄 News data available for countries:', Object.keys(newsData))
+
+    if (selectedSectors.length === 0) {
+      // No sectors selected, show original rankings
+      setCountries(originalCountries)
+      return
+    }
+
+    // Calculate sector-weighted scores using NEWS data
+    const countriesWithSectorScores = originalCountries.map(country => {
+      const countryNews = newsData[country.id] || []
+      const originalISI = country.isiScore || 50
+
+      if (countryNews.length === 0) {
+        return { ...country, isiScore: originalISI }
+      }
+
+      // Debug: Log actual sectors in news data for first country
+      if (country.id === 1) {
+        const uniqueSectors = [...new Set(countryNews.map((n: any) => n.primary_sector || n.sector).filter(Boolean))]
+        console.log(`📋 Available sectors in ${country.name} news:`, uniqueSectors)
+      }
+
+      // Map filter sectors to news topics
+      const sectorMapping: Record<string, string[]> = {
+        energy: ['Energy', 'Oil & Gas', 'Renewable Energy', 'Power'],
+        technology: ['Technology', 'Fintech', 'Digital Economy', 'Telecom', 'ICT', 'Innovation'],
+        infrastructure: ['Infrastructure', 'Real Estate', 'Construction', 'Transport', 'Transportation'],
+        agriculture: ['Agriculture', 'Agribusiness', 'Food Security', 'Farming'],
+        manufacturing: ['Manufacturing', 'Industrial', 'Production', 'Industry'],
+        tourism: ['Tourism', 'Hospitality', 'Travel', 'Culture'],
+        financial: ['Finance', 'Banking', 'Investment', 'Capital Markets', 'Economics', 'Economy'],
+        healthcare: ['Healthcare', 'Health', 'Pharmaceutical', 'Medical']
+      }
+
+      // Calculate sector score based on news volume and sentiment
+      let totalSectorScore = 0
+      let sectorCount = 0
+
+      selectedSectors.forEach(sector => {
+        const sectorValues = sectorMapping[sector] || []
+
+        // Filter news for this sector using topics array
+        const sectorNews = countryNews.filter((news: any) => {
+          const topics = news.topics || []
+          return sectorValues.some(val =>
+            topics.some((topic: string) =>
+              topic.toLowerCase().includes(val.toLowerCase()) ||
+              val.toLowerCase().includes(topic.toLowerCase())
+            )
+          )
+        })
+
+        // Debug: Log first 3 countries' sector matching
+        if (country.id <= 3) {
+          console.log(`🔍 ${country.name} - ${sector}: Found ${sectorNews.length}/${countryNews.length} articles`)
+          if (sectorNews.length > 0) {
+            console.log(`   Sample topics in news:`, sectorNews.slice(0, 3).map((n: any) => n.topics))
+          }
+        }
+
+        if (sectorNews.length > 0) {
+          // Calculate score: 50% news volume + 50% sentiment
+          const volumeScore = Math.min(sectorNews.length * 10, 100) // 10 points per article, max 100
+
+          const sentimentScores = sectorNews
+            .map((news: any) => news.sentiment_score || 50)
+            .filter((score: number) => score > 0)
+
+          const avgSentiment = sentimentScores.length > 0
+            ? sentimentScores.reduce((sum: number, s: number) => sum + s, 0) / sentimentScores.length
+            : 50
+
+          const sectorScore = (volumeScore * 0.5) + (avgSentiment * 0.5)
+          totalSectorScore += sectorScore
+          sectorCount++
+
+          if (country.id <= 3) {
+            console.log(`📰 ${country.name} - ${sector}: ${sectorNews.length} articles, sentiment ${avgSentiment.toFixed(1)} → score ${sectorScore.toFixed(1)}`)
+          }
+        }
+      })
+
+      if (sectorCount === 0) {
+        return { ...country, isiScore: originalISI }
+      }
+
+      const avgSectorScore = totalSectorScore / sectorCount
+      // Weight: 50% original ISI + 50% sector news score
+      const weightedScore = (originalISI * 0.5) + (avgSectorScore * 0.5)
+
+      return {
+        ...country,
+        isiScore: Math.round(weightedScore * 10) / 10
+      }
+    })
+
+    // Sort by new weighted score
+    const sortedCountries = [...countriesWithSectorScores].sort((a, b) =>
+      (b.isiScore || 0) - (a.isiScore || 0)
+    )
+
+    console.log('🎯 Countries re-ranked by sectors:', sortedCountries)
+    setCountries(sortedCountries)
+  }, [filters.sectors, originalCountries, newsData])
 
   const loadUserData = async () => {
     // Get user email from localStorage
@@ -53,6 +173,7 @@ export default function DashboardPage() {
         if (userData) {
           setUserFirstName(userData.first_name || '')
           setUserLastName(userData.last_name || '')
+          setUserProfilePicture(userData.profile_picture || '')
           console.log('User name loaded:', userData.first_name, userData.last_name)
         }
       } catch (error) {
@@ -128,7 +249,17 @@ export default function DashboardPage() {
         )
         const sentimentResponses = await Promise.all(sentimentPromises)
 
-        // Combine countries with their ISI scores, METI scores, and sentiment
+        // Fetch debt to GDP data for all countries (using 2021 - most recent year with complete data)
+        console.log('📊 Fetching debt to GDP data...')
+        const debtPromises = countriesData.map(country =>
+          marketsApi.getMacroeconomic(country.id, 2021).catch(err => {
+            console.log(`⚠️ Debt to GDP fetch failed for ${country.name}:`, err)
+            return null
+          })
+        )
+        const debtResponses = await Promise.all(debtPromises)
+
+        // Combine countries with their ISI scores, METI scores, sentiment, and debt to GDP
         const countriesWithScores = countriesData.map((country, index) => {
           // ISI Score
           const isiScore = isiScores.find(score =>
@@ -162,7 +293,18 @@ export default function DashboardPage() {
             }
           }
 
-          console.log(`🔗 Mapping ${country.name} (ID: ${country.id}): ISI=${isiScore?.score || 'N/A'}, METI=${metiScore || 'N/A'}, Sentiment=${sentimentPulse}`)
+          // Debt to GDP Ratio
+          let debtToGDP = undefined
+          const debtResponse = debtResponses[index]
+          if (debtResponse && debtResponse.data?.success && debtResponse.data?.data) {
+            const macroData = Array.isArray(debtResponse.data.data) ? debtResponse.data.data : [debtResponse.data.data]
+            const debtKPI = macroData.find((kpi: any) => kpi.code === 'DEBT_TO_GDP')
+            if (debtKPI) {
+              debtToGDP = debtKPI.value
+            }
+          }
+
+          console.log(`🔗 Mapping ${country.name} (ID: ${country.id}): ISI=${isiScore?.score || 'N/A'}, METI=${metiScore || 'N/A'}, Sentiment=${sentimentPulse}, Debt/GDP=${debtToGDP || 'N/A'}`)
 
           return {
             ...country,
@@ -170,12 +312,34 @@ export default function DashboardPage() {
             isiScore: isiScore ? isiScore.score : undefined,
             metiScore,
             sentimentPulse,
+            debtToGDP,
             region: getRegionFromCountry(country.name)
           }
         })
 
         console.log('🎯 Final countries with scores:', countriesWithScores)
         setCountries(countriesWithScores)
+        setOriginalCountries(countriesWithScores)
+
+        // Store news data by country for sector filtering
+        const newsMap: Record<number, any[]> = {}
+        console.log('🔍 Processing sentiment responses...', sentimentResponses.length)
+        sentimentResponses.forEach((response, index) => {
+          console.log(`🔍 Response ${index}:`, response?.data?.success, 'articles:', Array.isArray(response?.data?.data) ? response.data.data.length : 0)
+          if (response && response.data?.success && response.data?.data) {
+            const countryId = countriesData[index].id
+            newsMap[countryId] = Array.isArray(response.data.data) ? response.data.data : []
+
+            // Debug: Log first article structure for ANY country with data
+            if (newsMap[countryId].length > 0 && !Object.keys(newsMap).some(k => newsMap[Number(k)].length > 0 && Number(k) < countryId)) {
+              console.log('📰 Sample news article structure:', newsMap[countryId][0])
+              console.log('📰 All fields in first article:', Object.keys(newsMap[countryId][0]))
+            }
+          }
+        })
+        console.log('✅ News data loaded for sector filtering:', Object.keys(newsMap).length, 'countries')
+        console.log('📊 Total articles across all countries:', Object.values(newsMap).reduce((sum: number, arr: any[]) => sum + arr.length, 0))
+        setNewsData(newsMap)
       } else {
         console.log('❌ Countries API failed or returned no data')
         setError('Failed to load countries data')
@@ -300,6 +464,7 @@ export default function DashboardPage() {
           userName={getUsernameFromEmail(userEmail)}
           userInitials={getUserInitials()}
           truncatedName={getFormattedName()}
+          profilePicture={userProfilePicture}
         />
         
         {/* Content Area - Scrollable */}
@@ -329,6 +494,7 @@ export default function DashboardPage() {
               countries={countries}
               onCountryClick={handleCountryClick}
               onToggleFilters={() => setFiltersCollapsed(!filtersCollapsed)}
+              selectedSectors={filters.sectors || {}}
             />
           )}
         </div>

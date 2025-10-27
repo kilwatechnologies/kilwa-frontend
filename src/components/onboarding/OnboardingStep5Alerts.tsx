@@ -34,7 +34,7 @@ export default function OnboardingStep4({ onNext, onBack }: OnboardingStep4Props
 
       {/* Title */}
       <div className="text-center mb-8">
-        <h1 className="text-[32px] font-semibold text-gray-900 mb-2">
+        <h1 className="text-[32px] font-semibold text-gray-900 mb-2 leading-[120%]">
           Would you like to <br/> set up alerts?
         </h1>
         <p className="text-gray-600 text-[16px]">

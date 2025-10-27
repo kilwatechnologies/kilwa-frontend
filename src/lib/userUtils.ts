@@ -1,9 +1,11 @@
-import { authApi } from './api'
+import { authApi, countriesApi } from './api'
+import { saveCountryPreference } from './countryPreference'
 
 export interface UserData {
   email: string
   firstName: string
   lastName: string
+  profilePicture?: string
 }
 
 /**
@@ -22,10 +24,33 @@ export const loadUserData = async (): Promise<UserData> => {
       const userData = responseData.user || responseData.data?.user
 
       if (userData) {
+        // Save country preference to localStorage if user has a country set
+        if (userData.country) {
+          try {
+            const countriesResponse = await countriesApi.getAfricanCountries()
+            if (countriesResponse.data.success && countriesResponse.data.data) {
+              const selectedCountry = countriesResponse.data.data.find(
+                (c: any) => c.name === userData.country
+              )
+              if (selectedCountry) {
+                saveCountryPreference({
+                  id: selectedCountry.id,
+                  name: selectedCountry.name,
+                  isoCode: selectedCountry.isoCode
+                })
+                console.log('Country preference synced from user profile:', selectedCountry.name)
+              }
+            }
+          } catch (error) {
+            console.error('Failed to sync country preference:', error)
+          }
+        }
+
         return {
           email,
           firstName: userData.first_name || '',
-          lastName: userData.last_name || ''
+          lastName: userData.last_name || '',
+          profilePicture: userData.profile_picture || ''
         }
       }
     } catch (error) {
@@ -33,7 +58,7 @@ export const loadUserData = async (): Promise<UserData> => {
     }
   }
 
-  return { email, firstName: '', lastName: '' }
+  return { email, firstName: '', lastName: '', profilePicture: '' }
 }
 
 /**

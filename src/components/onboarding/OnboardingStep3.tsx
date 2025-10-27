@@ -100,7 +100,7 @@ export default function OnboardingStep3({ onNext, onBack, email }: OnboardingSte
 
       {/* Title */}
       <div className="text-center mb-8">
-        <h1 className="text-[32px] font-semibold text-gray-900 mb-2">
+        <h1 className="text-[32px] font-semibold text-gray-900 mb-2 leading-[120%]">
           Tell us a bit about yourself.
         </h1>
         <p className="text-gray-600 text-sm">

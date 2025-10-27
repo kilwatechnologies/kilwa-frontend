@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { marketsApi, countriesApi } from '@/lib/api'
+import { marketsApi, countriesApi, sentimentApi, currencyApi } from '@/lib/api'
+import { getCountryPreference } from '@/lib/countryPreference'
 
 interface Country {
   id: number
@@ -9,11 +10,14 @@ interface Country {
   isoCode: string
 }
 
-interface NewsItem {
+interface NewsArticle {
+  id: number
   title: string
   source: string
-  category: string
-  time: string
+  published_at: string
+  sentiment_label: string
+  topics: string[]
+  url: string
 }
 
 interface EquityFactor {
@@ -49,6 +53,10 @@ export default function MarketsContent() {
   const [financeData, setFinanceData] = useState<MarketKPI[]>([])
   const [governanceData, setGovernanceData] = useState<MarketKPI[]>([])
   const [dataLoading, setDataLoading] = useState(true)
+  const [newsArticles, setNewsArticles] = useState<NewsArticle[]>([])
+  const [newsLoading, setNewsLoading] = useState(true)
+  const [currencyRates, setCurrencyRates] = useState<any[]>([])
+  const [currencyLoading, setCurrencyLoading] = useState(true)
 
   // Historical chart data
   const [historicalMacroData, setHistoricalMacroData] = useState<{[year: number]: MarketKPI[]}>({})
@@ -56,16 +64,34 @@ export default function MarketsContent() {
   const [selectedYearRange, setSelectedYearRange] = useState(5)
   const [hoveredYear, setHoveredYear] = useState<number | null>(null)
 
+  // Calendar state
+  const [showCalendar, setShowCalendar] = useState(false)
+  const [selectedDate, setSelectedDate] = useState(new Date())
+
   // Load countries on mount
   useEffect(() => {
     loadCountries()
   }, [])
+
+  // Close calendar when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement
+      if (showCalendar && !target.closest('.calendar-container')) {
+        setShowCalendar(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [showCalendar])
 
   // Load market data when country changes
   useEffect(() => {
     if (selectedCountry) {
       loadMarketData()
       loadHistoricalMacroData()
+      loadNewsData()
+      loadCurrencyData()
     }
   }, [selectedCountry])
 
@@ -75,7 +101,27 @@ export default function MarketsContent() {
       const response = await countriesApi.getAfricanCountries()
       if (response.data.success && response.data.data && response.data.data.length > 0) {
         setCountries(response.data.data)
-        setSelectedCountry(response.data.data[0])
+
+        // Check for preferred country from settings
+        const preferredCountry = getCountryPreference()
+        let countryToSelect = null
+
+        if (preferredCountry) {
+          // Find the preferred country in the list
+          countryToSelect = response.data.data.find(
+            (c: Country) => c.id === preferredCountry.id || c.name === preferredCountry.name
+          )
+          console.log('Preferred country found:', countryToSelect?.name || 'None')
+        }
+
+        // Fall back to first country if no preference or preference not found
+        if (!countryToSelect && response.data.data.length > 0) {
+          countryToSelect = response.data.data[0]
+        }
+
+        if (countryToSelect) {
+          setSelectedCountry(countryToSelect)
+        }
       }
     } catch (error) {
       console.error('Error loading countries:', error)
@@ -142,45 +188,52 @@ export default function MarketsContent() {
     }
   }
 
-  const currencies = [
-    { pair: 'USD/KES', price: '114.9', change: '+1.21%' },
-    { pair: 'EUR/KES', price: '124', change: '+1.21%' },
-    { pair: 'GBP/KES', price: '145', change: '+1.21%' },
-    { pair: 'JPY/KES', price: '1.0', change: '-2.31%' },
-  ]
+  const loadNewsData = async () => {
+    if (!selectedCountry) return
 
-  const marketNews: NewsItem[] = [
-    {
-      title: 'Safaricom Reports Record Q3 Profits as Mobile Money Growth Accelerates',
-      source: 'Business Daily',
-      category: 'Markets',
-      time: '9:59 AM'
-    },
-    {
-      title: 'Central Bank of Kenya Maintains Benchmark Rate at 12.75% Amid Inflation',
-      source: 'Business Daily',
-      category: 'Energy',
-      time: '9:59 AM'
-    },
-    {
-      title: 'KenGen Secures $450M Financing for Renewable Energy Projects Expansion',
-      source: 'Business Daily',
-      category: 'Energy',
-      time: '9:59 AM'
-    },
-    {
-      title: 'NSE 20-Share Index Gains 2.1% on Banking Sector Rally',
-      source: 'Market Watch',
-      category: 'Kenya',
-      time: '8:59 AM'
-    },
-    {
-      title: 'NSE 20-Share Index Gains 2.1% on Banking Sector Rally',
-      source: 'Market Watch',
-      category: 'Kenya',
-      time: '9:59 AM'
-    },
-  ]
+    try {
+      setNewsLoading(true)
+      const response = await sentimentApi.getNews(selectedCountry.id, 7, 10)
+      if (response.data.success && response.data.data) {
+        setNewsArticles(response.data.data)
+      }
+    } catch (error) {
+      console.error('Error loading news data:', error)
+      setNewsArticles([])
+    } finally {
+      setNewsLoading(false)
+    }
+  }
+
+  const loadCurrencyData = async () => {
+    if (!selectedCountry) return
+
+    try {
+      setCurrencyLoading(true)
+      const response = await currencyApi.getRates(selectedCountry.name)
+      if (response.data.success && response.data.data?.pairs) {
+        setCurrencyRates(response.data.data.pairs)
+      }
+    } catch (error) {
+      console.error('Error loading currency data:', error)
+      setCurrencyRates([])
+    } finally {
+      setCurrencyLoading(false)
+    }
+  }
+
+  const getRelativeTime = (dateString: string) => {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffMs = now.getTime() - date.getTime()
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
+
+    if (diffHours < 1) return '<1h ago'
+    if (diffHours < 24) return `${diffHours}h ago`
+    const diffDays = Math.floor(diffHours / 24)
+    if (diffDays === 1) return '1 day ago'
+    return `${diffDays} days ago`
+  }
 
   const equityFactors: EquityFactor[] = [
     { name: 'Large', value: '-0.1%', core: '-0.3%', growth: '-0.4%' },
@@ -309,9 +362,115 @@ export default function MarketsContent() {
             </svg>
           </div>
         </div>
-        <div className="flex items-center space-x-2 text-gray-600">
-          <span>📅</span>
-          <span>Sunday, 12 September, 2025</span>
+        <div className="relative calendar-container">
+          <button
+            onClick={() => setShowCalendar(!showCalendar)}
+            className="flex items-center gap-2 text-gray-600 bg-white px-4 py-2 rounded-lg border border-gray-200 shadow-sm hover:border-gray-300 transition-colors cursor-pointer"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <span className="text-sm font-medium">
+              {selectedDate.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+            </span>
+          </button>
+
+          {/* Calendar Dropdown */}
+          {showCalendar && (
+            <div className="absolute right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-xl p-4 z-50 w-80">
+              <div className="flex items-center justify-between mb-4">
+                <button
+                  onClick={() => {
+                    const newDate = new Date(selectedDate)
+                    newDate.setMonth(newDate.getMonth() - 1)
+                    setSelectedDate(newDate)
+                  }}
+                  className="p-1.5 hover:bg-gray-100 rounded transition-colors"
+                >
+                  <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <span className="text-base font-semibold text-gray-900">
+                  {selectedDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                </span>
+                <button
+                  onClick={() => {
+                    const newDate = new Date(selectedDate)
+                    newDate.setMonth(newDate.getMonth() + 1)
+                    setSelectedDate(newDate)
+                  }}
+                  className="p-1.5 hover:bg-gray-100 rounded transition-colors"
+                >
+                  <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Calendar Grid */}
+              <div className="grid grid-cols-7 gap-1 text-center mb-2">
+                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                  <div key={day} className="text-xs font-medium text-gray-500 p-2">{day}</div>
+                ))}
+                {(() => {
+                  const year = selectedDate.getFullYear()
+                  const month = selectedDate.getMonth()
+                  const firstDay = new Date(year, month, 1).getDay()
+                  const daysInMonth = new Date(year, month + 1, 0).getDate()
+                  const days = []
+
+                  // Empty cells for days before month starts
+                  for (let i = 0; i < firstDay; i++) {
+                    days.push(<div key={`empty-${i}`} className="p-2"></div>)
+                  }
+
+                  // Days of the month
+                  for (let day = 1; day <= daysInMonth; day++) {
+                    const date = new Date(year, month, day)
+                    const isSelected = date.toDateString() === selectedDate.toDateString()
+                    const isToday = date.toDateString() === new Date().toDateString()
+
+                    days.push(
+                      <button
+                        key={day}
+                        onClick={() => {
+                          setSelectedDate(date)
+                          setShowCalendar(false)
+                        }}
+                        className={`p-2 text-sm rounded-lg hover:bg-gray-100 transition-colors min-w-[32px] min-h-[32px] flex items-center justify-center ${
+                          isSelected ? 'bg-blue-500 text-white hover:bg-blue-600 font-semibold' :
+                          isToday ? 'bg-gray-100 font-semibold text-gray-900' : 'text-gray-700'
+                        }`}
+                      >
+                        {day}
+                      </button>
+                    )
+                  }
+
+                  return days
+                })()}
+              </div>
+
+              <div className="mt-4 pt-4 border-t border-gray-200 flex justify-between">
+                <button
+                  onClick={() => {
+                    setSelectedDate(new Date())
+                    setShowCalendar(false)
+                  }}
+                  className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                >
+                  Today
+                </button>
+                <button
+                  onClick={() => setShowCalendar(false)}
+                  className="text-sm text-gray-600 hover:text-gray-700"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -354,20 +513,30 @@ export default function MarketsContent() {
             <h3 className="text-lg font-semibold text-black">Currencies</h3>
           </div>
           <div className="p-4">
-            <div className="grid grid-cols-3 gap-4 text-xs text-gray-500 mb-3 pb-2 border-b border-gray-100">
-              <span>Pair</span>
-              <span>Price</span>
-              <span>%</span>
-            </div>
-            {currencies.map((currency, index) => (
-              <div key={index} className={`grid grid-cols-3 gap-4 items-center py-2 ${index !== currencies.length - 1 ? 'border-b border-gray-100' : ''}`}>
-                <span className="text-sm text-black">{currency.pair}</span>
-                <span className="text-sm text-black">{currency.price}</span>
-                <span className={`text-sm ${getChangeColor(currency.change)}`}>
-                  {currency.change}
-                </span>
-              </div>
-            ))}
+            {currencyLoading ? (
+              <div className="text-center py-8 text-gray-500">Loading currency rates...</div>
+            ) : currencyRates.length > 0 ? (
+              <>
+                <div className="grid grid-cols-3 gap-4 text-xs text-gray-500 mb-3 pb-2 border-b border-gray-100">
+                  <span>Pair</span>
+                  <span>Rate</span>
+                  <span>%</span>
+                </div>
+                {currencyRates.map((currency, index) => (
+                  <div key={index} className={`grid grid-cols-3 gap-4 items-center py-2 ${index !== currencyRates.length - 1 ? 'border-b border-gray-100' : ''}`}>
+                    <span className="text-sm text-black">{currency.pair}</span>
+                    <span className="text-sm text-black">{currency.rate}</span>
+                    <span className={`text-sm ${
+                      currency.change >= 0 ? 'text-green-500' : 'text-red-500'
+                    }`}>
+                      {currency.changeFormatted}
+                    </span>
+                  </div>
+                ))}
+              </>
+            ) : (
+              <div className="text-center py-8 text-gray-500">No currency data available</div>
+            )}
           </div>
         </div>
 
@@ -587,17 +756,23 @@ export default function MarketsContent() {
             <h3 className="text-lg font-semibold text-black">Market News</h3>
           </div>
           <div className="p-4">
-            <div className="space-y-4">
-              {marketNews.map((news, index) => (
-                <div key={index} className={`pb-3 ${index !== marketNews.length - 1 ? 'border-b border-gray-100' : ''}`}>
-                  <h4 className="text-sm font-medium mb-1 text-black">{news.title}</h4>
-                  <div className="flex justify-between text-xs text-gray-600">
-                    <span>{news.source} &gt; {news.category}</span>
-                    <span>{news.time}</span>
+            {newsLoading ? (
+              <div className="text-center py-8 text-gray-500">Loading news...</div>
+            ) : newsArticles.length > 0 ? (
+              <div className="space-y-4">
+                {newsArticles.slice(0, 5).map((article) => (
+                  <div key={article.id} className="pb-3 border-b border-gray-100 last:border-b-0">
+                    <h4 className="text-sm font-medium mb-1 text-black">{article.title}</h4>
+                    <div className="flex justify-between text-xs text-gray-600">
+                      <span>{article.source} {article.topics?.[0] ? `> ${article.topics[0]}` : ''}</span>
+                      <span>{getRelativeTime(article.published_at)}</span>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-500">No news available</div>
+            )}
           </div>
         </div>
       </div>
