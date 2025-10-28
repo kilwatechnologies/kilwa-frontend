@@ -13,6 +13,7 @@ interface MenuItem {
   id: string
   label: string
   iconSrc?: string // Optional image path
+  iconSrcActive?: string // Active state icon
   iconEmoji?: string // Fallback emoji
   href: string
   active?: boolean
@@ -22,26 +23,29 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
   const pathname = usePathname()
   
   const menuItems: MenuItem[] = [
-    { 
-      id: 'dashboard', 
-      label: 'Dashboard', 
+    {
+      id: 'dashboard',
+      label: 'Dashboard',
       iconSrc: '/assets/hom.svg',
-      iconEmoji: '🏠', 
+      iconSrcActive: '/assets/home-fill.svg',
+      iconEmoji: '🏠',
       href: '/dashboard'
     },
-    { 
-      id: 'markets', 
-      label: 'Markets', 
+    {
+      id: 'markets',
+      label: 'Markets',
       iconSrc: '/assets/market.svg',
-      iconEmoji: '📈', 
-      href: '/markets' 
+      iconSrcActive: '/assets/market-filled.svg',
+      iconEmoji: '📈',
+      href: '/markets'
     },
-    { 
-      id: 'isi', 
-      label: 'ISI', 
+    {
+      id: 'isi',
+      label: 'ISI',
       iconSrc: '/assets/isi.svg',
-      iconEmoji: '📊', 
-      href: '/isi' 
+      iconSrcActive: '/assets/isi-fill.svg',
+      iconEmoji: '📊',
+      href: '/isi'
     },
     { 
       id: 'meti', 
@@ -67,15 +71,15 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
   ]
 
   const IconComponent = ({ item, isActive }: { item: MenuItem, isActive?: boolean }) => {
-    // For now, use emoji fallbacks since icon files don't exist yet
-    // When you add SVG icons to public/icons/, they will automatically be used
-    
+    // Use filled icon when active, otherwise use regular icon
+    const iconToUse = isActive && item.iconSrcActive ? item.iconSrcActive : item.iconSrc
+
     return (
       <>
-        {item.iconSrc ? (
+        {iconToUse ? (
           <>
             <Image
-              src={item.iconSrc}
+              src={iconToUse}
               alt={`${item.label} icon`}
               width={20}
               height={20}

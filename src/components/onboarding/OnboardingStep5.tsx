@@ -17,34 +17,18 @@ export default function OnboardingStep5({ onComplete, onBack }: OnboardingStep5P
   const [error, setError] = useState<string | null>(null)
 
 
-  const plans = [
-    {
-      id: 'free',
-      name: 'Free',
-      icon: '/assets/card1.svg',
-      price: { monthly: 0, yearly: 0 },
-      description: 'Best For: General public Journalists & Researchers',
-      subDescription: 'Basic ISI access, 3 country dashboards, alerts for 1 sector',
-      features: [
-        'Basic ISI Scores',
-        'Top-10 Rankings', 
-        'Visual Maps',
-        'Email Newsletters'
-      ],
-      buttonText: 'Subscribe',
-      buttonStyle: 'bg-gray-900 text-white'
-    },
+  const topPlans = [
     {
       id: 'gold',
       name: 'Gold',
       icon: '/assets/card2.svg',
-      price: { monthly: 699, yearly: 599 },
+      price: { monthly: 699, yearly: 6999 },
       description: 'All features, 15 countries, full dashboard access, export tools',
       subDescription: 'Best for: Analysts, boutique investors, consultants',
       features: [
         'Basic ISI Scores',
         'Top-10 Rankings',
-        'Visual Maps', 
+        'Visual Maps',
         'Email Newsletters'
       ],
       buttonText: 'Subscribe',
@@ -69,6 +53,29 @@ export default function OnboardingStep5({ onComplete, onBack }: OnboardingStep5P
     }
   ]
 
+  const bottomPlans = [
+    {
+      id: 'free',
+      name: 'Free',
+      icon: '/assets/free.svg',
+      price: { monthly: 0, yearly: 0 },
+      description: 'Basic ISI access, 3 country dashboards, alerts for 1 sector and community support.',
+      features: [],
+      buttonText: 'Get started',
+      buttonStyle: 'text-gray-900 underline'
+    },
+    {
+      id: 'enterprise',
+      name: 'Enterprise',
+      icon: '/assets/enterprise.svg',
+      price: { monthly: 0, yearly: 0 },
+      description: 'API access, team accounts, 54 countries, analyst reports',
+      features: [],
+      buttonText: 'Contact sales',
+      buttonStyle: 'text-gray-900 underline'
+    }
+  ]
+
   const handlePlanSelect = async (planId: string) => {
     setSelectedPlan(planId)
     setError(null)
@@ -79,10 +86,9 @@ export default function OnboardingStep5({ onComplete, onBack }: OnboardingStep5P
       return
     }
 
-    // Advisory and Enterprise - contact sales
-    if (planId === 'advisory' || planId === 'enterprise') {
-      // TODO: Redirect to contact sales page or show modal
-      alert('Please contact sales for Advisory and Enterprise plans')
+    // Enterprise - contact sales
+    if (planId === 'enterprise') {
+      window.open('https://www.kilwa.io/', '_blank', 'noopener,noreferrer')
       return
     }
 
@@ -198,10 +204,10 @@ export default function OnboardingStep5({ onComplete, onBack }: OnboardingStep5P
         </div>
       </div>
 
-      {/* Pricing Cards */}
-      <div className="max-w-6xl mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-12 mb-8">
-        {plans.map((plan) => (
-          <div key={plan.id} className="relative">
+      {/* Top Row - Gold & Diamond */}
+      <div className="max-w-6xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+        {topPlans.map((plan) => (
+          <div key={plan.id} className="relative max-w-[362px] mx-auto w-full">
             {/* Background color layer */}
             <div
               className="absolute -inset-2 rounded-2xl bg-gray-100"
@@ -289,7 +295,7 @@ export default function OnboardingStep5({ onComplete, onBack }: OnboardingStep5P
             <button
               onClick={() => handlePlanSelect(plan.id)}
               disabled={loading && selectedPlan === plan.id}
-              className={`w-full py-3 px-4 rounded-full font-medium transition-colors ${plan.buttonStyle} disabled:opacity-50 disabled:cursor-not-allowed`}
+              className={`w-full py-3 px-4 rounded-full font-medium transition-colors ${plan.buttonStyle} cursor-pointer disabled:cursor-not-allowed disabled:opacity-50`}
             >
               {loading && selectedPlan === plan.id ? (
                 <span className="flex items-center justify-center">
@@ -308,43 +314,40 @@ export default function OnboardingStep5({ onComplete, onBack }: OnboardingStep5P
         ))}
       </div>
 
-      {/* Bottom Options */}
-      <div className="max-w-4xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Advisory */}
-        <div className="flex flex-col items-start space-y-3 p-6 border bg-gray-100 border-gray-200 rounded-lg">
-          <Image 
-                src='/assets/advisory.svg' 
-                alt='advisorypic' 
-                width={40} 
+      {/* Bottom Row - Free & Enterprise */}
+      <div className="max-w-6xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+        {bottomPlans.map((plan) => (
+          <div key={plan.id} className="relative h-full max-w-[362px] mx-auto w-full">
+            {/* Background color layer */}
+            <div
+              className="absolute -inset-2 rounded-2xl bg-gray-100"
+              style={{
+                zIndex: 0
+              }}
+            />
+            {/* Card */}
+            <div className="relative flex flex-col items-start space-y-3 p-6 border bg-white border-gray-200 rounded-lg h-full" style={{ zIndex: 1 }}>
+              <Image
+                src={plan.icon}
+                alt={`${plan.name} plan icon`}
+                width={40}
                 height={40}
                 className="object-contain"
               />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Advisory</h3>
-          <p className="text-sm text-gray-600 mb-4">
-            Reports, briefings, 54 countries, analyst reports & priority SLA
-          </p>
-          <button className="text-gray-900 underline font-medium">
-            Contact sales
-          </button>
-        </div>
-
-        {/* Enterprise */}
-        <div className="flex flex-col items-start space-y-3 p-6 border bg-gray-100 border-gray-200 rounded-lg">
-         <Image 
-                src='/assets/enterprise.svg' 
-                alt='advisorypic' 
-                width={40} 
-                height={40}
-                className="object-contain"
-              />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Enterprise</h3>
-          <p className="text-sm text-gray-600 mb-4">
-            API access, team accounts, 54 countries, analyst reports
-          </p>
-          <button className="text-gray-900  underline font-medium">
-            Contact sales
-          </button>
-        </div>
+              <h3 className="text-lg font-semibold text-gray-900">{plan.name}</h3>
+              <p className="text-sm text-gray-600 flex-grow">
+                {plan.description}
+              </p>
+              <button
+                onClick={() => handlePlanSelect(plan.id)}
+                disabled={loading && selectedPlan === plan.id}
+                className={`${plan.buttonStyle} font-medium cursor-pointer disabled:cursor-not-allowed disabled:opacity-50`}
+              >
+                {loading && selectedPlan === plan.id ? 'Processing...' : plan.buttonText}
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   )

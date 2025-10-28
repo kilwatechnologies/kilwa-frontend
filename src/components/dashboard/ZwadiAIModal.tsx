@@ -161,7 +161,7 @@ export default function ZwadiAIModal({ isOpen, onClose }: ZwadiAIModalProps) {
             <>
               <div className="flex flex-col items-center justify-start pt-12 mb-auto">
                 <Image
-                  src="/assets/zwadi.svg"
+                  src="/assets/zwadi-black.svg"
                   alt="Zawadi"
                   width={48}
                   height={48}

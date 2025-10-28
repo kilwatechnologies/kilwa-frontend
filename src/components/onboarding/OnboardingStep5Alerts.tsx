@@ -1,5 +1,6 @@
 import Image from 'next/image'
 import { useState } from 'react'
+import { notificationApi, authApi } from '@/lib/api'
 
 interface OnboardingStep4Props {
   onNext: () => void
@@ -13,10 +14,40 @@ export default function OnboardingStep4({ onNext, onBack }: OnboardingStep4Props
   const [weeklySummaries, setWeeklySummaries] = useState(false)
   const [isiAlerts, setIsiAlerts] = useState(false)
   const [metiAlerts, setMetiAlerts] = useState(false)
+  const [saving, setSaving] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    onNext()
+
+    try {
+      setSaving(true)
+
+      // Get user ID from current user
+      const token = localStorage.getItem('access_token')
+      if (token) {
+        const userResponse = await authApi.getCurrentUser(token)
+        const responseData: any = userResponse.data
+        const userData = responseData.user || responseData.data?.user
+
+        if (userData?.id) {
+          // Save notification preferences
+          await notificationApi.updatePreferences(userData.id, {
+            email_notifications: true, // Default to true
+            weekly_isi_updates: weeklySummaries,
+            isi_notifications: isiAlerts,
+            isi_threshold: parseInt(isiThreshold),
+            meti_notifications: metiAlerts,
+            meti_alert_type: metiTiming
+          })
+        }
+      }
+    } catch (error) {
+      console.error('Failed to save notification preferences:', error)
+      // Continue anyway - don't block onboarding
+    } finally {
+      setSaving(false)
+      onNext()
+    }
   }
 
   return (
@@ -160,9 +191,10 @@ export default function OnboardingStep4({ onNext, onBack }: OnboardingStep4Props
         <div className="pt-4">
           <button
             type="submit"
-            className="w-full bg-gray-900 hover:bg-gray-800 text-white font-medium py-3 px-4 rounded-lg transition-colors"
+            disabled={saving}
+            className="w-full bg-gray-900 hover:bg-gray-800 text-white font-medium py-3 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Continue
+            {saving ? 'Saving...' : 'Continue'}
           </button>
         </div>
       </form>

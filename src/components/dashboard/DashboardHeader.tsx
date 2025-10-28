@@ -102,7 +102,7 @@ export default function DashboardHeader({ userName, userInitials, truncatedName,
                   </span>
                 </div>
               )}
-              <div className="ml-3 text-right">
+              <div className="ml-3 text-left">
                 <div className="text-sm font-medium text-white">{truncatedName || userName}</div>
                 <div className="text-xs text-gray-300 mr-1.5 capitalize">{userPlan}</div>
               </div>

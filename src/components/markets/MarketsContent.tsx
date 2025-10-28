@@ -512,12 +512,14 @@ export default function MarketsContent() {
             <h3 className="text-lg font-semibold text-black">Macroeconomic Overview</h3>
           </div>
           <div className="bg-white border border-gray-200 rounded-lg overflow-hidden flex-1">
-          <div className="p-4 h-full">
-            <div className="grid grid-cols-3 gap-4 text-xs text-black font-semibold mb-3 pb-2 border-b border-gray-100">
+          <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+            <div className="grid grid-cols-3 gap-4 text-xs text-black font-semibold">
               <span>Metric</span>
               <span>Value</span>
               <span>Score</span>
             </div>
+          </div>
+          <div className="p-4 h-full">
             {dataLoading ? (
               <div className="text-center py-4 text-gray-500">Loading...</div>
             ) : macroeconomicData.length > 0 ? (
@@ -545,16 +547,18 @@ export default function MarketsContent() {
             <h3 className="text-lg font-semibold text-black">Currencies</h3>
           </div>
           <div className="bg-white border border-gray-200 rounded-lg overflow-hidden flex-1">
+          <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+            <div className="grid grid-cols-3 gap-4 text-xs text-black font-semibold">
+              <span>Pair</span>
+              <span>Rate</span>
+              <span>%</span>
+            </div>
+          </div>
           <div className="p-4 h-full">
             {currencyLoading ? (
               <div className="text-center py-8 text-gray-500">Loading currency rates...</div>
             ) : currencyRates.length > 0 ? (
               <>
-                <div className="grid grid-cols-3 gap-4 text-xs text-black font-semibold mb-3 pb-2 border-b border-gray-100">
-                  <span>Pair</span>
-                  <span>Rate</span>
-                  <span>%</span>
-                </div>
                 {currencyRates.map((currency, index) => (
                   <div key={index} className={`grid grid-cols-3 gap-4 items-center py-2 ${index !== currencyRates.length - 1 ? 'border-b border-gray-100' : ''}`}>
                     <span className="text-sm text-gray-700">{currency.pair}</span>
@@ -580,12 +584,14 @@ export default function MarketsContent() {
             <h3 className="text-lg font-semibold text-black">Finance</h3>
           </div>
           <div className="bg-white border border-gray-200 rounded-lg overflow-hidden flex-1">
-          <div className="p-4 h-full">
-            <div className="grid grid-cols-3 gap-4 text-xs text-black font-semibold mb-3 pb-2 border-b border-gray-100">
+          <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+            <div className="grid grid-cols-3 gap-4 text-xs text-black font-semibold">
               <span>External Finance</span>
               <span>Value</span>
               <span>Score</span>
             </div>
+          </div>
+          <div className="p-4 h-full">
             {dataLoading ? (
               <div className="text-center py-4 text-gray-500">Loading...</div>
             ) : financeData.length > 0 ? (
@@ -646,11 +652,25 @@ export default function MarketsContent() {
             ) : Object.keys(historicalMacroData).length > 0 && getFilteredYears().length > 0 ? (
               <>
                 {/* Chart Legend */}
-                <div className="flex flex-wrap gap-4 mb-4 text-sm text-black">
+                <div className="flex flex-wrap gap-2 mb-4">
                   {getAllKPIs().map((kpi) => (
-                    <div key={kpi.code} className="flex items-center space-x-2">
-                      <div className="w-3 h-3 rounded" style={{ backgroundColor: getKPIColor(kpi.code) }}></div>
-                      <span>{kpi.name}</span>
+                    <div
+                      key={kpi.code}
+                      className="flex items-center gap-2.5 bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm"
+                    >
+                      <div
+                        className="w-1 h-full flex-shrink-0"
+                        style={{ backgroundColor: getKPIColor(kpi.code) }}
+                      ></div>
+                      <span className="text-sm text-black whitespace-nowrap pl-2">{kpi.name}</span>
+                      <button
+                        className="pr-2 pl-1 py-1.5 text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"
+                        onClick={() => {/* Add filter toggle logic */}}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                          <path d="M12 4L4 12M4 4L12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                        </svg>
+                      </button>
                     </div>
                   ))}
                 </div>
@@ -831,12 +851,14 @@ export default function MarketsContent() {
             <h3 className="text-lg font-semibold text-black">Governance & Risk</h3>
           </div>
           <div className="bg-white border border-gray-200 rounded-lg overflow-hidden flex-1">
-          <div className="p-4 h-full">
-            <div className="grid grid-cols-3 gap-4 text-xs text-black font-semibold mb-3 pb-2 border-b border-gray-100">
+          <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+            <div className="grid grid-cols-3 gap-4 text-xs text-black font-semibold">
               <span>Indicator</span>
               <span>Value</span>
               <span>Score</span>
             </div>
+          </div>
+          <div className="p-4 h-full">
             {dataLoading ? (
               <div className="text-center py-4 text-gray-500">Loading...</div>
             ) : governanceData.length > 0 ? (
@@ -864,10 +886,11 @@ export default function MarketsContent() {
             <h3 className="text-lg font-semibold text-black">Equity Factors</h3>
           </div>
           <div className="bg-white border border-gray-200 rounded-lg overflow-hidden flex-1">
+          <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+            <div className="text-sm text-black font-semibold">1-Day Performance</div>
+          </div>
           <div className="p-4 h-full">
           <div className="mb-4">
-            <div className="text-sm text-black font-semibold mb-3">1-Day Performance</div>
-            
             {/* Header Row */}
             <div className="grid grid-cols-4 gap-2 mb-3">
               <div></div>
@@ -880,22 +903,22 @@ export default function MarketsContent() {
             {equityFactorsData.map((factor: EquityFactor, index: number) => (
               <div key={index} className="grid grid-cols-4 gap-3 mb-6">
                 <div className="flex items-center text-sm text-black font-">{factor.name}</div>
-                
+
                 {/* Value Box */}
-                <div className="bg-red-100 border border-red-200 rounded-md py-6 px-3 text-center">
-                  <span className="text-sm font-medium text-red-800">{factor.value}</span>
+                <div className="bg-red-100 border border-red-200 rounded-md py-6 px-2 text-center flex items-center justify-center">
+                  <span className="text-xs font-medium text-red-800 break-words">{factor.value}</span>
                 </div>
-                
+
                 {/* Core Box */}
-                <div className={`${index === 1 ? 'bg-blue-100 border-blue-300 border-2' : 'bg-red-100 border border-red-200'} rounded-md py-6 px-3 text-center`}>
-                  <span className={`text-sm font-medium ${index === 1 ? 'text-blue-800' : 'text-red-800'}`}>
+                <div className={`${index === 1 ? 'bg-blue-100 border-blue-300 border-2' : 'bg-red-100 border border-red-200'} rounded-md py-6 px-2 text-center flex items-center justify-center`}>
+                  <span className={`text-xs font-medium ${index === 1 ? 'text-blue-800' : 'text-red-800'} break-words`}>
                     {factor.core}
                   </span>
                 </div>
-                
+
                 {/* Growth Box */}
-                <div className="bg-red-100 border border-red-200 rounded-md py-6 px-3 text-center">
-                  <span className="text-sm font-medium text-red-800">{factor.growth}</span>
+                <div className="bg-red-100 border border-red-200 rounded-md py-6 px-2 text-center flex items-center justify-center">
+                  <span className="text-xs font-medium text-red-800 break-words">{factor.growth}</span>
                 </div>
               </div>
             ))}
@@ -910,13 +933,15 @@ export default function MarketsContent() {
             <h3 className="text-lg font-semibold text-black">Equity Sectors</h3>
           </div>
           <div className="bg-white border border-gray-200 rounded-lg overflow-hidden flex-1">
-          <div className="p-4 h-full">
-            <div className="grid grid-cols-4 gap-4 text-xs text-black font-semibold mb-3 pb-2 border-b border-gray-100">
+          <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+            <div className="grid grid-cols-4 gap-4 text-xs text-black font-semibold">
               <span>S&P Sector ETFs</span>
               <span>Value</span>
               <span>Forecast</span>
               <span>%</span>
             </div>
+          </div>
+          <div className="p-4 h-full">
             {sectorETFsData.map((sector: SectorETF, index: number) => (
               <div key={index} className={`grid grid-cols-4 gap-4 items-center py-2 text-gray-700 ${index !== sectorETFsData.length - 1 ? 'border-b border-gray-100' : ''}`}>
                 <div className="flex items-center space-x-2">
