@@ -18,6 +18,22 @@ export default function OnboardingStep5({ onComplete, onBack }: OnboardingStep5P
 
 
   const topPlans = [
+      {
+      id: 'free',
+      name: 'Free',
+      icon: '/assets/star.svg',
+      price: { monthly: 0, yearly: 0 },
+      description: 'All features, 15 countries, full dashboard access, export tools',
+      subDescription: 'Best for: Analysts, boutique investors, consultants',
+     features: [
+  'Interactive Dashboard',
+  'Basic ISI Scores',
+  '1 User Seat',
+  'Community Support'
+],
+      buttonText: 'Get Started',
+      buttonStyle: 'bg-[#1E1E1E] text-white'
+    },
     {
       id: 'gold',
       name: 'Gold',
@@ -25,12 +41,15 @@ export default function OnboardingStep5({ onComplete, onBack }: OnboardingStep5P
       price: { monthly: 699, yearly: 6999 },
       description: 'All features, 15 countries, full dashboard access, export tools',
       subDescription: 'Best for: Analysts, boutique investors, consultants',
-      features: [
-        'Basic ISI Scores',
-        'Top-10 Rankings',
-        'Visual Maps',
-        'Email Newsletters'
-      ],
+     features: [
+  'Interactive Dashboard',
+  'Basic ISI Scores',
+  'Market Entry Timing Indicator (METI)',
+  'Sentiment Pulse',
+  '1 User Seat',
+  'Priority Support'
+],
+
       buttonText: 'Subscribe',
       buttonStyle: 'bg-white text-gray-900',
       highlighted: true
@@ -42,39 +61,63 @@ export default function OnboardingStep5({ onComplete, onBack }: OnboardingStep5P
       price: { monthly: 2499, yearly: 24999 },
       description: 'All features, 15 countries, full dashboard access, export tools',
       subDescription: 'Best for: Analysts, boutique investors, consultants',
-      features: [
-        'Basic ISI Scores',
-        'Top-10 Rankings',
-        'Visual Maps',
-        'Email Newsletters'
-      ],
+     features: [
+  'Interactive Dashboard',
+  'Basic ISI Scores',
+  'Market Entry Timing Indicator (METI)',
+  'Sentiment Pulse',
+  '5 User Seats',
+  'Priority Support',
+  'NLG Narrative Generator'
+],
       buttonText: 'Subscribe',
-      buttonStyle: 'bg-gray-900 text-white'
-    }
-  ]
-
-  const bottomPlans = [
-    {
-      id: 'free',
-      name: 'Free',
-      icon: '/assets/free.svg',
-      price: { monthly: 0, yearly: 0 },
-      description: 'Basic ISI access, 3 country dashboards, alerts for 1 sector and community support.',
-      features: [],
-      buttonText: 'Get started',
-      buttonStyle: 'text-gray-900 underline'
+      buttonStyle: 'bg-[#1E1E1E] text-white'
     },
+  
     {
       id: 'enterprise',
       name: 'Enterprise',
-      icon: '/assets/enterprise.svg',
-      price: { monthly: 0, yearly: 0 },
-      description: 'API access, team accounts, 54 countries, analyst reports',
-      features: [],
-      buttonText: 'Contact sales',
-      buttonStyle: 'text-gray-900 underline'
+      icon: '/assets/buildings.svg',
+      price: { monthly: 2499, yearly: 24999 },
+      description: 'All features, 15 countries, full dashboard access, export tools',
+      subDescription: 'Best for: Analysts, boutique investors, consultants',
+      features: [
+        'Interative Dashboard',
+        'Basic ISI Scores',
+  'Market Entry Timing Indicator (METI)',
+  'Sentiment Pulse',
+   'Custom User Seats',
+        'Custom Report Generation',
+        'Custom Model Development',
+        'Dedicated Account Manager'
+      ],
+      buttonText: 'Contact Sales',
+      buttonStyle: 'bg-[#1E1E1E] text-white'
     }
   ]
+
+  // const bottomPlans = [
+  //   {
+  //     id: 'free',
+  //     name: 'Free',
+  //     icon: '/assets/free.svg',
+  //     price: { monthly: 0, yearly: 0 },
+  //     description: 'Basic ISI access, 3 country dashboards, alerts for 1 sector and community support.',
+  //     features: [],
+  //     buttonText: 'Get started',
+  //     buttonStyle: 'text-gray-900 underline'
+  //   },
+  //   {
+  //     id: 'enterprise',
+  //     name: 'Enterprise',
+  //     icon: '/assets/enterprise.svg',
+  //     price: { monthly: 0, yearly: 0 },
+  //     description: 'API access, team accounts, 54 countries, analyst reports',
+  //     features: [],
+  //     buttonText: 'Contact sales',
+  //     buttonStyle: 'text-gray-900 underline'
+  //   }
+  // ]
 
   const handlePlanSelect = async (planId: string) => {
     setSelectedPlan(planId)
@@ -205,7 +248,8 @@ export default function OnboardingStep5({ onComplete, onBack }: OnboardingStep5P
       </div>
 
       {/* Top Row - Gold & Diamond */}
-      <div className="max-w-6xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+      <div className="max-w-full mx-auto px-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+
         {topPlans.map((plan) => (
           <div key={plan.id} className="relative max-w-[362px] mx-auto w-full">
             {/* Background color layer */}
@@ -240,22 +284,29 @@ export default function OnboardingStep5({ onComplete, onBack }: OnboardingStep5P
             </div>
             
             {/* Plan Name & Price */}
-            <div className="flex justify-between items-center mb-4 ">
+            <div className="flex flex-col items-start mb-4 ">
               <h3 className={`pt-2 text-xl font-semibold ${plan.highlighted ? 'text-white' : 'text-gray-900'}`}>
                 {plan.name}
               </h3>
-              <div className="mt-2">
-                {billingPeriod === 'monthly' && (
-                  <span className={`text-sm ${plan.highlighted ? 'text-gray-300' : 'text-gray-600'}`}>
+              <div className="mt-2 flex items-center">
+               {plan.id==='enterprise' ? (
+                <span className={`text-base font-medium mr-2 ${plan.highlighted ? 'text-gray-300' : 'text-gray-600'}`}>
+                    Contact Us
+                  </span>
+               ) : (
+                <>
+                  <span className={`text-sm mr-2 ${plan.highlighted ? 'text-gray-300' : 'text-gray-600'}`}>
                     Starting at
                   </span>
-                )}
+                
                 <span className={`text-2xl font-bold ${billingPeriod === 'monthly' ? 'ml-2' : ''} ${plan.highlighted ? 'text-white' : 'text-gray-900'}`}>
                   ${plan.price[billingPeriod]}
                 </span>
                 <span className={`text-sm ${plan.highlighted ? 'text-gray-300' : 'text-gray-600'}`}>
                   / mon
                 </span>
+                </>
+               )}
               </div>
             </div>
 
@@ -315,17 +366,17 @@ export default function OnboardingStep5({ onComplete, onBack }: OnboardingStep5P
       </div>
 
       {/* Bottom Row - Free & Enterprise */}
-      <div className="max-w-6xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* <div className="max-w-6xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 gap-6">
         {bottomPlans.map((plan) => (
           <div key={plan.id} className="relative h-full max-w-[362px] mx-auto w-full">
-            {/* Background color layer */}
+          
             <div
               className="absolute -inset-2 rounded-2xl bg-gray-100"
               style={{
                 zIndex: 0
               }}
             />
-            {/* Card */}
+           
             <div className="relative flex flex-col items-start space-y-3 p-6 border bg-white border-gray-200 rounded-lg h-full" style={{ zIndex: 1 }}>
               <Image
                 src={plan.icon}
@@ -348,7 +399,7 @@ export default function OnboardingStep5({ onComplete, onBack }: OnboardingStep5P
             </div>
           </div>
         ))}
-      </div>
+      </div> */}
     </div>
   )
 }
