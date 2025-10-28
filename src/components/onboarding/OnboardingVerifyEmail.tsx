@@ -168,7 +168,7 @@ export default function OnboardingVerifyEmail({ onNext, onBack, email }: Onboard
                       setCode(newCode)
                     }}
                     id={`code-${index}`}
-                    className="w-12 h-12 border border-gray-300 rounded-lg bg-white text-gray-900 text-center text-xl font-medium focus:ring-2 focus:ring-black focus:border-transparent"
+                    className="w-12 h-12 border border-gray-300 rounded-lg bg-white text-gray-900 text-center text-xl font-medium outline-none"
                     maxLength={1}
                   />
                 ))}

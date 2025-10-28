@@ -18,8 +18,21 @@ interface Country {
   debtToGDP?: number
 }
 
+interface SectorData {
+  sector_name: string
+  value: number
+  change_percent: number
+}
+
 export default function DashboardPage() {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    // Initialize from localStorage
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('sidebarCollapsed')
+      return saved ? JSON.parse(saved) : false
+    }
+    return false
+  })
   const [filtersCollapsed, setFiltersCollapsed] = useState(false)
   const [countries, setCountries] = useState<Country[]>([])
   const [originalCountries, setOriginalCountries] = useState<Country[]>([])
@@ -31,10 +44,18 @@ export default function DashboardPage() {
   const [userFirstName, setUserFirstName] = useState<string>('')
   const [userLastName, setUserLastName] = useState<string>('')
   const [userProfilePicture, setUserProfilePicture] = useState<string>('')
+  const [userPlan, setUserPlan] = useState<string>('free')
+  const [sectorData, setSectorData] = useState<SectorData[]>([])
+
+  // Persist sidebar state to localStorage
+  useEffect(() => {
+    localStorage.setItem('sidebarCollapsed', JSON.stringify(sidebarCollapsed))
+  }, [sidebarCollapsed])
 
   useEffect(() => {
     loadDashboardData()
     loadUserData()
+    loadSectorData()
   }, [])
 
   // Watch for sector filter changes and recalculate rankings
@@ -174,11 +195,47 @@ export default function DashboardPage() {
           setUserFirstName(userData.first_name || '')
           setUserLastName(userData.last_name || '')
           setUserProfilePicture(userData.profile_picture || '')
+          setUserPlan(userData.subscription_plan || 'free')
           console.log('User name loaded:', userData.first_name, userData.last_name)
         }
       } catch (error) {
         console.error('Error fetching user data:', error)
       }
+    }
+  }
+
+  const loadSectorData = async () => {
+    try {
+      const response = await marketsApi.getLatestSectors()
+      if (response.data.success && response.data.data) {
+        // Transform the data to match SectorData interface
+        const transformedData: SectorData[] = response.data.data.map((sector: any) => {
+          // Extract numeric value from strings like "$114.9B", "5.1%", etc.
+          let numericValue = parseFloat(sector.value.replace(/[^0-9.-]/g, ''))
+
+          // Handle billions (B suffix)
+          if (sector.value.includes('B')) {
+            numericValue = numericValue * 1000000000
+          }
+          // Handle millions (M suffix)
+          else if (sector.value.includes('M')) {
+            numericValue = numericValue * 1000000
+          }
+          // Handle thousands (K suffix)
+          else if (sector.value.includes('K')) {
+            numericValue = numericValue * 1000
+          }
+
+          return {
+            sector_name: sector.name,
+            value: numericValue,
+            change_percent: parseFloat(sector.change.replace(/[^0-9.-]/g, ''))
+          }
+        })
+        setSectorData(transformedData)
+      }
+    } catch (error) {
+      console.error('Error loading sector data:', error)
     }
   }
 
@@ -465,6 +522,7 @@ export default function DashboardPage() {
           userInitials={getUserInitials()}
           truncatedName={getFormattedName()}
           profilePicture={userProfilePicture}
+          userPlan={userPlan}
         />
         
         {/* Content Area - Scrollable */}
@@ -473,7 +531,6 @@ export default function DashboardPage() {
           <DashboardFilters
             onFiltersChange={handleFiltersChange}
             isCollapsed={filtersCollapsed}
-            onToggleCollapse={() => setFiltersCollapsed(!filtersCollapsed)}
           />
 
           {/* Main Map/Treemap Area - Scrollable */}
@@ -494,7 +551,10 @@ export default function DashboardPage() {
               countries={countries}
               onCountryClick={handleCountryClick}
               onToggleFilters={() => setFiltersCollapsed(!filtersCollapsed)}
+              filtersCollapsed={filtersCollapsed}
               selectedSectors={filters.sectors || {}}
+              displayMetric={filters.displayMetric || 'isi'}
+              sectorData={sectorData}
             />
           )}
         </div>

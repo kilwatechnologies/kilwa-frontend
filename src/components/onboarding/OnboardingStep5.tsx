@@ -239,10 +239,12 @@ export default function OnboardingStep5({ onComplete, onBack }: OnboardingStep5P
                 {plan.name}
               </h3>
               <div className="mt-2">
-                <span className={`text-sm ${plan.highlighted ? 'text-gray-300' : 'text-gray-600'}`}>
-                  Starting at
-                </span>
-                <span className={`text-2xl font-bold ml-2 ${plan.highlighted ? 'text-white' : 'text-gray-900'}`}>
+                {billingPeriod === 'monthly' && (
+                  <span className={`text-sm ${plan.highlighted ? 'text-gray-300' : 'text-gray-600'}`}>
+                    Starting at
+                  </span>
+                )}
+                <span className={`text-2xl font-bold ${billingPeriod === 'monthly' ? 'ml-2' : ''} ${plan.highlighted ? 'text-white' : 'text-gray-900'}`}>
                   ${plan.price[billingPeriod]}
                 </span>
                 <span className={`text-sm ${plan.highlighted ? 'text-gray-300' : 'text-gray-600'}`}>

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { countriesApi, metiApi, sentimentApi } from '@/lib/api'
+import { countriesApi, metiApi, sentimentApi, marketsApi } from '@/lib/api'
 import { generateInvestmentBrief } from '@/lib/zwadiService'
 import { getCountryPreference } from '@/lib/countryPreference'
 
@@ -41,6 +41,8 @@ interface SectorData {
   name: string
   outlook: string
   focusMarkets: string
+  value?: number
+  change_percent?: number
 }
 
 interface DriverCategoryData {
@@ -69,9 +71,12 @@ export default function METIContent() {
   const [historicalLoading, setHistoricalLoading] = useState(false)
   const [selectedYearRange, setSelectedYearRange] = useState(5) // Default to 5 years
   const [hoveredPoint, setHoveredPoint] = useState<HistoricalMETIData | null>(null)
+  const [sectorData, setSectorData] = useState<SectorData[]>([])
+  const [sectorLoading, setSectorLoading] = useState(false)
 
   useEffect(() => {
     loadCountries()
+    loadSectorData()
   }, [])
 
   // Close calendar when clicking outside
@@ -140,6 +145,67 @@ export default function METIContent() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const loadSectorData = async () => {
+    try {
+      setSectorLoading(true)
+      const response = await marketsApi.getLatestSectors()
+
+      if (response.data.success && response.data.data) {
+        const sectors = response.data.data.map((sector: any) => {
+          // Parse change_percent from the formatted string (e.g., "+1.23%" or "-0.45%")
+          const changeStr = sector.change || '0%'
+          const changePercent = parseFloat(changeStr.replace('%', '').replace('+', ''))
+
+          // Determine outlook based on change_percent
+          // Adjusted thresholds for realistic stock market movements
+          let outlook = 'Neutral'
+          if (changePercent > 0.5) {
+            outlook = 'Favorable'
+          } else if (changePercent < -0.5) {
+            outlook = 'High-Risk'
+          }
+
+          return {
+            name: sector.name, // API returns 'name' not 'sector_name'
+            outlook,
+            focusMarkets: getFocusMarkets(sector.name),
+            value: parseFloat(sector.value) || 0,
+            change_percent: changePercent
+          }
+        })
+
+        setSectorData(sectors)
+      }
+    } catch (error) {
+      console.error('Error loading sector data:', error)
+      // Set fallback data on error
+      setSectorData([
+        { name: 'Energy & Renewable Energy', outlook: 'Favorable', focusMarkets: 'Solar, Hydro' },
+        { name: 'Agriculture & Agribusiness', outlook: 'Favorable', focusMarkets: 'Cocoa, Tea' },
+        { name: 'Technology & Fintech', outlook: 'Favorable', focusMarkets: 'Mobile Payments' },
+        { name: 'Infrastructure & Real Estate', outlook: 'High-Risk', focusMarkets: 'Urban Housing' },
+        { name: 'Manufacturing & Industrialization', outlook: 'Neutral', focusMarkets: 'Textiles, Packaging' },
+        { name: 'Tourism & Hospitality', outlook: 'High-Risk', focusMarkets: 'Safari, Wellness' },
+        { name: 'Financial Markets & Investment', outlook: 'Neutral', focusMarkets: 'Microfinance, PE' },
+      ])
+    } finally {
+      setSectorLoading(false)
+    }
+  }
+
+  const getFocusMarkets = (sectorName: string): string => {
+    const focusMarketsMap: { [key: string]: string } = {
+      'Energy & Renewable Energy': 'Solar, Hydro',
+      'Agriculture & Agribusiness': 'Cocoa, Tea',
+      'Technology & Fintech': 'Mobile Payments',
+      'Infrastructure & Real Estate': 'Urban Housing',
+      'Manufacturing & Industrialization': 'Textiles, Packaging',
+      'Tourism & Hospitality': 'Safari, Wellness',
+      'Financial Markets & Investment': 'Microfinance, PE',
+    }
+    return focusMarketsMap[sectorName] || 'Various'
   }
 
   const loadMETIScore = async () => {
@@ -467,17 +533,6 @@ export default function METIContent() {
   const sentimentPulseDisplay = getSentimentPulseDisplay()
   const alertsSummary = getAlertsSummary()
 
-  // Mock data
-  const sectorData: SectorData[] = [
-    { name: 'Energy & Renewable Energy', outlook: 'Favorable', focusMarkets: 'Solar, Hydro' },
-    { name: 'Agriculture & Agribusiness', outlook: 'Favorable', focusMarkets: 'Cocoa, Tea' },
-    { name: 'Technology & Fintech', outlook: 'Favorable', focusMarkets: 'Mobile Payments' },
-    { name: 'Infrastructure & Real Estate', outlook: 'High-Risk', focusMarkets: 'Urban Housing' },
-    { name: 'Manufacturing & Industrialization', outlook: 'Neutral', focusMarkets: 'Textiles, Packaging' },
-    { name: 'Tourism & Hospitality', outlook: 'High-Risk', focusMarkets: 'Safari, Wellness' },
-    { name: 'Financial Markets & Investment', outlook: 'Neutral', focusMarkets: 'Microfinance, PE' },
-  ]
-
   const driverCategories: DriverCategoryData[] = [
     { name: 'Macroeconomic Stability', contribution: '+7.5', riskLevel: 'Critical' },
     { name: 'Liquidity & Capital Flow', contribution: '+12.0', riskLevel: 'Moderate' },
@@ -537,7 +592,7 @@ export default function METIContent() {
                 const country = countries.find(c => c.id === parseInt(e.target.value))
                 setSelectedCountry(country || null)
               }}
-              className="bg-white text-gray-900 pl-14 pr-10 py-2 rounded-lg border-2 border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm appearance-none cursor-pointer"
+              className="bg-white text-gray-900 pl-14 pr-10 py-2 rounded-lg border border-gray-300 outline-none  shadow-sm appearance-none cursor-pointer"
             >
               {countries.map(country => (
                 <option key={country.id} value={country.id}>{country.name}</option>
@@ -675,7 +730,7 @@ export default function METIContent() {
         {/* METI Score */}
         <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
           <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
-            <h3 className="text-sm font-medium text-gray-600">METI Score</h3>
+            <h3 className="text-sm font-medium text-gray-800">METI Score</h3>
           </div>
           <div className="p-4">
             {metiLoading ? (
@@ -685,8 +740,8 @@ export default function METIContent() {
             ) : (
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-3xl font-bold text-black mb-1">
-                    {displayScore.toFixed(0)}/100
+                  <div className="text-[24px] font-bold text-black mb-1">
+                    Entry timing
                   </div>
                   <div className="text-sm text-gray-600">{getMETIStatus(displayScore)}</div>
                 </div>
@@ -723,7 +778,7 @@ export default function METIContent() {
         {/* Zawadi Signal */}
         <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
           <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
-            <h3 className="text-sm font-medium text-gray-600">Zawadi Signal</h3>
+            <h3 className="text-sm font-medium text-gray-800">Zawadi Signal</h3>
           </div>
           <div className="p-4">
             {sentimentLoading ? (
@@ -732,7 +787,7 @@ export default function METIContent() {
               </div>
             ) : (
               <>
-                <div className="text-xl font-semibold text-black mb-2">{dominantSentiment.label}</div>
+                <div className="text-[24px] font-semibold text-black mb-1">{dominantSentiment.label}</div>
                 <div className="flex items-center justify-between">
                   <div className="text-sm text-gray-600">Based on multi-signal strength</div>
                   <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${dominantSentiment.badge}`}>
@@ -747,7 +802,7 @@ export default function METIContent() {
         {/* Sentiment Pulse */}
         <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
           <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
-            <h3 className="text-sm font-medium text-gray-600">Sentiment Pulse</h3>
+            <h3 className="text-sm font-medium text-gray-800">Sentiment Pulse</h3>
           </div>
           <div className="p-4">
             {pulseLoading ? (
@@ -756,8 +811,8 @@ export default function METIContent() {
               </div>
             ) : (
               <>
-                <div className="flex items-start justify-between mb-2">
-                  <div className={`text-lg font-semibold`}>
+                <div className="flex items-start justify-between ">
+                  <div className={`text-[24px] font-semibold`}>
                     {sentimentPulseDisplay.label}
                   </div>
                   <div className={`text-sm ${sentimentPulseDisplay.color} flex items-center gap-1 flex-shrink-0 ml-2`}>
@@ -816,7 +871,7 @@ export default function METIContent() {
         {/* Alerts */}
         <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
           <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
-            <h3 className="text-sm font-medium text-gray-600">Alerts</h3>
+            <h3 className="text-sm font-medium text-gray-800">Alerts</h3>
           </div>
           <div className="p-4">
             {alertsLoading ? (
@@ -829,7 +884,7 @@ export default function METIContent() {
                   {alertsSummary.critical > 0 && (
                     <div className="w-2 h-2 bg-red-500 rounded-full"></div>
                   )}
-                  <span className="text-lg font-semibold text-black">
+                  <span className="text-[24px] font-semibold text-black">
                     {alertsSummary.critical > 0
                       ? `${alertsSummary.critical} Critical / ${alertsSummary.total} New`
                       : alertsSummary.total > 0
@@ -864,7 +919,7 @@ export default function METIContent() {
                   <button
                     key={period.label}
                     onClick={() => setSelectedYearRange(period.value)}
-                    className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
+                    className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${
                       selectedYearRange === period.value ? 'bg-white text-black shadow-sm' : 'text-gray-600 hover:text-black'
                     }`}
                   >
@@ -1033,27 +1088,28 @@ export default function METIContent() {
           {/* Sectors Section */}
           <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
             <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-black">Sector</h3>
-            </div>
-            <div className="p-4">
-              <div className="grid grid-cols-3 gap-4 text-xs text-gray-500 mb-3 pb-2 border-b border-gray-100">
+              <div className="grid grid-cols-3 gap-4 text-xs font-semibold text-gray-700">
                 <span>Sector</span>
                 <span>Zawadi AI Outlook</span>
                 <span>Focus Markets</span>
               </div>
-
+            </div>
+            <div>
               {sectorData.map((sector, index) => (
                 <div
                   key={index}
-                  className={`grid grid-cols-3 gap-4 items-center py-3 ${
-                    index !== sectorData.length - 1 ? 'border-b border-gray-100' : ''
-                  } ${sector.name === 'Technology & Fintech' ? 'bg-purple-50' : ''}`}
+                  className={`grid grid-cols-3 gap-4 items-center px-4 py-3 cursor-pointer hover:opacity-90 transition-opacity ${
+                    sector.outlook === 'Favorable' ? 'bg-[#ECFEF4]' :
+                    sector.outlook === 'High-Risk' ? 'bg-[#FFEBE8]' :
+                    sector.outlook === 'Neutral' ? 'bg-[#FDF5E2]' :
+                    'bg-white'
+                  } ${index !== sectorData.length - 1 ? 'border-b border-gray-100' : ''}`}
                 >
                   <div className="flex items-center space-x-2">
                     <input
                       type="checkbox"
-                      className="rounded"
-                      defaultChecked={sector.name === 'Technology & Fintech'}
+                      className="rounded cursor-pointer accent-[#9514EB]"
+                      defaultChecked={false}
                     />
                     <span className="text-sm text-black">{sector.name}</span>
                   </div>
@@ -1074,8 +1130,8 @@ export default function METIContent() {
             <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
               <div className="grid grid-cols-[1fr_auto_auto] gap-3 items-center">
                 <h3 className="text-sm font-semibold text-black">Driver Category</h3>
-                <span className="text-sm text-gray-600 text-center min-w-[80px]">Contribution</span>
-                <span className="text-sm text-gray-600 text-center min-w-[100px]">Risk Level</span>
+                <span className="text-sm font-semibold text-center min-w-[80px]">Contribution</span>
+                <span className="text-sm font-semibold text-center min-w-[100px]">Risk Level</span>
               </div>
             </div>
             <div className="p-4">

@@ -507,7 +507,7 @@ export default function SettingsContent() {
                   type="text"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none text-gray-900 bg-white"
                 />
               </div>
 
@@ -518,7 +518,7 @@ export default function SettingsContent() {
                   type="text"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none text-gray-900 bg-white"
                 />
               </div>
 
@@ -540,7 +540,7 @@ export default function SettingsContent() {
                 <select
                   value={jobTitle}
                   onChange={(e) => setJobTitle(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none  bg-white text-gray-900"
                 >
                   <option value="">Select your job title</option>
                   <option value="CEO">CEO</option>
@@ -578,7 +578,7 @@ export default function SettingsContent() {
                   <select
                     value={country}
                     onChange={(e) => setCountry(e.target.value)}
-                    className="w-full pl-12 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white appearance-none text-gray-900"
+                    className="w-full pl-12 pr-4 py-2 border border-gray-300 rounded-lg outline-none  bg-white appearance-none text-gray-900"
                   >
                     <option value="">Select your country</option>
                     <option value="Nigeria">Nigeria</option>
@@ -608,7 +608,7 @@ export default function SettingsContent() {
                 <select
                   value={industry}
                   onChange={(e) => setIndustry(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none  bg-white text-gray-900"
                 >
                   <option value="">Select your industry</option>
                   <option value="Financial Services">Financial Services</option>
@@ -855,7 +855,7 @@ export default function SettingsContent() {
                   onChange={(e) => setCurrentPassword(e.target.value)}
                   autoComplete="off"
                   data-form-type="other"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none  bg-white text-gray-900"
                   placeholder="**************"
                 />
               </div>
@@ -869,7 +869,7 @@ export default function SettingsContent() {
                   onChange={(e) => setNewPassword(e.target.value)}
                   autoComplete="new-password"
                   data-form-type="other"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none bg-white text-gray-900"
                   placeholder="Enter New Password"
                 />
               </div>
@@ -883,7 +883,7 @@ export default function SettingsContent() {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   autoComplete="new-password"
                   data-form-type="other"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none bg-white text-gray-900"
                   placeholder="Re-enter your Password"
                 />
               </div>
@@ -969,7 +969,7 @@ export default function SettingsContent() {
                     <select
                       value={isiThreshold}
                       onChange={(e) => setIsiThreshold(e.target.value)}
-                      className="px-4 py-1 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 bg-transparent text-sm text-gray-900"
+                      className="px-4 py-1 border border-gray-300 rounded-full outline-none  bg-transparent text-sm text-gray-900"
                     >
                       <option value="30">30</option>
                       <option value="40">40</option>
@@ -1010,7 +1010,7 @@ export default function SettingsContent() {
                     <select
                       value={metiAlert}
                       onChange={(e) => setMetiAlert(e.target.value)}
-                      className="px-4 py-1 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 bg-transparent text-sm text-gray-900"
+                      className="px-4 py-1 border border-gray-300 rounded-full outline-none  bg-transparent text-sm text-gray-900"
                     >
                       <option value="Optimal Entry">Optimal Entry</option>
                       <option value="Caution">Caution</option>

@@ -117,7 +117,7 @@ export default function OnboardingStep3({ onNext, onBack, email }: OnboardingSte
           <select
             value={selectedCountry}
             onChange={(e) => setSelectedCountry(e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 text-black rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none appearance-none bg-white"
+            className="w-full px-4 py-3 border border-gray-300 text-black rounded-lg  outline-none appearance-none bg-white"
           >
             {countries.map((country) => (
               <option key={country} value={country} disabled={country === 'Select your country'}>
@@ -137,7 +137,7 @@ export default function OnboardingStep3({ onNext, onBack, email }: OnboardingSte
           <select
             value={selectedIndustry}
             onChange={(e) => setSelectedIndustry(e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 text-black rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none appearance-none bg-white"
+            className="w-full px-4 py-3 border border-gray-300 text-black rounded-lg outline-none appearance-none bg-white"
           >
             {industries.map((industry) => (
               <option key={industry} value={industry} disabled={industry === 'Select your industry'}>
@@ -157,7 +157,7 @@ export default function OnboardingStep3({ onNext, onBack, email }: OnboardingSte
           <select
             value={jobTitle}
             onChange={(e) => setJobTitle(e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 text-black rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none appearance-none bg-white"
+            className="w-full px-4 py-3 border border-gray-300 text-black rounded-lg outline-none appearance-none bg-white"
           >
             {jobTitles.map((title) => (
               <option key={title} value={title} disabled={title === 'Select your job title'}>

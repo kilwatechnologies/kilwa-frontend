@@ -63,7 +63,7 @@ export default function OnboardingStep1a({ onNext, onBack, email }: OnboardingSt
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
               placeholder="Enter First name"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent outline-none transition-all text-gray-900 bg-white"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none transition-all text-gray-900 bg-white"
               autoFocus
             />
           </div>
@@ -79,7 +79,7 @@ export default function OnboardingStep1a({ onNext, onBack, email }: OnboardingSt
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
               placeholder="Enter last name"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent outline-none transition-all text-gray-900 bg-white"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg  outline-none transition-all text-gray-900 bg-white"
             />
           </div>
         </div>

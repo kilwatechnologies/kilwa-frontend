@@ -47,6 +47,20 @@ export default function MarketsContent() {
   const [selectedCountry, setSelectedCountry] = useState<Country | null>(null)
   const [countries, setCountries] = useState<Country[]>([])
   const [loading, setLoading] = useState(true)
+  const [equityFactorsData, setEquityFactorsData] = useState<EquityFactor[]>([
+    { name: 'Large', value: '-0.1%', core: '-0.3%', growth: '-0.4%' },
+    { name: 'Mid', value: '-0.3%', core: '-0.4%', growth: '-0.5%' },
+    { name: 'Small', value: '-0.4%', core: '-0.4%', growth: '-0.3%' },
+  ])
+  const [sectorETFsData, setSectorETFsData] = useState<SectorETF[]>([
+    { name: 'Energy & Renewable Energy', value: '$114.9B', forecast: '$118.3B', change: '+1.21%' },
+    { name: 'Technology & Fintech', value: '$2,150', forecast: '$2,310', change: '+1.21%' },
+    { name: 'Infrastructure & Real Estate', value: '5.1%', forecast: '5.6%', change: '+1.21%' },
+    { name: 'Manufacturing & Industrialization', value: '7.8%', forecast: '6.4%', change: '+1.21%' },
+    { name: 'Agriculture & Agribusiness', value: '7.8%', forecast: '6.4%', change: '+1.21%' },
+    { name: 'Tourism & Hospitality', value: '7.8%', forecast: '6.4%', change: '+1.21%' },
+    { name: 'Financial Markets & Investment', value: '7.8%', forecast: '6.4%', change: '-2.31%' },
+  ])
 
   // API data states
   const [macroeconomicData, setMacroeconomicData] = useState<MarketKPI[]>([])
@@ -235,21 +249,37 @@ export default function MarketsContent() {
     return `${diffDays} days ago`
   }
 
-  const equityFactors: EquityFactor[] = [
-    { name: 'Large', value: '-0.1%', core: '-0.3%', growth: '-0.4%' },
-    { name: 'Mid', value: '-0.3%', core: '-0.4%', growth: '-0.5%' },
-    { name: 'Small', value: '-0.4%', core: '-0.4%', growth: '-0.3%' },
-  ]
+  // Fetch equity factors from API
+  useEffect(() => {
+    const loadEquityFactors = async () => {
+      try {
+        const response = await marketsApi.getEquityFactorPerformance()
+        if (response.data.success && response.data.data) {
+          setEquityFactorsData(response.data.data)
+        }
+      } catch (error) {
+        console.error('Error loading equity factors:', error)
+        // Keep default hardcoded data on error
+      }
+    }
+    loadEquityFactors()
+  }, [])
 
-  const sectorETFs: SectorETF[] = [
-    { name: 'Energy & Renewable Energy', value: '$114.9B', forecast: '$118.3B', change: '+1.21%' },
-    { name: 'Technology & Fintech', value: '$2,150', forecast: '$2,310', change: '+1.21%' },
-    { name: 'Infrastructure & Real Estate', value: '5.1%', forecast: '5.6%', change: '+1.21%' },
-    { name: 'Manufacturing & Industrialization', value: '7.8%', forecast: '6.4%', change: '+1.21%' },
-    { name: 'Agriculture & Agribusiness', value: '7.8%', forecast: '6.4%', change: '+1.21%' },
-    { name: 'Tourism & Hospitality', value: '7.8%', forecast: '6.4%', change: '+1.21%' },
-    { name: 'Financial Markets & Investment', value: '7.8%', forecast: '6.4%', change: '-2.31%' },
-  ]
+  // Fetch sector ETFs from API
+  useEffect(() => {
+    const loadSectorETFs = async () => {
+      try {
+        const response = await marketsApi.getLatestSectors()
+        if (response.data.success && response.data.data) {
+          setSectorETFsData(response.data.data)
+        }
+      } catch (error) {
+        console.error('Error loading sector ETFs:', error)
+        // Keep default hardcoded data on error
+      }
+    }
+    loadSectorETFs()
+  }, [])
 
   const getChangeColor = (change: string) => {
     if (change.startsWith('+')) return 'text-green-500'
@@ -345,7 +375,7 @@ export default function MarketsContent() {
                 const country = countries.find(c => c.id === parseInt(e.target.value))
                 setSelectedCountry(country || null)
               }}
-              className="bg-white text-gray-900 pl-14 pr-10 py-2 rounded-lg border-2 border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm appearance-none cursor-pointer"
+              className="bg-white text-gray-900 pl-14 pr-10 py-2 rounded-lg border border-gray-300 outline-none shadow-sm appearance-none cursor-pointer"
             >
               {countries.map(country => (
                 <option key={country.id} value={country.id}>{country.name}</option>
@@ -477,12 +507,13 @@ export default function MarketsContent() {
       {/* Top Row - Macroeconomic, Currencies, Finance */}
       <div className="grid grid-cols-3 gap-6 mb-6">
         {/* Macroeconomic Overview */}
-        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-          <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+        <div className="flex flex-col">
+          <div className="mb-4">
             <h3 className="text-lg font-semibold text-black">Macroeconomic Overview</h3>
           </div>
-          <div className="p-4">
-            <div className="grid grid-cols-3 gap-4 text-xs text-gray-500 mb-3 pb-2 border-b border-gray-100">
+          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden flex-1">
+          <div className="p-4 h-full">
+            <div className="grid grid-cols-3 gap-4 text-xs text-black font-semibold mb-3 pb-2 border-b border-gray-100">
               <span>Metric</span>
               <span>Value</span>
               <span>Score</span>
@@ -491,12 +522,12 @@ export default function MarketsContent() {
               <div className="text-center py-4 text-gray-500">Loading...</div>
             ) : macroeconomicData.length > 0 ? (
               macroeconomicData.map((kpi, index) => (
-                <div key={kpi.code} className={`grid grid-cols-3 gap-4 items-center py-2 ${index !== macroeconomicData.length - 1 ? 'border-b border-gray-100' : ''}`}>
-                  <span className="text-sm text-black">{kpi.name}</span>
-                  <span className="text-sm text-black">
+                <div key={kpi.code} className={`grid grid-cols-3 gap-4 items-center py-2 text-gray-700 ${index !== macroeconomicData.length - 1 ? 'border-b border-gray-100' : ''}`}>
+                  <span className="text-sm truncate" title={kpi.name}>{kpi.name}</span>
+                  <span className="text-sm  truncate" title={kpi.value ? `${kpi.value.toFixed(2)} ${kpi.unit || ''}` : 'N/A'}>
                     {kpi.value ? `${kpi.value.toFixed(2)} ${kpi.unit || ''}` : 'N/A'}
                   </span>
-                  <span className="text-sm text-black">
+                  <span className="text-sm ">
                     {kpi.normalizedValue ? kpi.normalizedValue.toFixed(1) : 'N/A'}
                   </span>
                 </div>
@@ -505,27 +536,29 @@ export default function MarketsContent() {
               <div className="text-center py-4 text-gray-500">No data available</div>
             )}
           </div>
+          </div>
         </div>
 
         {/* Currencies */}
-        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-          <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+        <div className="flex flex-col">
+          <div className="mb-4">
             <h3 className="text-lg font-semibold text-black">Currencies</h3>
           </div>
-          <div className="p-4">
+          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden flex-1">
+          <div className="p-4 h-full">
             {currencyLoading ? (
               <div className="text-center py-8 text-gray-500">Loading currency rates...</div>
             ) : currencyRates.length > 0 ? (
               <>
-                <div className="grid grid-cols-3 gap-4 text-xs text-gray-500 mb-3 pb-2 border-b border-gray-100">
+                <div className="grid grid-cols-3 gap-4 text-xs text-black font-semibold mb-3 pb-2 border-b border-gray-100">
                   <span>Pair</span>
                   <span>Rate</span>
                   <span>%</span>
                 </div>
                 {currencyRates.map((currency, index) => (
                   <div key={index} className={`grid grid-cols-3 gap-4 items-center py-2 ${index !== currencyRates.length - 1 ? 'border-b border-gray-100' : ''}`}>
-                    <span className="text-sm text-black">{currency.pair}</span>
-                    <span className="text-sm text-black">{currency.rate}</span>
+                    <span className="text-sm text-gray-700">{currency.pair}</span>
+                    <span className="text-sm text-gray-700">{currency.rate}</span>
                     <span className={`text-sm ${
                       currency.change >= 0 ? 'text-green-500' : 'text-red-500'
                     }`}>
@@ -538,15 +571,17 @@ export default function MarketsContent() {
               <div className="text-center py-8 text-gray-500">No currency data available</div>
             )}
           </div>
+          </div>
         </div>
 
         {/* Finance */}
-        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-          <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+        <div className="flex flex-col">
+          <div className="mb-4">
             <h3 className="text-lg font-semibold text-black">Finance</h3>
           </div>
-          <div className="p-4">
-            <div className="grid grid-cols-3 gap-4 text-xs text-gray-500 mb-3 pb-2 border-b border-gray-100">
+          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden flex-1">
+          <div className="p-4 h-full">
+            <div className="grid grid-cols-3 gap-4 text-xs text-black font-semibold mb-3 pb-2 border-b border-gray-100">
               <span>External Finance</span>
               <span>Value</span>
               <span>Score</span>
@@ -555,12 +590,12 @@ export default function MarketsContent() {
               <div className="text-center py-4 text-gray-500">Loading...</div>
             ) : financeData.length > 0 ? (
               financeData.map((kpi, index) => (
-                <div key={kpi.code} className={`grid grid-cols-3 gap-4 items-center py-2 ${index !== financeData.length - 1 ? 'border-b border-gray-100' : ''}`}>
-                  <span className="text-sm text-black">{kpi.name}</span>
-                  <span className="text-sm text-black">
+                <div key={kpi.code} className={`grid grid-cols-3 gap-4 items-center py-2 text-gray-700 ${index !== financeData.length - 1 ? 'border-b border-gray-100' : ''}`}>
+                  <span className="text-sm truncate" title={kpi.name}>{kpi.name}</span>
+                  <span className="text-sm truncate" title={kpi.value ? `${kpi.value.toFixed(2)} ${kpi.unit || ''}` : 'N/A'}>
                     {kpi.value ? `${kpi.value.toFixed(2)} ${kpi.unit || ''}` : 'N/A'}
                   </span>
-                  <span className="text-sm text-black">
+                  <span className="text-sm ">
                     {kpi.normalizedValue ? kpi.normalizedValue.toFixed(1) : 'N/A'}
                   </span>
                 </div>
@@ -569,33 +604,40 @@ export default function MarketsContent() {
               <div className="text-center py-4 text-gray-500">No data available</div>
             )}
           </div>
+          </div>
         </div>
       </div>
 
       {/* Second Row - Chart and Market News */}
       <div className="flex gap-6 mb-6">
         {/* Chart Component - Custom width */}
-        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden" style={{ width: '67%' }}>
-          <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+        <div className="flex flex-col" style={{ width: '67%' }}>
+          <div className="mb-4">
             <h3 className="text-lg font-semibold text-black">Macroeconomic Overview</h3>
           </div>
-          <div className="p-4">
+          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden flex-1">
+          <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
             {/* Year Range Selector */}
-            <div className="flex space-x-2 mb-4">
-              {[1, 2, 3, 4, 5].map((years) => (
+            <div className="inline-flex space-x-2">
+              {[
+                { label: '2Y', value: 2 },
+                { label: '3Y', value: 3 },
+                { label: '4Y', value: 4 },
+                { label: '5Y', value: 5 }
+              ].map((period) => (
                 <button
-                  key={years}
-                  onClick={() => setSelectedYearRange(years)}
-                  className={`px-3 py-1 text-xs rounded ${
-                    selectedYearRange === years
-                      ? 'bg-blue-500 text-white'
-                      : 'bg-gray-200 hover:bg-gray-300 text-black'
+                  key={period.label}
+                  onClick={() => setSelectedYearRange(period.value)}
+                  className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${
+                    selectedYearRange === period.value ? 'bg-white text-black shadow-sm' : 'text-gray-600 hover:text-black'
                   }`}
                 >
-                  {years}Y
+                  {period.label}
                 </button>
               ))}
             </div>
+          </div>
+          <div className="p-4">
 
             {historicalLoading ? (
               <div className="h-80 flex items-center justify-center">
@@ -748,13 +790,15 @@ export default function MarketsContent() {
               </div>
             )}
           </div>
+          </div>
         </div>
 
         {/* Market News - Custom width */}
-        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden" style={{ width: '33%' }}>
-          <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+        <div className="flex flex-col" style={{ width: '33%' }}>
+          <div className="mb-4">
             <h3 className="text-lg font-semibold text-black">Market News</h3>
           </div>
+          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden flex-1">
           <div className="p-4">
             {newsLoading ? (
               <div className="text-center py-8 text-gray-500">Loading news...</div>
@@ -774,19 +818,21 @@ export default function MarketsContent() {
               <div className="text-center py-8 text-gray-500">No news available</div>
             )}
           </div>
+          </div>
         </div>
       </div>
 
       {/* Bottom Section */}
       <div className="grid grid-cols-3 gap-6 mt-6">
-        
+
         {/* Governance & Risk */}
-        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-          <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+        <div className="flex flex-col">
+          <div className="mb-4">
             <h3 className="text-lg font-semibold text-black">Governance & Risk</h3>
           </div>
-          <div className="p-4">
-            <div className="grid grid-cols-3 gap-4 text-xs text-gray-500 mb-3 pb-2 border-b border-gray-100">
+          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden flex-1">
+          <div className="p-4 h-full">
+            <div className="grid grid-cols-3 gap-4 text-xs text-black font-semibold mb-3 pb-2 border-b border-gray-100">
               <span>Indicator</span>
               <span>Value</span>
               <span>Score</span>
@@ -795,12 +841,12 @@ export default function MarketsContent() {
               <div className="text-center py-4 text-gray-500">Loading...</div>
             ) : governanceData.length > 0 ? (
               governanceData.map((kpi, index) => (
-                <div key={kpi.code} className={`grid grid-cols-3 gap-4 items-center py-2 ${index !== governanceData.length - 1 ? 'border-b border-gray-100' : ''}`}>
-                  <span className="text-sm text-black">{kpi.name}</span>
-                  <span className="text-sm text-black">
+                <div key={kpi.code} className={`grid grid-cols-3 gap-4 items-center py-2 text-gray-700 ${index !== governanceData.length - 1 ? 'border-b border-gray-100' : ''}`}>
+                  <span className="text-sm  truncate" title={kpi.name}>{kpi.name}</span>
+                  <span className="text-sm ">
                     {kpi.value ? `${kpi.value.toFixed(2)} ${kpi.unit || ''}` : 'N/A'}
                   </span>
-                  <span className="text-sm text-black">
+                  <span className="text-sm">
                     {kpi.normalizedValue ? kpi.normalizedValue.toFixed(1) : 'N/A'}
                   </span>
                 </div>
@@ -809,29 +855,31 @@ export default function MarketsContent() {
               <div className="text-center py-4 text-gray-500">No data available</div>
             )}
           </div>
+          </div>
         </div>
 
         {/* Equity Factors */}
-        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-          <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+        <div className="flex flex-col">
+          <div className="mb-4">
             <h3 className="text-lg font-semibold text-black">Equity Factors</h3>
           </div>
-          <div className="p-4">
+          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden flex-1">
+          <div className="p-4 h-full">
           <div className="mb-4">
-            <div className="text-sm text-gray-600 mb-3">1-Day Performance</div>
+            <div className="text-sm text-black font-semibold mb-3">1-Day Performance</div>
             
             {/* Header Row */}
             <div className="grid grid-cols-4 gap-2 mb-3">
               <div></div>
-              <div className="text-center text-xs text-gray-600 font-medium">Value</div>
-              <div className="text-center text-xs text-gray-600 font-medium">Core</div>
-              <div className="text-center text-xs text-gray-600 font-medium">Growth</div>
+              <div className="text-center text-xs text-gray-500 font-medium">Value</div>
+              <div className="text-center text-xs text-gray-500 font-medium">Core</div>
+              <div className="text-center text-xs text-gray-500 font-medium">Growth</div>
             </div>
             
             {/* Data Rows */}
-            {equityFactors.map((factor, index) => (
+            {equityFactorsData.map((factor: EquityFactor, index: number) => (
               <div key={index} className="grid grid-cols-4 gap-3 mb-6">
-                <div className="flex items-center text-sm text-black font-medium">{factor.name}</div>
+                <div className="flex items-center text-sm text-black font-">{factor.name}</div>
                 
                 {/* Value Box */}
                 <div className="bg-red-100 border border-red-200 rounded-md py-6 px-3 text-center">
@@ -853,32 +901,35 @@ export default function MarketsContent() {
             ))}
             </div>
           </div>
+          </div>
         </div>
 
         {/* Equity Sectors */}
-        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-          <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+        <div className="flex flex-col">
+          <div className="mb-4">
             <h3 className="text-lg font-semibold text-black">Equity Sectors</h3>
           </div>
-          <div className="p-4">
-            <div className="grid grid-cols-4 gap-4 text-xs text-gray-500 mb-3 pb-2 border-b border-gray-100">
+          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden flex-1">
+          <div className="p-4 h-full">
+            <div className="grid grid-cols-4 gap-4 text-xs text-black font-semibold mb-3 pb-2 border-b border-gray-100">
               <span>S&P Sector ETFs</span>
               <span>Value</span>
               <span>Forecast</span>
               <span>%</span>
             </div>
-            {sectorETFs.map((sector, index) => (
-              <div key={index} className={`grid grid-cols-4 gap-4 items-center py-2 ${index !== sectorETFs.length - 1 ? 'border-b border-gray-100' : ''}`}>
+            {sectorETFsData.map((sector: SectorETF, index: number) => (
+              <div key={index} className={`grid grid-cols-4 gap-4 items-center py-2 text-gray-700 ${index !== sectorETFsData.length - 1 ? 'border-b border-gray-100' : ''}`}>
                 <div className="flex items-center space-x-2">
-                  <span className="text-sm text-black">{sector.name}</span>
+                  <span className="text-sm truncate" title={sector.name}>{sector.name}</span>
                 </div>
-                <span className="text-sm text-black">{sector.value}</span>
-                <span className="text-sm text-black">{sector.forecast}</span>
+                <span className="text-sm ">{sector.value}</span>
+                <span className="text-sm ">{sector.forecast}</span>
                 <span className={`text-sm ${getChangeColor(sector.change)}`}>
                   {sector.change}
                 </span>
               </div>
             ))}
+          </div>
           </div>
         </div>
       </div>

@@ -276,6 +276,14 @@ export const marketsApi = {
   // Get industry & sector KPIs
   getIndustrySector: (countryId: number, year: number = 2023) =>
     api.get<APIResponse<any[]>>(`/markets/industry-sector?country_id=${countryId}&year=${year}`),
+
+  // Get equity factor performance (Kenneth French data)
+  getEquityFactorPerformance: () =>
+    api.get<APIResponse<any[]>>('/equity/factors/performance'),
+
+  // Get latest sector ETF data (Alpha Vantage)
+  getLatestSectors: () =>
+    api.get<APIResponse<any[]>>('/equity/sectors/latest'),
 };
 
 // Currency API

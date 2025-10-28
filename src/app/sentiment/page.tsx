@@ -29,7 +29,13 @@ interface NewsArticle {
 }
 
 export default function SentimentPulsePage() {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('sidebarCollapsed')
+      return saved ? JSON.parse(saved) : false
+    }
+    return false
+  })
   const [filtersCollapsed, setFiltersCollapsed] = useState(false)
   const [filters, setFilters] = useState<any>({})
   const [selectedCountry, setSelectedCountry] = useState<Country | null>(null)
@@ -38,6 +44,7 @@ export default function SentimentPulsePage() {
   const [filteredNewsArticles, setFilteredNewsArticles] = useState<NewsArticle[]>([])
   const [loading, setLoading] = useState(true)
   const [userData, setUserData] = useState<UserData>({ email: '', firstName: '', lastName: '' })
+  const [userDataLoading, setUserDataLoading] = useState(true)
   const [selectedPeriod, setSelectedPeriod] = useState('6 M')
   const [sentimentTimelineData, setSentimentTimelineData] = useState<any[]>([])
   const [trendsLoading, setTrendsLoading] = useState(false)
@@ -46,10 +53,15 @@ export default function SentimentPulsePage() {
   const [viewingMonth, setViewingMonth] = useState(new Date())
 
   useEffect(() => {
+    localStorage.setItem('sidebarCollapsed', JSON.stringify(sidebarCollapsed))
+  }, [sidebarCollapsed])
+
+  useEffect(() => {
     loadInitialData()
     const fetchUserData = async () => {
       const data = await loadUserData()
       setUserData(data)
+      setUserDataLoading(false)
     }
     fetchUserData()
   }, [])
@@ -183,16 +195,23 @@ export default function SentimentPulsePage() {
       case '1 D':
         // Show 5 points for the same day (every few hours)
         numPoints = 5
+        const oneDayFallback = [
+          { positive: 55, neutral: 60, negative: 25 },
+          { positive: 48, neutral: 58, negative: 32 },
+          { positive: 52, neutral: 55, negative: 28 },
+          { positive: 60, neutral: 52, negative: 22 },
+          { positive: 58, neutral: 54, negative: 24 }
+        ]
         for (let i = 0; i < numPoints; i++) {
           const date = new Date(today)
           date.setHours(8 + i * 3) // 8am, 11am, 2pm, 5pm, 8pm
 
-          const sentiment = backendData[Math.min(i, backendData.length - 1)]?.sentiment_pulse || (Math.random() * 100 - 50)
+          const backendPoint = backendData[Math.min(i, backendData.length - 1)]
           dataPoints.push({
             date: formatDate(date.toISOString(), '1 D'),
-            positive: sentiment > 0 ? Math.round(sentiment) : Math.round(Math.random() * 40 + 50),
-            negative: sentiment < 0 ? Math.round(Math.abs(sentiment)) : Math.round(Math.random() * 30 + 40),
-            neutral: 100 - (sentiment > 0 ? Math.round(sentiment) : Math.round(Math.abs(sentiment)))
+            positive: backendPoint?.positive !== undefined ? Math.round(backendPoint.positive) : oneDayFallback[i].positive,
+            negative: backendPoint?.negative !== undefined ? Math.round(backendPoint.negative) : oneDayFallback[i].negative,
+            neutral: backendPoint?.neutral !== undefined ? Math.round(backendPoint.neutral) : oneDayFallback[i].neutral
           })
         }
         break
@@ -200,16 +219,23 @@ export default function SentimentPulsePage() {
       case '5 D':
         // Show last 5 days
         numPoints = 5
+        const fallbackValues5D = [
+          { positive: 58, neutral: 52, negative: 42 },
+          { positive: 62, neutral: 48, negative: 38 },
+          { positive: 55, neutral: 50, negative: 45 },
+          { positive: 60, neutral: 55, negative: 40 },
+          { positive: 65, neutral: 52, negative: 35 }
+        ]
         for (let i = 4; i >= 0; i--) {
           const date = new Date(today)
           date.setDate(date.getDate() - i)
 
-          const sentiment = backendData[Math.min(4 - i, backendData.length - 1)]?.sentiment_pulse || (Math.random() * 100 - 50)
+          const backendPoint = backendData[Math.min(4 - i, backendData.length - 1)]
           dataPoints.push({
             date: formatDate(date.toISOString(), '5 D'),
-            positive: sentiment > 0 ? Math.round(sentiment) : Math.round(Math.random() * 40 + 50),
-            negative: sentiment < 0 ? Math.round(Math.abs(sentiment)) : Math.round(Math.random() * 30 + 40),
-            neutral: 100 - (sentiment > 0 ? Math.round(sentiment) : Math.round(Math.abs(sentiment)))
+            positive: backendPoint?.positive !== undefined ? Math.round(backendPoint.positive) : fallbackValues5D[4 - i].positive,
+            negative: backendPoint?.negative !== undefined ? Math.round(backendPoint.negative) : fallbackValues5D[4 - i].negative,
+            neutral: backendPoint?.neutral !== undefined ? Math.round(backendPoint.neutral) : fallbackValues5D[4 - i].neutral
           })
         }
         break
@@ -218,16 +244,23 @@ export default function SentimentPulsePage() {
         // Show 5 equally distributed points over 1 month
         numPoints = 5
         interval = 30 / (numPoints - 1) // ~7.5 days between points
+        const fallbackValues1M = [
+          { positive: 48, neutral: 58, negative: 52 },
+          { positive: 55, neutral: 52, negative: 45 },
+          { positive: 62, neutral: 48, negative: 38 },
+          { positive: 58, neutral: 50, negative: 42 },
+          { positive: 65, neutral: 52, negative: 35 }
+        ]
         for (let i = 0; i < numPoints; i++) {
           const date = new Date(today)
           date.setDate(date.getDate() - Math.round(30 - i * interval))
 
-          const sentiment = backendData[Math.min(i, backendData.length - 1)]?.sentiment_pulse || (Math.random() * 100 - 50)
+          const backendPoint = backendData[Math.min(i, backendData.length - 1)]
           dataPoints.push({
             date: formatDate(date.toISOString(), '1 M'),
-            positive: sentiment > 0 ? Math.round(sentiment) : Math.round(Math.random() * 40 + 50),
-            negative: sentiment < 0 ? Math.round(Math.abs(sentiment)) : Math.round(Math.random() * 30 + 40),
-            neutral: 100 - (sentiment > 0 ? Math.round(sentiment) : Math.round(Math.abs(sentiment)))
+            positive: backendPoint?.positive !== undefined ? Math.round(backendPoint.positive) : fallbackValues1M[i].positive,
+            negative: backendPoint?.negative !== undefined ? Math.round(backendPoint.negative) : fallbackValues1M[i].negative,
+            neutral: backendPoint?.neutral !== undefined ? Math.round(backendPoint.neutral) : fallbackValues1M[i].neutral
           })
         }
         break
@@ -236,16 +269,23 @@ export default function SentimentPulsePage() {
         // Show 5 equally distributed points over 3 months
         numPoints = 5
         interval = 90 / (numPoints - 1) // ~22.5 days between points
+        const fallbackValues3M = [
+          { positive: 42, neutral: 62, negative: 58 },
+          { positive: 50, neutral: 55, negative: 50 },
+          { positive: 58, neutral: 50, negative: 42 },
+          { positive: 62, neutral: 48, negative: 38 },
+          { positive: 65, neutral: 52, negative: 35 }
+        ]
         for (let i = 0; i < numPoints; i++) {
           const date = new Date(today)
           date.setDate(date.getDate() - Math.round(90 - i * interval))
 
-          const sentiment = backendData[Math.min(i, backendData.length - 1)]?.sentiment_pulse || (Math.random() * 100 - 50)
+          const backendPoint = backendData[Math.min(i, backendData.length - 1)]
           dataPoints.push({
             date: formatDate(date.toISOString(), '3 M'),
-            positive: sentiment > 0 ? Math.round(sentiment) : Math.round(Math.random() * 40 + 50),
-            negative: sentiment < 0 ? Math.round(Math.abs(sentiment)) : Math.round(Math.random() * 30 + 40),
-            neutral: 100 - (sentiment > 0 ? Math.round(sentiment) : Math.round(Math.abs(sentiment)))
+            positive: backendPoint?.positive !== undefined ? Math.round(backendPoint.positive) : fallbackValues3M[i].positive,
+            negative: backendPoint?.negative !== undefined ? Math.round(backendPoint.negative) : fallbackValues3M[i].negative,
+            neutral: backendPoint?.neutral !== undefined ? Math.round(backendPoint.neutral) : fallbackValues3M[i].neutral
           })
         }
         break
@@ -255,17 +295,25 @@ export default function SentimentPulsePage() {
         // Show 5 equally distributed points over 6 months (180 days)
         // Days back: 180, 135, 90, 45, 0
         const sixMonthDaysBack = [180, 135, 90, 45, 0]
+        // Consistent fallback values (not random)
+        const fallbackValues = [
+          { positive: 65, neutral: 55, negative: 28 },
+          { positive: 52, neutral: 60, negative: 48 },
+          { positive: 25, neutral: 50, negative: 65 },
+          { positive: 24, neutral: 40, negative: 58 },
+          { positive: 28, neutral: 60, negative: 48 }
+        ]
         for (let i = 0; i < 5; i++) {
           const date = new Date(today)
           date.setDate(date.getDate() - sixMonthDaysBack[i])
           date.setHours(12, 0, 0, 0) // Set to noon to avoid timezone issues
 
-          const sentiment = backendData[Math.min(i, backendData.length - 1)]?.sentiment_pulse || (Math.random() * 100 - 50)
+          const backendPoint = backendData[Math.min(i, backendData.length - 1)]
           const point = {
             date: formatDate(date.toISOString(), '6 M'),
-            positive: sentiment > 0 ? Math.round(sentiment) : Math.round(Math.random() * 40 + 50),
-            negative: sentiment < 0 ? Math.round(Math.abs(sentiment)) : Math.round(Math.random() * 30 + 40),
-            neutral: Math.round(Math.random() * 30 + 40)
+            positive: backendPoint?.positive !== undefined ? Math.round(backendPoint.positive) : fallbackValues[i].positive,
+            negative: backendPoint?.negative !== undefined ? Math.round(backendPoint.negative) : fallbackValues[i].negative,
+            neutral: backendPoint?.neutral !== undefined ? Math.round(backendPoint.neutral) : fallbackValues[i].neutral
           }
           dataPoints.push(point)
           console.log('6M Point', i, 'Days back:', sixMonthDaysBack[i], 'Date:', point.date, 'Full date:', date.toISOString())
@@ -514,7 +562,7 @@ export default function SentimentPulsePage() {
   // Calculate sentiment mix dynamically from news articles
   const sentimentMixData = calculateSentimentMix()
 
-  if (loading) {
+  if (loading || userDataLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
@@ -604,7 +652,7 @@ export default function SentimentPulsePage() {
                         const country = countries.find(c => c.id === parseInt(e.target.value))
                         setSelectedCountry(country || null)
                       }}
-                      className="bg-white text-gray-900 pl-14 pr-10 py-2 rounded-lg border border-gray-200 focus:outline-none focus:border-gray-200 appearance-none cursor-pointer"
+                      className="bg-white text-gray-900 pl-14 pr-10 py-2 rounded-lg border border-gray-300 focus:outline-none focus:border-gray-200 appearance-none cursor-pointer"
                     >
                       {countries.map(country => (
                         <option key={country.id} value={country.id}>{country.name}</option>
@@ -806,7 +854,7 @@ export default function SentimentPulsePage() {
                       <button
                         key={period}
                         onClick={() => handlePeriodChange(period)}
-                        className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
+                        className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${
                           selectedPeriod === period
                             ? 'bg-white text-black shadow-sm'
                             : 'text-gray-600 hover:text-black'

@@ -10,9 +10,10 @@ interface DashboardHeaderProps {
   truncatedName?: string
   onMobileMenuToggle?: () => void
   profilePicture?: string
+  userPlan?: string
 }
 
-export default function DashboardHeader({ userName, userInitials, truncatedName, onMobileMenuToggle, profilePicture }: DashboardHeaderProps) {
+export default function DashboardHeader({ userName, userInitials, truncatedName, onMobileMenuToggle, profilePicture, userPlan = 'free' }: DashboardHeaderProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [showUserDropdown, setShowUserDropdown] = useState(false)
   const [showZwadiModal, setShowZwadiModal] = useState(false)
@@ -55,7 +56,7 @@ export default function DashboardHeader({ userName, userInitials, truncatedName,
           </button>
           <div>
             <h1 className="text-3xl font-semibold text-white">
-              Welcome, {truncatedName}!
+              Welcome, {truncatedName}
             </h1>
           
           </div>
@@ -103,7 +104,7 @@ export default function DashboardHeader({ userName, userInitials, truncatedName,
               )}
               <div className="ml-3 text-right">
                 <div className="text-sm font-medium text-white">{truncatedName || userName}</div>
-                <div className="text-xs text-gray-300 mr-1.5">Premium</div>
+                <div className="text-xs text-gray-300 mr-1.5 capitalize">{userPlan}</div>
               </div>
               <svg
                 className={`ml-2 w-4 h-4 text-gray-400 transition-transform ${showUserDropdown ? 'rotate-180' : 'rotate-0'}`}

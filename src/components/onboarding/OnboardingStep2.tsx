@@ -63,7 +63,7 @@ export default function OnboardingStep2({ onNext, onBack }: OnboardingStep2Props
               type="checkbox"
               checked={selectedGoals.includes(goal.id)}
               onChange={() => toggleGoal(goal.id)}
-              className="w-4 h-4 text-black border-gray-300 rounded focus:ring-black accent-black"
+              className="w-4 h-4 text-black border-gray-300 rounded focus:ring-black accent-black cursor-pointer"
             />
             <span className="ml-3 text-gray-900">{goal.label}</span>
           </label>

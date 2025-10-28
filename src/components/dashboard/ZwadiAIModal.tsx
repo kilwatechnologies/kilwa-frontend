@@ -140,8 +140,8 @@ export default function ZwadiAIModal({ isOpen, onClose }: ZwadiAIModalProps) {
   if (!isOpen) return null
 
   return (
-    <div className="fixed top-20 right-6 z-50">
-      <div className="bg-white rounded-2xl shadow-2xl w-[400px] h-[600px] flex flex-col">
+    <div className="fixed top-20 right-6 bottom-6 z-50 max-w-[400px] w-full">
+      <div className="bg-white rounded-2xl shadow-2xl w-full h-full max-h-[600px] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
           <h2 className="text-base font-semibold text-gray-900">Zawadi AI</h2>

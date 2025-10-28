@@ -139,20 +139,13 @@ export default function OnboardingWelcome({ onStart }: OnboardingWelcomeProps) {
         </form>
 
         {/* Footer */}
-        <div className="text-center mt-6">
-          <p className="text-sm text-gray-600">
-            Already have an account?{' '}
-            <button className="text-black font-medium">
-              Click here
-            </button>
-          </p>
-        </div>
+    
 
         <div className="text-center mt-6 text-xs text-gray-500">
           You acknowledge that you read, and continue to our{' '}
-          <a href="#" className="text-black font-semibold">Terms of Service</a>
+          <a href="https://www.kilwa.io/terms" className="text-black font-semibold">Terms of Service</a>
           {' '}and{' '}
-          <a href="#" className=" text-black font-semibold">Privacy Policy</a>
+          <a href="https://www.kilwa.io/privacy" className=" text-black font-semibold">Privacy Policy</a>
         </div>
     </div>
   )
