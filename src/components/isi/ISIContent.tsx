@@ -875,7 +875,7 @@ export default function ISIContent({ onContentReady }: ISIContentProps) {
             <h3 className="text-sm font-medium text-gray-800">ISI Score</h3>
           </div>
           <div className="p-4">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
                   <div className="text-[24px] font-bold text-black mb-1">
                     Investment Grade
