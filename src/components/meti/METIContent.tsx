@@ -1191,7 +1191,7 @@ export default function METIContent({ onContentReady }: METIContentProps) {
 
           {/* Sectors Section */}
           <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-            <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+            <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 ">
               <div className="grid grid-cols-3 gap-4 text-xs font-semibold text-gray-700">
                 <span>Sector</span>
                 <span>Zawadi AI Outlook</span>
