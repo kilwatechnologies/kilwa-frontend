@@ -738,7 +738,7 @@ export default function METIContent() {
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
               </div>
             ) : (
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
                 <div>
                   <div className="text-[24px] font-bold text-black mb-1">
                     Entry timing
@@ -747,27 +747,29 @@ export default function METIContent() {
                 </div>
 
                 {/* Circular Progress */}
-                <div className="relative w-20 h-20 flex-shrink-0">
-                  <svg className="w-20 h-20 transform -rotate-90" viewBox="0 0 36 36">
-                    <path
-                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                      fill="none"
-                      stroke="#e5e7eb"
-                      strokeWidth="2"
-                    />
-                    <path
-                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                      fill="none"
-                      stroke={getMETIColor(displayScore)}
-                      strokeWidth="2"
-                      strokeDasharray={`${displayScore}, 100`}
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className={`text-lg font-bold ${getMETITextColor(displayScore)}`}>
-                      {displayScore.toFixed(0)}
-                    </span>
+                <div className="flex justify-center xl:justify-end">
+                  <div className="relative w-20 h-20 flex-shrink-0">
+                    <svg className="w-20 h-20 transform -rotate-90" viewBox="0 0 36 36">
+                      <path
+                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                        fill="none"
+                        stroke="#e5e7eb"
+                        strokeWidth="2"
+                      />
+                      <path
+                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                        fill="none"
+                        stroke={getMETIColor(displayScore)}
+                        strokeWidth="2"
+                        strokeDasharray={`${displayScore}, 100`}
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className={`text-lg font-bold ${getMETITextColor(displayScore)}`}>
+                        {displayScore.toFixed(0)}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -815,7 +817,7 @@ export default function METIContent() {
                   <div className={`text-[24px] font-semibold`}>
                     {sentimentPulseDisplay.label}
                   </div>
-                  <div className={`text-sm ${sentimentPulseDisplay.color} flex items-center gap-1 flex-shrink-0 ml-2`}>
+                  <div className="text-sm text-black flex items-center gap-1 flex-shrink-0 ml-2">
                     <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       {sentimentPulseDisplay.trend === 'Upward' ? (
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
@@ -828,39 +830,20 @@ export default function METIContent() {
                     <span className="whitespace-nowrap">{sentimentPulseDisplay.trend}</span>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="text-sm text-gray-600">Based on last 30 days</div>
-                  <div className="flex-1 h-8 ml-16">
-                    <svg viewBox="0 0 200 50" className="w-full h-full">
-                      {sentimentPulseDisplay.trend === 'Upward' ? (
-                        <polyline
-                          points="0,45 40,35 80,30 120,20 160,15 200,10"
-                          fill="none"
-                          stroke="#10b981"
-                          strokeWidth="2.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      ) : sentimentPulseDisplay.trend === 'Downward' ? (
-                        <polyline
-                          points="0,10 40,15 80,20 120,30 160,35 200,45"
-                          fill="none"
-                          stroke="#ef4444"
-                          strokeWidth="2.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      ) : (
-                        <polyline
-                          points="0,25 40,22 80,28 120,25 160,23 200,25"
-                          fill="none"
-                          stroke="#6b7280"
-                          strokeWidth="2.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      )}
-                    </svg>
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-black">Based on last 30 days</div>
+                  <div className="flex-shrink-0 max-w-[100px]">
+                    <img
+                      src={
+                        sentimentPulseDisplay.trend === 'Upward'
+                          ? '/assets/upward.svg'
+                          : sentimentPulseDisplay.trend === 'Downward'
+                          ? '/assets/downward.svg'
+                          : '/assets/neutral.svg'
+                      }
+                      alt={`${sentimentPulseDisplay.trend} trend`}
+                      className="h-8 w-auto max-w-full"
+                    />
                   </div>
                 </div>
               </>
@@ -937,9 +920,8 @@ export default function METIContent() {
                 <>
                   {/* Chart Legend */}
                   <div className="flex items-center space-x-4 mb-4">
-                    <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 bg-purple-500 rounded"></div>
-                      <span className="text-sm">METI Score - {selectedCountry?.name}</span>
+                    <div className="flex items-center gap-2 text-gray-600 bg-white px-3 py-2 rounded-lg border border-gray-200 shadow-sm border-l-4 border-l-purple-500">
+                      <span className="text-sm text-gray-700">METI Score - {selectedCountry?.name}</span>
                     </div>
                   </div>
 
@@ -1055,21 +1037,36 @@ export default function METIContent() {
 
                           {/* Hover tooltip */}
                           {hoveredPoint && (
-                            <div className="absolute top-4 right-4 bg-white border rounded p-2 text-xs shadow-lg z-10">
-                              <div className="flex items-center space-x-2 mb-1">
-                                <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                                <span className="font-semibold">{selectedCountry?.name} - {hoveredPoint.year}</span>
+                            <div className="absolute top-4 right-4 bg-white border rounded-lg p-4 text-sm shadow-lg z-10 w-[262px]">
+                              <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-2.5 h-2.5 bg-purple-500 rounded-full"></div>
+                                  <span className="font-semibold text-black">{selectedCountry?.name}</span>
+                                </div>
+                                <span className="text-gray-500">{hoveredPoint.year}</span>
                               </div>
-                              <div>METI Score: <strong>{hoveredPoint.score.toFixed(2)}</strong></div>
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="text-gray-600">METI Score</span>
+                                <strong className="text-black">{hoveredPoint.score.toFixed(2)}</strong>
+                              </div>
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="text-gray-600">Status</span>
+                                <span className="text-sm text-gray-800">
+                                  {getMETIStatus(hoveredPoint.score)}
+                                </span>
+                              </div>
                               {(() => {
                                 const currentIndex = filteredData.findIndex(d => d.year === hoveredPoint.year)
                                 if (currentIndex > 0) {
                                   const previousScore = filteredData[currentIndex - 1].score
                                   const change = hoveredPoint.score - previousScore
                                   return (
-                                    <div>Change: <span className={change >= 0 ? 'text-green-600' : 'text-red-600'}>
-                                      {change >= 0 ? '+' : ''}{change.toFixed(2)}
-                                    </span></div>
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-gray-600">Change</span>
+                                      <span className={change >= 0 ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
+                                        {change >= 0 ? '+' : ''}{change.toFixed(2)}%
+                                      </span>
+                                    </div>
                                   )
                                 }
                                 return null

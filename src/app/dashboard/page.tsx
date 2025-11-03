@@ -58,6 +58,44 @@ export default function DashboardPage() {
     loadSectorData()
   }, [])
 
+  // Refresh user data when window gains focus or when subscription updates
+  useEffect(() => {
+    const handleFocus = async () => {
+      // Reload user data when returning to dashboard (e.g., from settings)
+      const token = localStorage.getItem('access_token')
+      if (token) {
+        try {
+          const { authApi } = await import('@/lib/api')
+          const response = await authApi.getCurrentUser(token)
+          const responseData: any = response.data
+          const userData = responseData.user || responseData.data?.user
+
+          if (userData) {
+            setUserFirstName(userData.first_name || '')
+            setUserLastName(userData.last_name || '')
+            setUserProfilePicture(userData.profile_picture || '')
+            setUserPlan(userData.subscription_plan || 'free')
+          }
+        } catch (error) {
+          console.error('Error refreshing user data:', error)
+        }
+      }
+    }
+
+    // Listen for subscription update event from settings
+    const handleSubscriptionUpdate = () => {
+      handleFocus()
+    }
+
+    window.addEventListener('focus', handleFocus)
+    window.addEventListener('subscriptionUpdated', handleSubscriptionUpdate)
+
+    return () => {
+      window.removeEventListener('focus', handleFocus)
+      window.removeEventListener('subscriptionUpdated', handleSubscriptionUpdate)
+    }
+  }, [])
+
   // Watch for sector filter changes and recalculate rankings
   useEffect(() => {
     if (!filters.sectors || originalCountries.length === 0) return

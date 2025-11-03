@@ -164,6 +164,18 @@ export default function OnboardingStep5({ onComplete, onBack }: OnboardingStep5P
         throw new Error('Could not retrieve user ID')
       }
 
+      // Determine success URL based on where user came from
+      // Check if coming from settings (via URL param or referrer)
+      const urlParams = new URLSearchParams(window.location.search)
+      const returnTo = urlParams.get('returnTo') || 'dashboard'
+      const successUrl = returnTo === 'settings'
+        ? `${window.location.origin}/settings?payment=success&tab=account`
+        : `${window.location.origin}/dashboard?payment=success`
+
+      const cancelUrl = returnTo === 'settings'
+        ? `${window.location.origin}/settings?payment=canceled&tab=account`
+        : `${window.location.origin}/onboarding/step-5?payment=canceled`
+
       // Call backend to create checkout session
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/stripe/create-checkout-session`, {
         method: 'POST',
@@ -175,8 +187,8 @@ export default function OnboardingStep5({ onComplete, onBack }: OnboardingStep5P
           user_id: userId,
           plan_type: planId,
           billing_period: billingPeriod,
-          success_url: `${window.location.origin}/dashboard?payment=success`,
-          cancel_url: `${window.location.origin}/onboarding/step-5?payment=canceled`
+          success_url: successUrl,
+          cancel_url: cancelUrl
         })
       })
 
@@ -295,10 +307,10 @@ export default function OnboardingStep5({ onComplete, onBack }: OnboardingStep5P
                   </span>
                ) : (
                 <>
-                  <span className={`text-sm mr-2 ${plan.highlighted ? 'text-gray-300' : 'text-gray-600'}`}>
+                  <span className={`text-sm mr-2 px-3 py-1 rounded-md border ${plan.highlighted ? 'text-gray-300 border-gray-600 bg-[#2E2E2E]' : 'text-gray-600 border-gray-300'}`}>
                     Starting at
                   </span>
-                
+
                 <span className={`text-2xl font-bold ${billingPeriod === 'monthly' ? 'ml-2' : ''} ${plan.highlighted ? 'text-white' : 'text-gray-900'}`}>
                   ${plan.price[billingPeriod]}
                 </span>
@@ -343,23 +355,34 @@ export default function OnboardingStep5({ onComplete, onBack }: OnboardingStep5P
             </div>
 
             {/* Subscribe Button */}
-            <button
-              onClick={() => handlePlanSelect(plan.id)}
-              disabled={loading && selectedPlan === plan.id}
-              className={`w-full py-3 px-4 rounded-full font-medium transition-colors ${plan.buttonStyle} cursor-pointer disabled:cursor-not-allowed disabled:opacity-50`}
-            >
-              {loading && selectedPlan === plan.id ? (
-                <span className="flex items-center justify-center">
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Processing...
-                </span>
-              ) : (
-                plan.buttonText
-              )}
-            </button>
+            {plan.id === 'enterprise' ? (
+              <a
+                href="https://www.kilwa.io/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`w-full py-3 px-4 rounded-full font-medium transition-colors ${plan.buttonStyle} cursor-pointer text-center block`}
+              >
+                {plan.buttonText}
+              </a>
+            ) : (
+              <button
+                onClick={() => handlePlanSelect(plan.id)}
+                disabled={loading && selectedPlan === plan.id}
+                className={`w-full py-3 px-4 rounded-full font-medium transition-colors ${plan.buttonStyle} cursor-pointer disabled:cursor-not-allowed disabled:opacity-50`}
+              >
+                {loading && selectedPlan === plan.id ? (
+                  <span className="flex items-center justify-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Processing...
+                  </span>
+                ) : (
+                  plan.buttonText
+                )}
+              </button>
+            )}
             </div>
           </div>
         ))}

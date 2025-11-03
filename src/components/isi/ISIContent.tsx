@@ -875,8 +875,8 @@ export default function ISIContent() {
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
               </div>
             ) : (
-              <>
-                <div className="mb-3">
+              <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
+                <div>
                   <div className="text-[24px] font-bold text-black mb-1">
                     Investment Grade
                   </div>
@@ -886,8 +886,8 @@ export default function ISIContent() {
                 </div>
 
                 {/* Circular Progress */}
-                <div className="flex justify-center">
-                  <div className="relative w-20 h-20">
+                <div className="flex justify-center xl:justify-end">
+                  <div className="relative w-20 h-20 flex-shrink-0">
                     <svg className="w-20 h-20 transform -rotate-90" viewBox="0 0 36 36">
                       <path
                         d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
@@ -911,7 +911,7 @@ export default function ISIContent() {
                     </div>
                   </div>
                 </div>
-              </>
+              </div>
             )}
           </div>
         </div>
@@ -1061,9 +1061,8 @@ export default function ISIContent() {
                 <>
                   {/* Chart Legend */}
                   <div className="flex items-center space-x-4 mb-4">
-                    <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 bg-purple-500 rounded"></div>
-                      <span className="text-sm">ISI Score - {selectedCountry?.name}</span>
+                    <div className="flex items-center gap-2 text-gray-600 bg-white px-3 py-2 rounded-lg border border-gray-200 shadow-sm border-l-4 border-l-purple-500">
+                      <span className="text-sm text-gray-700">ISI Score - {selectedCountry?.name}</span>
                     </div>
                   </div>
 

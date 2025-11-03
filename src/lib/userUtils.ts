@@ -6,6 +6,7 @@ export interface UserData {
   firstName: string
   lastName: string
   profilePicture?: string
+  userPlan?: string
 }
 
 /**
@@ -50,7 +51,8 @@ export const loadUserData = async (): Promise<UserData> => {
           email,
           firstName: userData.first_name || '',
           lastName: userData.last_name || '',
-          profilePicture: userData.profile_picture || ''
+          profilePicture: userData.profile_picture || '',
+          userPlan: userData.subscription_plan || 'free'
         }
       }
     } catch (error) {
@@ -58,7 +60,7 @@ export const loadUserData = async (): Promise<UserData> => {
     }
   }
 
-  return { email, firstName: '', lastName: '', profilePicture: '' }
+  return { email, firstName: '', lastName: '', profilePicture: '', userPlan: 'free' }
 }
 
 /**

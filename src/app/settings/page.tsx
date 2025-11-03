@@ -30,6 +30,24 @@ export default function SettingsPage() {
       setLoading(false)
     }
     fetchUserData()
+
+    // Listen for subscription updates and refresh user data
+    const handleSubscriptionUpdate = () => {
+      fetchUserData()
+    }
+
+    // Refresh when window gains focus (e.g., returning from Stripe checkout)
+    const handleFocus = () => {
+      fetchUserData()
+    }
+
+    window.addEventListener('subscriptionUpdated', handleSubscriptionUpdate)
+    window.addEventListener('focus', handleFocus)
+
+    return () => {
+      window.removeEventListener('subscriptionUpdated', handleSubscriptionUpdate)
+      window.removeEventListener('focus', handleFocus)
+    }
   }, [])
 
   if (loading) {
@@ -56,6 +74,7 @@ export default function SettingsPage() {
           userInitials={getUserInitials(userData)}
           truncatedName={getFormattedName(userData)}
           profilePicture={userData.profilePicture}
+          userPlan={userData.userPlan}
         />
 
         {/* Settings Content Area - Scrollable */}

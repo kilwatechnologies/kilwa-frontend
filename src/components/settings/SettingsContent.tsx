@@ -7,7 +7,17 @@ import { saveCountryPreference } from '@/lib/countryPreference'
 type Tab = 'profile' | 'account' | 'notifications'
 
 export default function SettingsContent() {
-  const [activeTab, setActiveTab] = useState<Tab>('profile')
+  // Check URL params for tab on mount
+  const [activeTab, setActiveTab] = useState<Tab>(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      const tab = params.get('tab')
+      if (tab === 'account' || tab === 'notifications') {
+        return tab as Tab
+      }
+    }
+    return 'profile'
+  })
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
@@ -74,6 +84,24 @@ export default function SettingsContent() {
     return flagMap[countryName] || null
   }
 
+  // Check for payment success/cancel on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      const payment = params.get('payment')
+
+      if (payment === 'success') {
+        showToast('Subscription updated successfully!', 'success')
+        // Clean up URL
+        window.history.replaceState({}, '', window.location.pathname + '?tab=account')
+      } else if (payment === 'canceled') {
+        showToast('Payment was canceled', 'error')
+        // Clean up URL
+        window.history.replaceState({}, '', window.location.pathname + '?tab=account')
+      }
+    }
+  }, [])
+
   // Load user data on mount
   useEffect(() => {
     const loadUserData = async () => {
@@ -86,6 +114,7 @@ export default function SettingsContent() {
           // Handle both response.data.user and response.data.data.user
           const responseData: any = response.data
           const userData = responseData.user || responseData.data?.user
+          const userPreferences = responseData.preferences || responseData.data?.preferences
 
           if (userData) {
             setFirstName(userData.first_name || '')
@@ -98,6 +127,23 @@ export default function SettingsContent() {
             setIndustry(userData.industry || '')
             setUserId(userData.id || null)
             setUserPlan(userData.subscription_plan || 'free')
+
+            // Load focus area preferences from user preferences
+            console.log('User preferences:', userPreferences)
+            if (userPreferences?.selected_goals) {
+              const selectedGoalsArray = userPreferences.selected_goals
+              console.log('Loading selected goals:', selectedGoalsArray)
+
+              // Convert array of goal names to object format
+              const loadedFocusAreas = {
+                macroeconomic: Array.isArray(selectedGoalsArray) ? selectedGoalsArray.includes('macroeconomic') : false,
+                optimalTimes: Array.isArray(selectedGoalsArray) ? selectedGoalsArray.includes('optimalTimes') : false,
+                political: Array.isArray(selectedGoalsArray) ? selectedGoalsArray.includes('political') : false,
+                sentiment: Array.isArray(selectedGoalsArray) ? selectedGoalsArray.includes('sentiment') : false,
+              }
+              console.log('Setting focus areas to:', loadedFocusAreas)
+              setFocusAreas(loadedFocusAreas)
+            }
 
             // Load notification preferences
             if (userData.id) {
@@ -250,6 +296,26 @@ export default function SettingsContent() {
         }
       }
 
+      // Save focus area preferences
+      const token = localStorage.getItem('access_token')
+      if (token) {
+        try {
+          // Convert focusAreas object to array of selected goal names
+          const selectedGoalsArray: string[] = []
+          if (focusAreas.macroeconomic) selectedGoalsArray.push('macroeconomic')
+          if (focusAreas.optimalTimes) selectedGoalsArray.push('optimalTimes')
+          if (focusAreas.political) selectedGoalsArray.push('political')
+          if (focusAreas.sentiment) selectedGoalsArray.push('sentiment')
+
+          await authApi.updatePreferences({
+            selected_goals: selectedGoalsArray
+          }, token)
+          console.log('Focus area preferences saved:', selectedGoalsArray)
+        } catch (error) {
+          console.error('Failed to save focus area preferences:', error)
+        }
+      }
+
       showToast('Settings saved successfully!', 'success')
 
       // Optionally reload the page to update header
@@ -313,9 +379,9 @@ export default function SettingsContent() {
 
       showToast('Account deleted successfully', 'success')
 
-      // Redirect to home/login page after a short delay
+      // Redirect to welcome/onboarding page after a short delay
       setTimeout(() => {
-        window.location.href = '/'
+        window.location.href = '/onboarding'
       }, 2000)
     } catch (error: any) {
       console.error('Failed to delete account:', error)
@@ -365,7 +431,7 @@ export default function SettingsContent() {
 
       // Temporary: Redirect all users to plan selection until Customer Portal is configured
       // TODO: Once Stripe Customer Portal is configured, use the code below for paid users
-      window.location.href = '/onboarding/step-5'
+      window.location.href = '/onboarding/step-5?returnTo=settings'
       return
 
       // // For free tier users, redirect to onboarding step 5 to select a plan
@@ -660,40 +726,61 @@ export default function SettingsContent() {
               {/* Expanded Options */}
               {showOptions && (
                 <div className="border-t border-gray-200">
-                  <div className="px-4 py-3 bg-white">
-                    <div className="text-xs font-medium text-gray-500 mb-3">Selected</div>
-                    <div className="space-y-3">
-                      <label className="flex items-center gap-3 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={focusAreas.macroeconomic}
-                          onChange={() => toggleFocusArea('macroeconomic')}
-                          className="w-5 h-5 rounded border-gray-300 accent-black focus:ring-black focus:ring-2"
-                        />
-                        <span className="text-sm text-gray-700">Track macroeconomic risk</span>
-                      </label>
-                      <label className="flex items-center gap-3 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={focusAreas.optimalTimes}
-                          onChange={() => toggleFocusArea('optimalTimes')}
-                          className="w-5 h-5 rounded border-gray-300 accent-black focus:ring-black focus:ring-2"
-                        />
-                        <span className="text-sm text-gray-700">Find optimal times to enter a market</span>
-                      </label>
-                      <label className="flex items-center gap-3 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={focusAreas.political}
-                          onChange={() => toggleFocusArea('political')}
-                          className="w-5 h-5 rounded border-gray-300 accent-black focus:ring-black focus:ring-2"
-                        />
-                        <span className="text-sm text-gray-700">Monitor political & regulatory risks</span>
-                      </label>
-                    </div>
-                  </div>
+                  {selectedCount > 0 && (
+                    <>
+                      <div className="px-4 py-3 bg-white">
+                        <div className="text-xs font-medium text-gray-500 mb-3">Selected</div>
+                        <div className="space-y-3">
+                          {focusAreas.macroeconomic && (
+                            <label className="flex items-center gap-3 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={focusAreas.macroeconomic}
+                                onChange={() => toggleFocusArea('macroeconomic')}
+                                className="w-5 h-5 rounded border-gray-300 accent-black focus:ring-black focus:ring-2"
+                              />
+                              <span className="text-sm text-gray-700">Track macroeconomic risk</span>
+                            </label>
+                          )}
+                          {focusAreas.optimalTimes && (
+                            <label className="flex items-center gap-3 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={focusAreas.optimalTimes}
+                                onChange={() => toggleFocusArea('optimalTimes')}
+                                className="w-5 h-5 rounded border-gray-300 accent-black focus:ring-black focus:ring-2"
+                              />
+                              <span className="text-sm text-gray-700">Find optimal times to enter a market</span>
+                            </label>
+                          )}
+                          {focusAreas.political && (
+                            <label className="flex items-center gap-3 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={focusAreas.political}
+                                onChange={() => toggleFocusArea('political')}
+                                className="w-5 h-5 rounded border-gray-300 accent-black focus:ring-black focus:ring-2"
+                              />
+                              <span className="text-sm text-gray-700">Monitor political & regulatory risks</span>
+                            </label>
+                          )}
+                          {focusAreas.sentiment && (
+                            <label className="flex items-center gap-3 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={focusAreas.sentiment}
+                                onChange={() => toggleFocusArea('sentiment')}
+                                className="w-5 h-5 rounded border-gray-300 accent-black focus:ring-black focus:ring-2"
+                              />
+                              <span className="text-sm text-gray-700">Analyze news & sentiment trends</span>
+                            </label>
+                          )}
+                        </div>
+                      </div>
 
-                  <div className="border-t border-gray-200"></div>
+                      <div className="border-t border-gray-200"></div>
+                    </>
+                  )}
 
                   <div className="px-4 py-3">
                     <div className="text-xs font-medium text-gray-500 mb-3">Options</div>
@@ -1012,9 +1099,9 @@ export default function SettingsContent() {
                       onChange={(e) => setMetiAlert(e.target.value)}
                       className="px-4 py-1 border border-gray-300 rounded-full outline-none  bg-transparent text-sm text-gray-900"
                     >
+                      <option value="Early Entry">Early Entry</option>
                       <option value="Optimal Entry">Optimal Entry</option>
-                      <option value="Caution">Caution</option>
-                      <option value="High Risk">High Risk</option>
+                      <option value="Late Entry">Late Entry</option>
                     </select>
                   </div>
                 </div>
