@@ -79,6 +79,12 @@ export default function METIContent({ onContentReady }: METIContentProps) {
   const [sectorData, setSectorData] = useState<SectorData[]>([])
   const [sectorLoading, setSectorLoading] = useState(false)
 
+  // Sector filtering states
+  const [selectedSectors, setSelectedSectors] = useState<Set<string>>(new Set())
+  const [originalMetiScore, setOriginalMetiScore] = useState<number | null>(null)
+  const [originalSentimentPulse, setOriginalSentimentPulse] = useState<any>(null)
+  const [allNewsArticles, setAllNewsArticles] = useState<NewsArticle[]>([])
+
   useEffect(() => {
     loadCountries()
     loadSectorData()
@@ -238,6 +244,10 @@ export default function METIContent({ onContentReady }: METIContentProps) {
           volatilityScore: latestScore.volatilityScore,
           momentumScore: latestScore.momentumScore
         })
+        // Store original score for sector filtering
+        if (originalMetiScore === null) {
+          setOriginalMetiScore(latestScore.score)
+        }
       }
     } catch (error) {
       console.error('Error loading METI score:', error)
@@ -256,6 +266,10 @@ export default function METIContent({ onContentReady }: METIContentProps) {
 
       if (response.data.success && response.data.data) {
         setNewsArticles(response.data.data)
+        // Store all news for sector filtering
+        if (allNewsArticles.length === 0) {
+          setAllNewsArticles(response.data.data)
+        }
       }
     } catch (error) {
       console.error('Error loading sentiment data:', error)
