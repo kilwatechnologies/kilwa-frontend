@@ -11,7 +11,8 @@ interface Country {
   isiScore?: number
   metiScore?: number
   sentimentPulse?: string
-  debtToGDP?: number
+  gdpGrowth?: number
+  gdpValue?: number
 }
 
 interface SectorData {
@@ -138,20 +139,20 @@ export default function CountryTreemap({ countries, onCountryClick, onToggleFilt
     return flagMap[countryName] || null
   }
 
-  // Calculate width percentage based on debt to GDP ratio
-  const getCountryWidthPercent = (debtToGDP?: number, totalDebt?: number) => {
-    if (!debtToGDP || !totalDebt || totalDebt === 0) {
+  // Calculate width percentage based on absolute GDP value
+  const getCountryWidthPercent = (gdpValue?: number, totalGDP?: number) => {
+    if (!gdpValue || !totalGDP || totalGDP === 0) {
       return 33.33 // Default equal distribution
     }
 
-    // Calculate percentage of total debt
-    return (debtToGDP / totalDebt) * 100
+    // Calculate percentage of total GDP
+    return (gdpValue / totalGDP) * 100
   }
 
   const renderTreemapRegion = (regionCountries: Country[]) => {
-    // Calculate total debt to GDP for the region
-    const totalDebt = regionCountries.reduce((sum, country) => {
-      return sum + (country.debtToGDP || 0)
+    // Calculate total GDP for the region
+    const totalGDP = regionCountries.reduce((sum, country) => {
+      return sum + (country.gdpValue || 0)
     }, 0)
 
     // Fixed height for all boxes in the region
@@ -160,7 +161,7 @@ export default function CountryTreemap({ countries, onCountryClick, onToggleFilt
     return (
       <div className="flex gap-1" style={{ height: `${fixedHeight}px` }}>
         {regionCountries.map((country) => {
-          const widthPercent = getCountryWidthPercent(country.debtToGDP, totalDebt)
+          const widthPercent = getCountryWidthPercent(country.gdpValue, totalGDP)
           const displayValue = getDisplayValue(country)
           return (
             <div

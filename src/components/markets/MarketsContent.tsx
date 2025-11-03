@@ -514,19 +514,19 @@ export default function MarketsContent({ onContentReady }: MarketsContentProps) 
       {/* Top Row - Macroeconomic, Currencies, Finance */}
       <div className="grid grid-cols-3 gap-6 mb-6">
         {/* Macroeconomic Overview */}
-        <div className="flex flex-col">
+        <div className="flex flex-col justify-center items-center">
           <div className="mb-4">
-            <h3 className="text-lg font-semibold text-black">Macroeconomic Overview</h3>
+            <h3 className="text-lg text-center font-semibold text-black">Macroeconomic Overview</h3>
           </div>
           <div className="bg-white border border-gray-200 rounded-lg overflow-hidden flex-1">
-          <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+          <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 text-center">
             <div className="grid grid-cols-3 gap-4 text-xs text-black font-semibold">
               <span>Metric</span>
               <span>Value</span>
               <span>Score</span>
             </div>
           </div>
-          <div className="p-4 h-full">
+          <div className="p-4 h-full text-center">
             {macroeconomicData.length > 0 ? (
               macroeconomicData.map((kpi, index) => (
                 <div key={kpi.code} className={`grid grid-cols-3 gap-4 items-center py-2 text-gray-700 ${index !== macroeconomicData.length - 1 ? 'border-b border-gray-100' : ''}`}>

@@ -121,6 +121,12 @@ export default function METIContent({ onContentReady }: METIContentProps) {
 
   useEffect(() => {
     if (selectedCountry) {
+      // Reset sector filters and original values when country changes
+      setSelectedSectors(new Set())
+      setOriginalMetiScore(null)
+      setOriginalSentimentPulse(null)
+      setAllNewsArticles([])
+
       loadMETIScore()
       loadSentimentData()
       loadSentimentPulse()
@@ -129,6 +135,105 @@ export default function METIContent({ onContentReady }: METIContentProps) {
       loadHistoricalMETIData()
     }
   }, [selectedCountry])
+
+  // Watch for sector filter changes and recalculate scores
+  useEffect(() => {
+    if (!selectedCountry || originalMetiScore === null || allNewsArticles.length === 0) return
+
+    console.log('🔄 METI Sector filter changed:', Array.from(selectedSectors))
+
+    // No sectors selected - show original scores
+    if (selectedSectors.size === 0) {
+      if (originalMetiScore !== null) {
+        setMetiScore(prev => prev ? { ...prev, score: originalMetiScore } : null)
+      }
+      if (originalSentimentPulse !== null) {
+        setSentimentPulse(originalSentimentPulse)
+      }
+      setNewsArticles(allNewsArticles)
+      return
+    }
+
+    // Sector mapping - map sector names to news topics
+    const sectorMapping: Record<string, string[]> = {
+      'Energy & Renewable Energy': ['Energy', 'Oil & Gas', 'Renewable Energy', 'Power'],
+      'Technology & Fintech': ['Technology', 'Fintech', 'Digital Economy', 'Telecom', 'ICT', 'Innovation'],
+      'Infrastructure & Real Estate': ['Infrastructure', 'Real Estate', 'Construction', 'Transport', 'Transportation'],
+      'Agriculture & Agribusiness': ['Agriculture', 'Agribusiness', 'Food Security', 'Farming'],
+      'Manufacturing & Industrialization': ['Manufacturing', 'Industrial', 'Production', 'Industry'],
+      'Tourism & Hospitality': ['Tourism', 'Hospitality', 'Travel', 'Culture'],
+      'Financial Markets & Investment': ['Finance', 'Banking', 'Investment', 'Capital Markets', 'Economics', 'Economy'],
+      'Healthcare & Pharmaceuticals': ['Healthcare', 'Health', 'Pharmaceutical', 'Medical']
+    }
+
+    // Filter news by selected sectors
+    let sectorFilteredNews: NewsArticle[] = []
+    let totalSectorScore = 0
+    let sectorCount = 0
+
+    selectedSectors.forEach(sector => {
+      const sectorValues = sectorMapping[sector] || []
+
+      const sectorNews = allNewsArticles.filter((news: any) => {
+        const topics = news.topics || []
+        return sectorValues.some(val =>
+          topics.some((topic: string) =>
+            topic.toLowerCase().includes(val.toLowerCase()) ||
+            val.toLowerCase().includes(topic.toLowerCase())
+          )
+        )
+      })
+
+      sectorFilteredNews = [...sectorFilteredNews, ...sectorNews]
+
+      if (sectorNews.length > 0) {
+        // Calculate score: 50% news volume + 50% sentiment
+        const volumeScore = Math.min(sectorNews.length * 10, 100)
+        const sentimentScores = sectorNews
+          .map((news: any) => news.sentiment_score || 50)
+          .filter((score: number) => score > 0)
+
+        const avgSentiment = sentimentScores.length > 0
+          ? sentimentScores.reduce((sum: number, s: number) => sum + s, 0) / sentimentScores.length
+          : 50
+
+        const sectorScore = (volumeScore * 0.5) + (avgSentiment * 0.5)
+        totalSectorScore += sectorScore
+        sectorCount++
+
+        console.log(`📰 METI ${sector}: ${sectorNews.length} articles, sentiment ${avgSentiment.toFixed(1)} → score ${sectorScore.toFixed(1)}`)
+      }
+    })
+
+    // Remove duplicates from filtered news
+    sectorFilteredNews = Array.from(new Set(sectorFilteredNews.map(n => n.id)))
+      .map(id => sectorFilteredNews.find(n => n.id === id)!)
+
+    // Update news articles to show only sector-related news
+    setNewsArticles(sectorFilteredNews)
+
+    // Calculate weighted METI score
+    if (sectorCount > 0 && originalMetiScore !== null) {
+      const avgSectorScore = totalSectorScore / sectorCount
+      const weightedScore = (originalMetiScore * 0.5) + (avgSectorScore * 0.5)
+      console.log(`✨ METI Score: Original ${originalMetiScore.toFixed(1)} → Weighted ${weightedScore.toFixed(1)}`)
+      setMetiScore(prev => prev ? { ...prev, score: weightedScore } : null)
+
+      // Update sentiment pulse based on filtered news
+      if (sectorFilteredNews.length > 0) {
+        const posCount = sectorFilteredNews.filter(n => n.sentiment_label?.toLowerCase() === 'positive').length
+        const negCount = sectorFilteredNews.filter(n => n.sentiment_label?.toLowerCase() === 'negative').length
+        const neutralCount = sectorFilteredNews.filter(n => n.sentiment_label?.toLowerCase() === 'neutral').length
+
+        setSentimentPulse({
+          positive_count: posCount,
+          negative_count: negCount,
+          neutral_count: neutralCount,
+          trend: posCount > negCount ? 'Upward' : posCount < negCount ? 'Downward' : 'Stable'
+        })
+      }
+    }
+  }, [selectedSectors, selectedCountry, originalMetiScore, originalSentimentPulse, allNewsArticles])
 
   const loadCountries = async () => {
     try {
@@ -288,6 +393,10 @@ export default function METIContent({ onContentReady }: METIContentProps) {
 
       if (response.data.success && response.data.data) {
         setSentimentPulse(response.data.data)
+        // Store original pulse for sector filtering
+        if (originalSentimentPulse === null) {
+          setOriginalSentimentPulse(response.data.data)
+        }
       }
     } catch (error) {
       console.error('Error loading sentiment pulse:', error)
@@ -1104,7 +1213,16 @@ export default function METIContent({ onContentReady }: METIContentProps) {
                     <input
                       type="checkbox"
                       className="rounded cursor-pointer accent-[#9514EB]"
-                      defaultChecked={false}
+                      checked={selectedSectors.has(sector.name)}
+                      onChange={(e) => {
+                        const newSelected = new Set(selectedSectors)
+                        if (e.target.checked) {
+                          newSelected.add(sector.name)
+                        } else {
+                          newSelected.delete(sector.name)
+                        }
+                        setSelectedSectors(newSelected)
+                      }}
                     />
                     <span className="text-sm text-black">{sector.name}</span>
                   </div>

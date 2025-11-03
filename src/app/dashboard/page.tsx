@@ -15,7 +15,8 @@ interface Country {
   isiScore?: number
   metiScore?: number
   sentimentPulse?: string
-  debtToGDP?: number
+  gdpGrowth?: number
+  gdpValue?: number
 }
 
 interface SectorData {
@@ -277,6 +278,23 @@ export default function DashboardPage() {
     }
   }
 
+  // Static GDP values (2025 estimates in billions USD)
+  const getGDPValue = (countryName: string): number => {
+    const gdpValues: { [key: string]: number } = {
+      'South Africa': 426.38,
+      'Egypt': 349.26,
+      'Nigeria': 285.00,
+      'Morocco': 179.61,
+      'Kenya': 136.01,
+      'Ghana': 111.96,
+      'Tunisia': 59.07,
+      'Botswana': 19.19,
+      'Mauritius': 15.73,
+      'Rwanda': 14.77
+    }
+    return gdpValues[countryName] || 50 // Default value if not found
+  }
+
   const loadDashboardData = async () => {
     try {
       setLoading(true)
@@ -344,17 +362,17 @@ export default function DashboardPage() {
         )
         const sentimentResponses = await Promise.all(sentimentPromises)
 
-        // Fetch debt to GDP data for all countries (using 2021 - most recent year with complete data)
-        console.log('📊 Fetching debt to GDP data...')
-        const debtPromises = countriesData.map(country =>
+        // Fetch GDP growth data for all countries (using 2021 - most recent year with complete data)
+        console.log('📊 Fetching GDP growth data...')
+        const gdpPromises = countriesData.map(country =>
           marketsApi.getMacroeconomic(country.id, 2021).catch(err => {
-            console.log(`⚠️ Debt to GDP fetch failed for ${country.name}:`, err)
+            console.log(`⚠️ GDP growth fetch failed for ${country.name}:`, err)
             return null
           })
         )
-        const debtResponses = await Promise.all(debtPromises)
+        const gdpResponses = await Promise.all(gdpPromises)
 
-        // Combine countries with their ISI scores, METI scores, sentiment, and debt to GDP
+        // Combine countries with their ISI scores, METI scores, sentiment, and GDP growth
         const countriesWithScores = countriesData.map((country, index) => {
           // ISI Score
           const isiScore = isiScores.find(score =>
@@ -388,18 +406,21 @@ export default function DashboardPage() {
             }
           }
 
-          // Debt to GDP Ratio
-          let debtToGDP = undefined
-          const debtResponse = debtResponses[index]
-          if (debtResponse && debtResponse.data?.success && debtResponse.data?.data) {
-            const macroData = Array.isArray(debtResponse.data.data) ? debtResponse.data.data : [debtResponse.data.data]
-            const debtKPI = macroData.find((kpi: any) => kpi.code === 'DEBT_TO_GDP')
-            if (debtKPI) {
-              debtToGDP = debtKPI.value
+          // GDP Growth Rate
+          let gdpGrowth = undefined
+          const gdpResponse = gdpResponses[index]
+          if (gdpResponse && gdpResponse.data?.success && gdpResponse.data?.data) {
+            const macroData = Array.isArray(gdpResponse.data.data) ? gdpResponse.data.data : [gdpResponse.data.data]
+            const gdpKPI = macroData.find((kpi: any) => kpi.code === 'GDP_GROWTH')
+            if (gdpKPI) {
+              gdpGrowth = gdpKPI.value
             }
           }
 
-          console.log(`🔗 Mapping ${country.name} (ID: ${country.id}): ISI=${isiScore?.score || 'N/A'}, METI=${metiScore || 'N/A'}, Sentiment=${sentimentPulse}, Debt/GDP=${debtToGDP || 'N/A'}`)
+          // Get static GDP value
+          const gdpValue = getGDPValue(country.name)
+
+          console.log(`🔗 Mapping ${country.name} (ID: ${country.id}): ISI=${isiScore?.score || 'N/A'}, METI=${metiScore || 'N/A'}, Sentiment=${sentimentPulse}, GDP Growth=${gdpGrowth || 'N/A'}%, GDP=$${gdpValue}B`)
 
           return {
             ...country,
@@ -407,12 +428,21 @@ export default function DashboardPage() {
             isiScore: isiScore ? isiScore.score : undefined,
             metiScore,
             sentimentPulse,
-            debtToGDP,
+            gdpGrowth,
+            gdpValue,
             region: getRegionFromCountry(country.name)
           }
         })
 
         console.log('🎯 Final countries with scores:', countriesWithScores)
+
+        // Log GDP growth rates for verification
+        console.log('\n=== GDP Growth Rates (2021) ===')
+        countriesWithScores.forEach(country => {
+          console.log(`${country.name}: ${country.gdpGrowth !== undefined ? country.gdpGrowth.toFixed(2) + '%' : 'No data'}`)
+        })
+        console.log('================================\n')
+
         setCountries(countriesWithScores)
         setOriginalCountries(countriesWithScores)
 
