@@ -564,7 +564,7 @@ export default function SentimentPulsePage() {
 
   if (loading || userDataLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
+      <div className="min-h-screen flex items-center justify-center bg-black">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
       </div>
     )
@@ -588,6 +588,7 @@ export default function SentimentPulsePage() {
           userInitials={getUserInitials(userData)}
           truncatedName={getFormattedName(userData)}
           profilePicture={userData.profilePicture}
+          userPlan={userData.userPlan}
         />
 
         {/* Content Area with Filters */}

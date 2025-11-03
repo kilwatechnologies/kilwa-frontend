@@ -349,10 +349,12 @@ export default function CountryTreemap({ countries, onCountryClick, onToggleFilt
       {/* Hover Tooltip */}
       {hoveredCountry && (
         <div
-          className="fixed bg-white text-black p-6 rounded-xl shadow-2xl z-30 w-[442px] border border-gray-200 max-h-[500px] overflow-y-auto"
+          className="fixed bg-white text-black p-6 rounded-xl shadow-2xl z-30 w-[442px] border border-gray-200 max-h-[500px] overflow-y-auto pointer-events-auto"
           style={{
-            left: `${Math.min(mousePosition.x + 20, window.innerWidth - 350)}px`,
-            top: `${Math.max(20, Math.min(mousePosition.y - 200, window.innerHeight - 450))}px`,
+            left: mousePosition.x + 482 > window.innerWidth
+              ? `${window.innerWidth - 482}px`
+              : `${mousePosition.x + 20}px`,
+            top: `${Math.max(20, Math.min(mousePosition.y - 200, window.innerHeight - 520))}px`,
           }}
           onMouseEnter={() => {
             if (hoverTimeoutRef.current) {

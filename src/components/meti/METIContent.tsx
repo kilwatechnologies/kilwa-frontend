@@ -51,7 +51,11 @@ interface DriverCategoryData {
   riskLevel: 'Critical' | 'Moderate' | 'Strong'
 }
 
-export default function METIContent() {
+interface METIContentProps {
+  onContentReady?: () => void
+}
+
+export default function METIContent({ onContentReady }: METIContentProps) {
   const [selectedCountry, setSelectedCountry] = useState<Country | null>(null)
   const [countries, setCountries] = useState<Country[]>([])
   const [loading, setLoading] = useState(true)
@@ -71,6 +75,7 @@ export default function METIContent() {
   const [historicalLoading, setHistoricalLoading] = useState(false)
   const [selectedYearRange, setSelectedYearRange] = useState(5) // Default to 5 years
   const [hoveredPoint, setHoveredPoint] = useState<HistoricalMETIData | null>(null)
+  const [hoverTimeout, setHoverTimeout] = useState<NodeJS.Timeout | null>(null)
   const [sectorData, setSectorData] = useState<SectorData[]>([])
   const [sectorLoading, setSectorLoading] = useState(false)
 
@@ -78,6 +83,13 @@ export default function METIContent() {
     loadCountries()
     loadSectorData()
   }, [])
+
+  // Notify parent once initial data has loaded (including chart data)
+  useEffect(() => {
+    if (selectedCountry && metiScore !== null && historicalData.length > 0 && onContentReady) {
+      onContentReady()
+    }
+  }, [selectedCountry, metiScore, historicalData, onContentReady])
 
   // Close calendar when clicking outside
   useEffect(() => {
@@ -559,12 +571,8 @@ export default function METIContent() {
     }
   }
 
-  if (loading || !selectedCountry) {
-    return (
-      <div className="bg-white text-black p-6 flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    )
+  if (!selectedCountry) {
+    return null
   }
 
   return (
@@ -733,12 +741,7 @@ export default function METIContent() {
             <h3 className="text-sm font-medium text-gray-800">METI Score</h3>
           </div>
           <div className="p-4">
-            {metiLoading ? (
-              <div className="flex items-center justify-center h-20">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              </div>
-            ) : (
-              <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
+            <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
                 <div>
                   <div className="text-[24px] font-bold text-black mb-1">
                     Entry timing
@@ -773,7 +776,6 @@ export default function METIContent() {
                   </div>
                 </div>
               </div>
-            )}
           </div>
         </div>
 
@@ -783,21 +785,15 @@ export default function METIContent() {
             <h3 className="text-sm font-medium text-gray-800">Zawadi Signal</h3>
           </div>
           <div className="p-4">
-            {sentimentLoading ? (
-              <div className="flex items-center justify-center h-20">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-              </div>
-            ) : (
-              <>
-                <div className="text-[24px] font-semibold text-black mb-1">{dominantSentiment.label}</div>
-                <div className="flex items-center justify-between">
-                  <div className="text-sm text-gray-600">Based on multi-signal strength</div>
-                  <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${dominantSentiment.badge}`}>
-                    {dominantSentiment.signal}
-                  </div>
+            <>
+              <div className="text-[24px] font-semibold text-black mb-1">{dominantSentiment.label}</div>
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-gray-600">Based on multi-signal strength</div>
+                <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${dominantSentiment.badge}`}>
+                  {dominantSentiment.signal}
                 </div>
-              </>
-            )}
+              </div>
+            </>
           </div>
         </div>
 
@@ -807,47 +803,41 @@ export default function METIContent() {
             <h3 className="text-sm font-medium text-gray-800">Sentiment Pulse</h3>
           </div>
           <div className="p-4">
-            {pulseLoading ? (
-              <div className="flex items-center justify-center h-20">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+            <>
+              <div className="flex items-start justify-between ">
+                <div className={`text-[24px] font-semibold`}>
+                  {sentimentPulseDisplay.label}
+                </div>
+                <div className="text-sm text-black flex items-center gap-1 flex-shrink-0 ml-2">
+                  <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    {sentimentPulseDisplay.trend === 'Upward' ? (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
+                    ) : sentimentPulseDisplay.trend === 'Downward' ? (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 13l-5 5m0 0l-5-5m5 5V6" />
+                    ) : (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                    )}
+                  </svg>
+                  <span className="whitespace-nowrap">{sentimentPulseDisplay.trend}</span>
+                </div>
               </div>
-            ) : (
-              <>
-                <div className="flex items-start justify-between ">
-                  <div className={`text-[24px] font-semibold`}>
-                    {sentimentPulseDisplay.label}
-                  </div>
-                  <div className="text-sm text-black flex items-center gap-1 flex-shrink-0 ml-2">
-                    <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      {sentimentPulseDisplay.trend === 'Upward' ? (
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
-                      ) : sentimentPulseDisplay.trend === 'Downward' ? (
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 13l-5 5m0 0l-5-5m5 5V6" />
-                      ) : (
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
-                      )}
-                    </svg>
-                    <span className="whitespace-nowrap">{sentimentPulseDisplay.trend}</span>
-                  </div>
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-black">Based on last 30 days</div>
+                <div className="flex-shrink-0 max-w-[100px]">
+                  <img
+                    src={
+                      sentimentPulseDisplay.trend === 'Upward'
+                        ? '/assets/upward.svg'
+                        : sentimentPulseDisplay.trend === 'Downward'
+                        ? '/assets/downward.svg'
+                        : '/assets/neutral.svg'
+                    }
+                    alt={`${sentimentPulseDisplay.trend} trend`}
+                    className="h-8 w-auto max-w-full"
+                  />
                 </div>
-                <div className="flex items-center justify-between">
-                  <div className="text-sm text-black">Based on last 30 days</div>
-                  <div className="flex-shrink-0 max-w-[100px]">
-                    <img
-                      src={
-                        sentimentPulseDisplay.trend === 'Upward'
-                          ? '/assets/upward.svg'
-                          : sentimentPulseDisplay.trend === 'Downward'
-                          ? '/assets/downward.svg'
-                          : '/assets/neutral.svg'
-                      }
-                      alt={`${sentimentPulseDisplay.trend} trend`}
-                      className="h-8 w-auto max-w-full"
-                    />
-                  </div>
-                </div>
-              </>
-            )}
+              </div>
+            </>
           </div>
         </div>
 
@@ -857,29 +847,23 @@ export default function METIContent() {
             <h3 className="text-sm font-medium text-gray-800">Alerts</h3>
           </div>
           <div className="p-4">
-            {alertsLoading ? (
-              <div className="flex items-center justify-center h-20">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+            <>
+              <div className="flex items-center space-x-2 mb-2">
+                {alertsSummary.critical > 0 && (
+                  <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                )}
+                <span className="text-[24px] font-semibold text-black">
+                  {alertsSummary.critical > 0
+                    ? `${alertsSummary.critical} Critical / ${alertsSummary.total} New`
+                    : alertsSummary.total > 0
+                    ? `${alertsSummary.total} New`
+                    : 'No alerts'}
+                </span>
               </div>
-            ) : (
-              <>
-                <div className="flex items-center space-x-2 mb-2">
-                  {alertsSummary.critical > 0 && (
-                    <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                  )}
-                  <span className="text-[24px] font-semibold text-black">
-                    {alertsSummary.critical > 0
-                      ? `${alertsSummary.critical} Critical / ${alertsSummary.total} New`
-                      : alertsSummary.total > 0
-                      ? `${alertsSummary.total} New`
-                      : 'No alerts'}
-                  </span>
-                </div>
-                <div className="text-sm text-gray-600">
-                  {alertsSummary.message}
-                </div>
-              </>
-            )}
+              <div className="text-sm text-gray-600">
+                {alertsSummary.message}
+              </div>
+            </>
           </div>
         </div>
       </div>
@@ -912,21 +896,16 @@ export default function METIContent() {
               </div>
             </div>
             <div className="p-4">
-              {historicalLoading ? (
-                <div className="h-80 flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-                </div>
-              ) : (
-                <>
-                  {/* Chart Legend */}
-                  <div className="flex items-center space-x-4 mb-4">
-                    <div className="flex items-center gap-2 text-gray-600 bg-white px-3 py-2 rounded-lg border border-gray-200 shadow-sm border-l-4 border-l-purple-500">
-                      <span className="text-sm text-gray-700">METI Score - {selectedCountry?.name}</span>
-                    </div>
+              <>
+                {/* Chart Legend */}
+                <div className="flex items-center space-x-4 mb-4">
+                  <div className="flex items-center gap-2 text-gray-600 bg-white px-3 py-2 rounded-lg border border-gray-200 shadow-sm border-l-4 border-l-purple-500">
+                    <span className="text-sm text-gray-700">METI Score - {selectedCountry?.name}</span>
                   </div>
+                </div>
 
-                  {/* Chart Area */}
-                  <div className="h-80 bg-gray-50 rounded relative p-8">
+                {/* Chart Area */}
+                <div className="h-80 bg-gray-50 rounded relative p-8">
                     {(() => {
                       const filteredData = getFilteredHistoricalData()
                       if (filteredData.length === 0) {
@@ -1009,8 +988,14 @@ export default function METIContent() {
                                 return (
                                   <g
                                     key={point.year}
-                                    onMouseEnter={() => setHoveredPoint(point)}
-                                    onMouseLeave={() => setHoveredPoint(null)}
+                                    onMouseEnter={() => {
+                                      if (hoverTimeout) clearTimeout(hoverTimeout)
+                                      setHoveredPoint(point)
+                                    }}
+                                    onMouseLeave={() => {
+                                      const timeout = setTimeout(() => setHoveredPoint(null), 100)
+                                      setHoverTimeout(timeout)
+                                    }}
                                     style={{ cursor: 'pointer' }}
                                   >
                                     {/* Invisible larger circle for easier hovering */}
@@ -1037,7 +1022,7 @@ export default function METIContent() {
 
                           {/* Hover tooltip */}
                           {hoveredPoint && (
-                            <div className="absolute top-4 right-4 bg-white border rounded-lg p-4 text-sm shadow-lg z-10 w-[262px]">
+                            <div className="absolute top-4 right-4 bg-white border rounded-lg p-4 text-sm shadow-lg z-10 w-[262px] pointer-events-none">
                               <div className="flex items-center justify-between mb-3">
                                 <div className="flex items-center gap-2">
                                   <div className="w-2.5 h-2.5 bg-purple-500 rounded-full"></div>
@@ -1078,7 +1063,6 @@ export default function METIContent() {
                     })()}
                   </div>
                 </>
-              )}
             </div>
           </div>
 
@@ -1157,11 +1141,7 @@ export default function METIContent() {
             </div>
             <div className="flex-1 overflow-y-auto">
               <div className="p-4 space-y-6">
-                {aiBriefLoading ? (
-                  <div className="flex items-center justify-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
-                  </div>
-                ) : aiBrief ? (
+                {aiBrief ? (
                   <div>
                     <div className="flex items-center justify-between mb-3">
                       <h4 className="font-semibold text-black">{selectedCountry?.name}</h4>

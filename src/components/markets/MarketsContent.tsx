@@ -43,7 +43,11 @@ interface MarketKPI {
   year: number
 }
 
-export default function MarketsContent() {
+interface MarketsContentProps {
+  onContentReady?: () => void
+}
+
+export default function MarketsContent({ onContentReady }: MarketsContentProps) {
   const [selectedCountry, setSelectedCountry] = useState<Country | null>(null)
   const [countries, setCountries] = useState<Country[]>([])
   const [loading, setLoading] = useState(true)
@@ -86,6 +90,13 @@ export default function MarketsContent() {
   useEffect(() => {
     loadCountries()
   }, [])
+
+  // Notify parent once initial data has loaded (including chart data)
+  useEffect(() => {
+    if (selectedCountry && !dataLoading && !historicalLoading && onContentReady) {
+      onContentReady()
+    }
+  }, [selectedCountry, dataLoading, historicalLoading, onContentReady])
 
   // Close calendar when clicking outside
   useEffect(() => {
@@ -342,12 +353,8 @@ export default function MarketsContent() {
     return Array.from(kpiMap.values())
   }
 
-  if (loading || !selectedCountry) {
-    return (
-      <div className="bg-white text-black p-6 flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    )
+  if (!selectedCountry) {
+    return null
   }
 
   return (
@@ -520,9 +527,7 @@ export default function MarketsContent() {
             </div>
           </div>
           <div className="p-4 h-full">
-            {dataLoading ? (
-              <div className="text-center py-4 text-gray-500">Loading...</div>
-            ) : macroeconomicData.length > 0 ? (
+            {macroeconomicData.length > 0 ? (
               macroeconomicData.map((kpi, index) => (
                 <div key={kpi.code} className={`grid grid-cols-3 gap-4 items-center py-2 text-gray-700 ${index !== macroeconomicData.length - 1 ? 'border-b border-gray-100' : ''}`}>
                   <span className="text-sm truncate" title={kpi.name}>{kpi.name}</span>
@@ -555,9 +560,7 @@ export default function MarketsContent() {
             </div>
           </div>
           <div className="p-4 h-full">
-            {currencyLoading ? (
-              <div className="text-center py-8 text-gray-500">Loading currency rates...</div>
-            ) : currencyRates.length > 0 ? (
+            {currencyRates.length > 0 ? (
               <>
                 {currencyRates.map((currency, index) => (
                   <div key={index} className={`grid grid-cols-3 gap-4 items-center py-2 ${index !== currencyRates.length - 1 ? 'border-b border-gray-100' : ''}`}>
@@ -592,9 +595,7 @@ export default function MarketsContent() {
             </div>
           </div>
           <div className="p-4 h-full">
-            {dataLoading ? (
-              <div className="text-center py-4 text-gray-500">Loading...</div>
-            ) : financeData.length > 0 ? (
+            {financeData.length > 0 ? (
               financeData.map((kpi, index) => (
                 <div key={kpi.code} className={`grid grid-cols-3 gap-4 items-center py-2 text-gray-700 ${index !== financeData.length - 1 ? 'border-b border-gray-100' : ''}`}>
                   <span className="text-sm truncate" title={kpi.name}>{kpi.name}</span>
@@ -645,11 +646,7 @@ export default function MarketsContent() {
           </div>
           <div className="p-4">
 
-            {historicalLoading ? (
-              <div className="h-80 flex items-center justify-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
-              </div>
-            ) : Object.keys(historicalMacroData).length > 0 && getFilteredYears().length > 0 ? (
+            {Object.keys(historicalMacroData).length > 0 && getFilteredYears().length > 0 ? (
               <>
                 {/* Chart Legend */}
                 <div className="flex flex-wrap gap-2 mb-4">
@@ -820,9 +817,7 @@ export default function MarketsContent() {
           </div>
           <div className="bg-white border border-gray-200 rounded-lg overflow-hidden flex-1">
           <div className="p-4">
-            {newsLoading ? (
-              <div className="text-center py-8 text-gray-500">Loading news...</div>
-            ) : newsArticles.length > 0 ? (
+            {newsArticles.length > 0 ? (
               <div className="space-y-4">
                 {newsArticles.slice(0, 5).map((article) => (
                   <div key={article.id} className="pb-3 border-b border-gray-100 last:border-b-0">
@@ -859,9 +854,7 @@ export default function MarketsContent() {
             </div>
           </div>
           <div className="p-4 h-full">
-            {dataLoading ? (
-              <div className="text-center py-4 text-gray-500">Loading...</div>
-            ) : governanceData.length > 0 ? (
+            {governanceData.length > 0 ? (
               governanceData.map((kpi, index) => (
                 <div key={kpi.code} className={`grid grid-cols-3 gap-4 items-center py-2 text-gray-700 ${index !== governanceData.length - 1 ? 'border-b border-gray-100' : ''}`}>
                   <span className="text-sm  truncate" title={kpi.name}>{kpi.name}</span>

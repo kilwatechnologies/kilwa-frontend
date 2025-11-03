@@ -6,7 +6,11 @@ import { saveCountryPreference } from '@/lib/countryPreference'
 
 type Tab = 'profile' | 'account' | 'notifications'
 
-export default function SettingsContent() {
+interface SettingsContentProps {
+  onContentReady?: () => void
+}
+
+export default function SettingsContent({ onContentReady }: SettingsContentProps) {
   // Check URL params for tab on mount
   const [activeTab, setActiveTab] = useState<Tab>(() => {
     if (typeof window !== 'undefined') {
@@ -173,6 +177,13 @@ export default function SettingsContent() {
 
     loadUserData()
   }, [])
+
+  // Notify parent when data is loaded
+  useEffect(() => {
+    if (!loading && onContentReady) {
+      onContentReady()
+    }
+  }, [loading, onContentReady])
 
   const handleReset = () => {
     // Reset to original loaded values - would need to store original values
