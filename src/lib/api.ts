@@ -34,6 +34,51 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     console.error('API Error:', error.response?.data || error.message);
+
+    // Handle 401 Unauthorized (token expired or invalid)
+    if (error.response?.status === 401) {
+      // Clear stored tokens
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        localStorage.removeItem('user_email');
+        localStorage.removeItem('userEmail');
+
+        // Redirect to login page if not already there
+        if (!window.location.pathname.includes('/auth') && !window.location.pathname.includes('/onboarding')) {
+          console.log('Session expired, redirecting to login...');
+          window.location.href = '/';
+        }
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
+
+// Add interceptor for authInstance as well
+authInstance.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    console.error('Auth API Error:', error.response?.data || error.message);
+
+    // Handle 401 Unauthorized (token expired or invalid)
+    if (error.response?.status === 401) {
+      // Clear stored tokens
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        localStorage.removeItem('user_email');
+        localStorage.removeItem('userEmail');
+
+        // Redirect to login page if not already there
+        if (!window.location.pathname.includes('/auth') && !window.location.pathname.includes('/onboarding')) {
+          console.log('Session expired, redirecting to login...');
+          window.location.href = '/';
+        }
+      }
+    }
+
     return Promise.reject(error);
   }
 );

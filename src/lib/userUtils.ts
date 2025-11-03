@@ -55,8 +55,34 @@ export const loadUserData = async (): Promise<UserData> => {
           userPlan: userData.subscription_plan || 'free'
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching user data:', error)
+
+      // If token is invalid/expired (401), clear localStorage and redirect
+      if (error.response?.status === 401) {
+        console.log('Token expired or invalid, clearing session...')
+        localStorage.removeItem('access_token')
+        localStorage.removeItem('refresh_token')
+        localStorage.removeItem('user_email')
+        localStorage.removeItem('userEmail')
+
+        // Redirect to login if not already there
+        if (typeof window !== 'undefined' &&
+            !window.location.pathname.includes('/auth') &&
+            !window.location.pathname.includes('/onboarding')) {
+          window.location.href = '/'
+        }
+      }
+    }
+  } else {
+    // No token found, redirect to login if not already there
+    console.log('No access token found')
+    if (typeof window !== 'undefined' &&
+        !window.location.pathname.includes('/auth') &&
+        !window.location.pathname.includes('/onboarding') &&
+        window.location.pathname !== '/') {
+      console.log('Redirecting to login...')
+      window.location.href = '/'
     }
   }
 

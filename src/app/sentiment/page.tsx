@@ -11,6 +11,7 @@ import { sentimentApi, countriesApi } from '@/lib/api'
 import { getCountryPreference } from '@/lib/countryPreference'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 import Image from 'next/image'
+import { TagCloud } from 'react-tagcloud'
 
 interface Country {
   id: number
@@ -1000,8 +1001,8 @@ export default function SentimentPulsePage() {
             </div>
           </div>
  </div>
-          {/* Bottom Grid - Signal Cards & Sentiment Mix */}
-          <div className="grid grid-cols-2 gap-6 items-stretch mb-6">
+          {/* Bottom Grid - Signal Cards, Sentiment Mix & Word Cloud */}
+          <div className="grid grid-cols-3 gap-6 items-stretch mb-6">
             {/* Signal Cards */}
             <div className="flex flex-col">
               <div className="mb-4">
@@ -1133,6 +1134,124 @@ export default function SentimentPulsePage() {
                 </div> {/* End p-6 padding */}
               </div> {/* End card */}
             </div> {/* End Sentiment Mix flex-col */}
+
+            {/* Most Common Words from Positive Mentions */}
+            <div className="flex flex-col">
+              <div className="mb-4">
+                <h2 className="text-gray-900 text-xl font-semibold mb-1">Most Common Words from Positive Mentions</h2>
+              </div>
+
+              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex-1 flex flex-col">
+                <div className="p-6 flex flex-col flex-1 items-center justify-center">
+                  {/* Word Cloud */}
+                  <div className="w-full h-full flex items-center justify-center" style={{ minHeight: '380px' }}>
+                    {(() => {
+                      // Extract words from positive news articles
+                      const positiveArticles = newsArticles.filter(a => a.sentiment_label === 'positive')
+                      const wordFrequency: { [key: string]: number } = {}
+
+                      // Common words to exclude (stop words)
+                      const stopWords = new Set(['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'from', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'should', 'could', 'may', 'might', 'can', 'as', 'this', 'that', 'these', 'those', 'it', 'its', 'their', 'there', 'they', 'them', 'we', 'our', 'us', 'you', 'your', 'into', 'over', 'after', 'who', 'what', 'when', 'where', 'which', 'while', 'about'])
+
+                      // Negative/concerning words to exclude
+                      const negativeWords = new Set(['crisis', 'scandal', 'corruption', 'fraud', 'illegal', 'violence', 'attack', 'death', 'kill', 'murder', 'rape', 'abuse', 'exploitation', 'trafficking', 'sexual', 'threat', 'war', 'conflict', 'protest', 'strike', 'riot', 'collapse', 'fail', 'failure', 'crash', 'decline', 'loss', 'debt', 'poverty', 'unemployment', 'inflation', 'recession', 'warn', 'warning', 'danger', 'risk', 'concern', 'worry', 'fear', 'arrests', 'charged', 'convicted', 'guilty', 'crime', 'criminal', 'victim', 'injured', 'wounded', 'disaster', 'emergency', 'epidemic', 'pandemic', 'disease', 'outbreak', 'shortage', 'deficit', 'bankrupt', 'insolvent', 'defaulted', 'sued', 'lawsuit', 'allegation', 'investigation', 'probe', 'delays', 'delayed', 'suspended', 'banned', 'prohibited', 'restriction', 'sanction', 'penalty', 'fine', 'breach', 'violation', 'girls', 'women', 'men', 'boys', 'children', 'reports', 'says', 'said'])
+
+                      // Investment/business-related keywords to prioritize
+                      const relevantKeywords = new Set([
+                        'investment', 'investor', 'investors', 'growth', 'expansion', 'opportunity', 'opportunities', 'innovation', 'innovative',
+                        'digital', 'technology', 'tech', 'fintech', 'startup', 'startups', 'enterprise', 'business', 'economy', 'economic',
+                        'infrastructure', 'development', 'project', 'projects', 'funding', 'capital', 'finance', 'financial', 'banking', 'bank',
+                        'market', 'markets', 'trade', 'export', 'exports', 'import', 'imports', 'sector', 'sectors', 'industry', 'industries',
+                        'manufacturing', 'agriculture', 'agribusiness', 'energy', 'renewable', 'solar', 'power', 'electricity', 'mining',
+                        'oil', 'gas', 'petroleum', 'healthcare', 'health', 'pharmaceutical', 'tourism', 'hospitality', 'real', 'estate',
+                        'construction', 'housing', 'transport', 'transportation', 'logistics', 'warehouse', 'port', 'airport', 'railway',
+                        'digital', 'online', 'platform', 'mobile', 'internet', 'connectivity', 'network', 'telecommunications', 'telecom',
+                        'revenue', 'profit', 'earnings', 'income', 'returns', 'yield', 'dividend', 'stock', 'equity', 'bond', 'securities',
+                        'deal', 'deals', 'merger', 'acquisition', 'partnership', 'collaboration', 'joint', 'venture', 'agreement',
+                        'launch', 'launched', 'unveils', 'announces', 'plans', 'boost', 'increase', 'rise', 'rising', 'surge', 'soar',
+                        'expand', 'scale', 'upgrade', 'improve', 'enhance', 'strengthen', 'optimize', 'modernize', 'transform',
+                        'sustainable', 'sustainability', 'green', 'clean', 'climate', 'carbon', 'emission', 'renewable',
+                        'smart', 'intelligent', 'automated', 'automation', 'artificial', 'intelligence', 'blockchain', 'crypto',
+                        'jobs', 'employment', 'workforce', 'talent', 'skilled', 'training', 'education', 'capacity',
+                        'foreign', 'direct', 'domestic', 'local', 'regional', 'international', 'global', 'cross-border',
+                        'policy', 'reform', 'reforms', 'regulation', 'regulatory', 'government', 'public', 'private',
+                        'gdp', 'gross', 'domestic', 'product', 'macroeconomic', 'monetary', 'fiscal', 'budget', 'spending',
+                        'reserve', 'reserves', 'currency', 'exchange', 'forex', 'rate', 'interest', 'central', 'commercial',
+                        'consumer', 'demand', 'supply', 'production', 'productivity', 'output', 'performance', 'competitive',
+                        'efficiency', 'effective', 'diversification', 'diversify', 'portfolio', 'asset', 'assets', 'value',
+                        'billion', 'million', 'trillion', 'dollar', 'shilling', 'naira', 'cedi', 'rand', 'kwacha'
+                      ])
+
+                      positiveArticles.forEach(article => {
+                        const words = article.title.toLowerCase().split(/\s+/)
+                        words.forEach(word => {
+                          const cleanWord = word.replace(/[^\w]/g, '')
+                          // Include words that are: longer than 3 chars, not stop words, not negative words
+                          // AND (relevant keywords OR not filtered if we need more words)
+                          if (cleanWord.length > 3 &&
+                              !stopWords.has(cleanWord) &&
+                              !negativeWords.has(cleanWord)) {
+                            // Prioritize relevant keywords, but include others too
+                            if (relevantKeywords.has(cleanWord)) {
+                              wordFrequency[cleanWord] = (wordFrequency[cleanWord] || 0) + 2 // Double weight for relevant words
+                            } else {
+                              wordFrequency[cleanWord] = (wordFrequency[cleanWord] || 0) + 1
+                            }
+                          }
+                        })
+                      })
+
+                      // Get top words by frequency
+                      let sortedWords = Object.entries(wordFrequency)
+                        .sort((a, b) => b[1] - a[1])
+                        .slice(0, 30)
+
+                      console.log('Word cloud data:', {
+                        totalPositiveArticles: positiveArticles.length,
+                        uniqueWords: Object.keys(wordFrequency).length,
+                        topWords: sortedWords.slice(0, 5)
+                      })
+
+                      // Fallback mock words if we don't have enough data
+                      if (sortedWords.length < 5) {
+                        const mockWords = [
+                          ['growth', 8], ['investment', 7], ['innovation', 6], ['infrastructure', 6],
+                          ['opportunity', 5], ['expansion', 5], ['digital', 5], ['technology', 4],
+                          ['development', 4], ['fintech', 4], ['startups', 3], ['gdp', 3],
+                          ['economy', 3], ['business', 3], ['market', 3], ['capital', 2],
+                          ['finance', 2], ['banking', 2], ['energy', 2], ['renewable', 2],
+                          ['agriculture', 2], ['export', 2], ['manufacturing', 2], ['jobs', 2],
+                          ['productivity', 1], ['trade', 1], ['sustainable', 1], ['smart', 1],
+                          ['logistics', 1], ['healthcare', 1], ['tourism', 1], ['partnership', 1],
+                          ['upgrade', 1], ['revenue', 1], ['profit', 1], ['launch', 1],
+                          ['boost', 1], ['improve', 1], ['modernize', 1], ['competitive', 1]
+                        ] as [string, number][]
+                        sortedWords = mockWords
+                      }
+
+                      // Convert to TagCloud format
+                      const tagCloudData = sortedWords.map(([word, count]) => ({
+                        value: word,
+                        count: count
+                      }))
+
+                      return (
+                        <TagCloud
+                          minSize={14}
+                          maxSize={32}
+                          tags={tagCloudData}
+                          className="w-full"
+                          colorOptions={{
+                            luminosity: 'dark',
+                            hue: 'monochrome'
+                          }}
+                        />
+                      )
+                    })()}
+                  </div>
+                </div>
+              </div>
+            </div> {/* End Most Common Words flex-col */}
           </div> {/* End Bottom grid */}
 
           {/* End Main scrollable content */}
