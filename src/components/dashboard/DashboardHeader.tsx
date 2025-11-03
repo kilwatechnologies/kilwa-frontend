@@ -19,6 +19,12 @@ export default function DashboardHeader({ userName, userInitials, truncatedName,
   const [showZwadiModal, setShowZwadiModal] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
+  const handleEditProfile = () => {
+    // Navigate to settings page
+    window.location.href = '/settings'
+    setShowUserDropdown(false)
+  }
+
   const handleLogout = () => {
     // Clear any stored tokens or user data
     localStorage.clear()
@@ -87,7 +93,7 @@ export default function DashboardHeader({ userName, userInitials, truncatedName,
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setShowUserDropdown(!showUserDropdown)}
-              className="flex items-center hover:bg-gray-800 rounded-lg px-3 py-2 transition-colors"
+              className="flex items-center hover:bg-[#4B4B4B] rounded-lg px-3 py-2 transition-colors"
             >
               {profilePicture ? (
                 <img
@@ -118,11 +124,24 @@ export default function DashboardHeader({ userName, userInitials, truncatedName,
 
             {/* Dropdown Menu */}
             {showUserDropdown && (
-              <div className="absolute right-0 top-full mt-2 w-48 bg-gray-800 border border-gray-600 rounded-lg shadow-lg z-50">
+              <div className="absolute right-0 top-full mt-2 w-48 bg-black border border-[#4B4B4B] rounded-lg shadow-lg z-50">
                 <div className="py-2">
                   <button
+                    onClick={handleEditProfile}
+                    className="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#4B4B4B] transition-colors flex items-center"
+                  >
+                    <Image
+                      src="/assets/User.svg"
+                      alt="Edit profile"
+                      width={16}
+                      height={16}
+                      className="mr-3"
+                    />
+                    Edit profile
+                  </button>
+                  <button
                     onClick={handleLogout}
-                    className="w-full text-left px-4 py-2 text-sm text-white hover:bg-gray-700 transition-colors flex items-center"
+                    className="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#4B4B4B] transition-colors flex items-center"
                   >
                     <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
