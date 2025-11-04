@@ -34,7 +34,14 @@ export default function DashboardPage() {
     }
     return false
   })
-  const [filtersCollapsed, setFiltersCollapsed] = useState(false)
+  const [filtersCollapsed, setFiltersCollapsed] = useState(() => {
+    // Initialize from localStorage
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('filtersCollapsed')
+      return saved ? JSON.parse(saved) : false
+    }
+    return false
+  })
   const [countries, setCountries] = useState<Country[]>([])
   const [originalCountries, setOriginalCountries] = useState<Country[]>([])
   const [newsData, setNewsData] = useState<Record<number, any[]>>({})
@@ -52,6 +59,11 @@ export default function DashboardPage() {
   useEffect(() => {
     localStorage.setItem('sidebarCollapsed', JSON.stringify(sidebarCollapsed))
   }, [sidebarCollapsed])
+
+  // Persist filters state to localStorage
+  useEffect(() => {
+    localStorage.setItem('filtersCollapsed', JSON.stringify(filtersCollapsed))
+  }, [filtersCollapsed])
 
   useEffect(() => {
     loadDashboardData()

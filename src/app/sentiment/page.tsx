@@ -37,7 +37,13 @@ export default function SentimentPulsePage() {
     }
     return false
   })
-  const [filtersCollapsed, setFiltersCollapsed] = useState(false)
+  const [filtersCollapsed, setFiltersCollapsed] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('sentimentFiltersCollapsed')
+      return saved ? JSON.parse(saved) : false
+    }
+    return false
+  })
   const [filters, setFilters] = useState<any>({})
   const [selectedCountry, setSelectedCountry] = useState<Country | null>(null)
   const [countries, setCountries] = useState<Country[]>([])
@@ -56,6 +62,10 @@ export default function SentimentPulsePage() {
   useEffect(() => {
     localStorage.setItem('sidebarCollapsed', JSON.stringify(sidebarCollapsed))
   }, [sidebarCollapsed])
+
+  useEffect(() => {
+    localStorage.setItem('sentimentFiltersCollapsed', JSON.stringify(filtersCollapsed))
+  }, [filtersCollapsed])
 
   useEffect(() => {
     loadInitialData()
