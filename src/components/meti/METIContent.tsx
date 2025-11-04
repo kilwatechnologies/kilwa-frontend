@@ -1193,9 +1193,9 @@ export default function METIContent({ onContentReady }: METIContentProps) {
           <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
             <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 ">
               <div className="grid grid-cols-3 gap-4 text-xs font-semibold text-gray-700">
-                <span>Sector</span>
-                <span>Zawadi AI Outlook</span>
-                <span>Focus Markets</span>
+                <span className="text-left">Sector</span>
+                <span className="text-center">Zawadi AI Outlook</span>
+                <span className="text-center">Focus Markets</span>
               </div>
             </div>
             <div>
@@ -1212,7 +1212,7 @@ export default function METIContent({ onContentReady }: METIContentProps) {
                   <div className="flex items-center space-x-2">
                     <input
                       type="checkbox"
-                      className="rounded cursor-pointer accent-[#9514EB]"
+                      className="rounded cursor-pointer accent-[#9514EB] flex-shrink-0"
                       checked={selectedSectors.has(sector.name)}
                       onChange={(e) => {
                         const newSelected = new Set(selectedSectors)
@@ -1226,10 +1226,10 @@ export default function METIContent({ onContentReady }: METIContentProps) {
                     />
                     <span className="text-sm text-black">{sector.name}</span>
                   </div>
-                  <span className={`text-sm ${getOutlookColor(sector.outlook)}`}>
+                  <span className={`text-sm ${getOutlookColor(sector.outlook)} text-center`}>
                     {sector.outlook}
                   </span>
-                  <span className="text-sm text-gray-600">{sector.focusMarkets}</span>
+                  <span className="text-sm text-gray-600 text-center">{sector.focusMarkets}</span>
                 </div>
               ))}
             </div>
@@ -1242,7 +1242,7 @@ export default function METIContent({ onContentReady }: METIContentProps) {
           <div className="bg-white border border-gray-200 rounded-lg overflow-hidden flex-shrink-0">
             <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
               <div className="grid grid-cols-[1fr_auto_auto] gap-3 items-center">
-                <h3 className="text-sm font-semibold text-black">Driver Category</h3>
+                <h3 className="text-sm font-semibold text-black text-center">Driver Category</h3>
                 <span className="text-sm font-semibold text-center min-w-[80px]">Contribution</span>
                 <span className="text-sm font-semibold text-center min-w-[100px]">Risk Level</span>
               </div>
@@ -1255,9 +1255,9 @@ export default function METIContent({ onContentReady }: METIContentProps) {
                     index !== driverCategories.length - 1 ? 'border-b border-gray-100' : ''
                   }`}
                 >
-                  <span className="text-sm text-black leading-tight">{category.name}</span>
+                  <span className="text-sm text-black leading-tight text-center">{category.name}</span>
                   <span className="text-sm text-black text-center min-w-[60px]">{category.contribution}</span>
-                  <div className="flex items-center space-x-2 min-w-[100px]">
+                  <div className="flex items-center justify-center space-x-2 min-w-[100px]">
                     <div className={`w-2 h-2 rounded-full ${getRiskLevelDot(category.riskLevel)}`}></div>
                     <span className="text-sm text-gray-600">{category.riskLevel}</span>
                   </div>

@@ -842,13 +842,13 @@ export default function SentimentPulsePage() {
           {/* Main Grid */}
           <div className="grid grid-cols-[1.2fr_0.8fr] gap-6 mb-6">
             {/* Sentiment Over Time */}
-            <div>
-              <div className="mb-4">
+            <div className="flex flex-col">
+              <div className="mb-4" style={{ minHeight: '100px' }}>
                 <h2 className="text-gray-900 text-xl font-semibold mb-1">Sentiment Over Time</h2>
                 <p className="text-gray-500 text-sm">Confidence-based outlook for market entry over the next 6 months.</p>
               </div>
 
-              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex-1">
                 {/* Period Selector */}
                 <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
                   <div className="inline-flex gap-2">
@@ -935,14 +935,14 @@ export default function SentimentPulsePage() {
             </div>
 
             {/* Top Positive Sectors */}
-            <div>
-              <div className="mb-4">
+            <div className="flex flex-col">
+              <div className="mb-4" style={{ minHeight: '100px' }}>
                 <h2 className="text-gray-900 text-xl font-semibold mb-1">Top Positive Sectors by Sentiment</h2>
                 <p className="text-gray-500 text-sm">Highlights where investor confidence is rising or falling.</p>
               </div>
 
-              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-                <div className="p-6 h-[428px] flex flex-col">
+              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex-1">
+                <div className="p-6 flex flex-col h-full">
 
               {/* Legend */}
               <div className="flex gap-6 mb-6 flex-shrink-0">
@@ -1002,10 +1002,10 @@ export default function SentimentPulsePage() {
           </div>
  </div>
           {/* Bottom Grid - Signal Cards, Sentiment Mix & Word Cloud */}
-          <div className="grid grid-cols-3 gap-6 items-stretch mb-6">
+          <div className="grid grid-cols-3 gap-6 mb-6">
             {/* Signal Cards */}
             <div className="flex flex-col">
-              <div className="mb-4">
+              <div className="mb-4" style={{ minHeight: '68px' }}>
                 <h2 className="text-gray-900 text-xl font-semibold mb-1">Signal Cards</h2>
                 <p className="text-gray-500 text-sm">
                   Highlights why investor confidence is declining across sectors.
@@ -1013,7 +1013,7 @@ export default function SentimentPulsePage() {
               </div>
 
               {/* Make this div stretch to full height */}
-              <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm flex-1 flex flex-col">
+              <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm flex-1 flex flex-col" style={{ minHeight: '500px' }}>
                 <div className="divide-y divide-gray-200 flex-1 overflow-y-auto">
                   {displayArticles.slice(0, 4).map((article, index) => (
                     <div
@@ -1056,41 +1056,41 @@ export default function SentimentPulsePage() {
 
             {/* Sentiment Mix */}
             <div className="flex flex-col">
-              <div className="mb-4">
+              <div className="mb-4" style={{ minHeight: '68px' }}>
                 <h2 className="text-gray-900 text-xl font-semibold mb-1">Sentiment Mix</h2>
                 <p className="text-gray-500 text-sm">
                   Confidence-based outlook for market entry over the next 6 months.
                 </p>
               </div>
 
-              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex-1 flex flex-col">
-                <div className="p-6 flex flex-col flex-1">
+              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm flex-1 flex flex-col" style={{ minHeight: '500px' }}>
+                <div className="p-4 md:p-6 flex flex-col flex-1">
                   {/* Legend */}
-                  <div className="flex gap-6 mb-6 flex-shrink-0">
+                  <div className="flex gap-4 md:gap-6 mb-4 flex-shrink-0 flex-wrap">
                     <div className="flex items-center gap-2">
                       <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#8FE36C' }}></div>
-                      <span className="text-sm text-gray-600">Positive</span>
+                      <span className="text-xs md:text-sm text-gray-600">Positive</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#FFE054' }}></div>
-                      <span className="text-sm text-gray-600">Neutral</span>
+                      <span className="text-xs md:text-sm text-gray-600">Neutral</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#FF8F85' }}></div>
-                      <span className="text-sm text-gray-600">Negative</span>
+                      <span className="text-xs md:text-sm text-gray-600">Negative</span>
                     </div>
                   </div>
 
                   {/* Pie Chart */}
-                  <div className="flex items-center justify-center flex-1">
-                    <ResponsiveContainer width="100%" height={320}>
+                  <div className="flex items-center justify-center flex-1 min-h-0">
+                    <ResponsiveContainer width="100%" height="100%" minHeight={280}>
                       <PieChart>
                         <Pie
                           data={sentimentMixData}
                           cx="50%"
                           cy="50%"
                           innerRadius={0}
-                          outerRadius={130}
+                          outerRadius="65%"
                           paddingAngle={0}
                           dataKey="value"
                           label={({ cx, cy, midAngle, innerRadius, outerRadius, value }) => {
@@ -1137,11 +1137,11 @@ export default function SentimentPulsePage() {
 
             {/* Most Common Words from Positive Mentions */}
             <div className="flex flex-col">
-              <div className="mb-4">
+              <div className="mb-4" style={{ minHeight: '68px' }}>
                 <h2 className="text-gray-900 text-xl font-semibold mb-1">Most Common Words from Positive Mentions</h2>
               </div>
 
-              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex-1 flex flex-col">
+              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex-1 flex flex-col" style={{ minHeight: '500px' }}>
                 <div className="p-6 flex flex-col flex-1 items-center justify-center">
                   {/* Word Cloud */}
                   <div className="w-full h-full flex items-center justify-center" style={{ minHeight: '380px' }}>
