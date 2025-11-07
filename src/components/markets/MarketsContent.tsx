@@ -519,22 +519,22 @@ export default function MarketsContent({ onContentReady }: MarketsContentProps) 
             <h3 className="text-lg font-semibold text-black">Macroeconomic Overview</h3>
           </div>
           <div className="bg-white border border-gray-200 rounded-lg overflow-hidden flex-1">
-          <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 text-center">
+          <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 ">
             <div className="grid grid-cols-3 gap-4 text-xs text-black font-semibold">
-              <span>Metric</span>
-              <span>Value</span>
-              <span>Score</span>
+              <span className='text-left pl-1'>Metric</span>
+              <span className='text-center'>Value</span>
+              <span className='text-center'>Score</span>
             </div>
           </div>
           <div className="p-4 h-full text-center">
             {macroeconomicData.length > 0 ? (
               macroeconomicData.map((kpi, index) => (
-                <div key={kpi.code} className={`grid grid-cols-3 gap-4 items-center py-2 text-gray-700 ${index !== macroeconomicData.length - 1 ? 'border-b border-gray-100' : ''}`}>
-                  <span className="text-sm truncate" title={kpi.name}>{kpi.name}</span>
-                  <span className="text-sm  truncate" title={kpi.value ? `${kpi.value.toFixed(2)} ${kpi.unit || ''}` : 'N/A'}>
+                <div key={kpi.code} className={`grid grid-cols-3 gap-4 items-center py-2 ${index !== macroeconomicData.length - 1 ? 'border-b border-gray-100' : ''}`}>
+                  <span className="text-[14px] truncate" style={{ color: '#686868' }} title={kpi.name}>{kpi.name}</span>
+                  <span className="text-[14px] text-[#686868] truncate" title={kpi.value ? `${kpi.value.toFixed(2)} ${kpi.unit || ''}` : 'N/A'}>
                     {kpi.value ? `${kpi.value.toFixed(2)} ${kpi.unit || ''}` : 'N/A'}
                   </span>
-                  <span className="text-sm ">
+                  <span className="text-[14px]" style={{ color: '#686868' }}>
                     {kpi.normalizedValue ? kpi.normalizedValue.toFixed(1) : 'N/A'}
                   </span>
                 </div>
@@ -564,9 +564,9 @@ export default function MarketsContent({ onContentReady }: MarketsContentProps) 
               <>
                 {currencyRates.map((currency, index) => (
                   <div key={index} className={`grid grid-cols-3 gap-4 items-center py-2 ${index !== currencyRates.length - 1 ? 'border-b border-gray-100' : ''}`}>
-                    <span className="text-sm text-gray-700">{currency.pair}</span>
-                    <span className="text-sm text-gray-700">{currency.rate}</span>
-                    <span className={`text-sm ${
+                    <span className="text-[14px] text-[#686868]">{currency.pair}</span>
+                    <span className="text-[14px] text-[#686868]">{currency.rate}</span>
+                    <span className={`text-[14px] ${
                       currency.change >= 0 ? 'text-green-500' : 'text-red-500'
                     }`}>
                       {currency.changeFormatted}
@@ -597,12 +597,12 @@ export default function MarketsContent({ onContentReady }: MarketsContentProps) 
           <div className="p-4 h-full text-center">
             {financeData.length > 0 ? (
               financeData.map((kpi, index) => (
-                <div key={kpi.code} className={`grid grid-cols-3 gap-4 items-center py-2 text-gray-700 ${index !== financeData.length - 1 ? 'border-b border-gray-100' : ''}`}>
-                  <span className="text-sm truncate" title={kpi.name}>{kpi.name}</span>
-                  <span className="text-sm truncate" title={kpi.value ? `${kpi.value.toFixed(2)} ${kpi.unit || ''}` : 'N/A'}>
+                <div key={kpi.code} className={`grid grid-cols-3 gap-4 items-center py-2 ${index !== financeData.length - 1 ? 'border-b border-gray-100' : ''}`}>
+                  <span className="text-[14px] truncate" style={{ color: '#686868' }} title={kpi.name}>{kpi.name}</span>
+                  <span className="text-[14px] text-[#686868] truncate" title={kpi.value ? `${kpi.value.toFixed(2)} ${kpi.unit || ''}` : 'N/A'}>
                     {kpi.value ? `${kpi.value.toFixed(2)} ${kpi.unit || ''}` : 'N/A'}
                   </span>
-                  <span className="text-sm ">
+                  <span className="text-[14px]" style={{ color: '#686868' }}>
                     {kpi.normalizedValue ? kpi.normalizedValue.toFixed(1) : 'N/A'}
                   </span>
                 </div>
@@ -821,8 +821,8 @@ export default function MarketsContent({ onContentReady }: MarketsContentProps) 
               <div className="space-y-4">
                 {newsArticles.slice(0, 5).map((article) => (
                   <div key={article.id} className="pb-3 border-b border-gray-100 last:border-b-0">
-                    <h4 className="text-sm font-medium mb-1 text-black">{article.title}</h4>
-                    <div className="flex justify-between text-xs text-gray-600">
+                    <h4 className="text-sm font-medium mb-1 text-[#4B4B4B]">{article.title}</h4>
+                    <div className="flex justify-between text-xs text-[#686868]">
                       <span>{article.source} {article.topics?.[0] ? `> ${article.topics[0]}` : ''}</span>
                       <span>{getRelativeTime(article.published_at)}</span>
                     </div>
@@ -856,12 +856,12 @@ export default function MarketsContent({ onContentReady }: MarketsContentProps) 
           <div className="p-4 h-full text-center">
             {governanceData.length > 0 ? (
               governanceData.map((kpi, index) => (
-                <div key={kpi.code} className={`grid grid-cols-3 gap-4 items-center py-2 text-gray-700 ${index !== governanceData.length - 1 ? 'border-b border-gray-100' : ''}`}>
-                  <span className="text-sm  truncate" title={kpi.name}>{kpi.name}</span>
-                  <span className="text-sm ">
+                <div key={kpi.code} className={`grid grid-cols-3 gap-4 items-center py-2 ${index !== governanceData.length - 1 ? 'border-b border-gray-100' : ''}`}>
+                  <span className="text-[14px] truncate" style={{ color: '#686868' }} title={kpi.name}>{kpi.name}</span>
+                  <span className="text-sm text-gray-700">
                     {kpi.value ? `${kpi.value.toFixed(2)} ${kpi.unit || ''}` : 'N/A'}
                   </span>
-                  <span className="text-sm">
+                  <span className="text-[14px]" style={{ color: '#686868' }}>
                     {kpi.normalizedValue ? kpi.normalizedValue.toFixed(1) : 'N/A'}
                   </span>
                 </div>
@@ -887,15 +887,15 @@ export default function MarketsContent({ onContentReady }: MarketsContentProps) 
             {/* Header Row */}
             <div className="grid grid-cols-4 gap-2 mb-3">
               <div></div>
-              <div className="text-center text-xs text-gray-500 font-medium">Value</div>
-              <div className="text-center text-xs text-gray-500 font-medium">Core</div>
-              <div className="text-center text-xs text-gray-500 font-medium">Growth</div>
+              <div className="text-center text-[12px] text-[#8C8C8C] font-medium">Value</div>
+              <div className="text-center text-[12px] text-[#8C8C8C] font-medium">Core</div>
+              <div className="text-center text-[12px] text-[#8C8C8C] font-medium">Growth</div>
             </div>
             
             {/* Data Rows */}
             {equityFactorsData.map((factor: EquityFactor, index: number) => (
               <div key={index} className="grid grid-cols-4 gap-3 mb-6">
-                <div className="flex items-center text-sm text-black font-">{factor.name}</div>
+                <div className="flex items-center text-[14px] text-[#4B4B4B] font-">{factor.name}</div>
 
                 {/* Value Box */}
                 <div className="bg-red-100 border border-red-200 rounded-md py-6 px-2 text-center flex items-center justify-center">
@@ -936,13 +936,13 @@ export default function MarketsContent({ onContentReady }: MarketsContentProps) 
           </div>
           <div className="p-4 h-full text-center">
             {sectorETFsData.map((sector: SectorETF, index: number) => (
-              <div key={index} className={`grid grid-cols-4 gap-4 items-center py-2 text-gray-700 ${index !== sectorETFsData.length - 1 ? 'border-b border-gray-100' : ''}`}>
+              <div key={index} className={`grid grid-cols-4 gap-4 items-center py-2 ${index !== sectorETFsData.length - 1 ? 'border-b border-gray-100' : ''}`}>
                 <div className="flex items-center space-x-2">
-                  <span className="text-sm truncate" title={sector.name}>{sector.name}</span>
+                  <span className="text-[14px] truncate" style={{ color: '#686868' }} title={sector.name}>{sector.name}</span>
                 </div>
-                <span className="text-sm ">{sector.value}</span>
-                <span className="text-sm ">{sector.forecast}</span>
-                <span className={`text-sm ${getChangeColor(sector.change)}`}>
+                <span className="text-[14px] text-[#686868]">{sector.value}</span>
+                <span className="text-[14px] text-[#686868]">{sector.forecast}</span>
+                <span className={`text-[14px] ${getChangeColor(sector.change)}`}>
                   {sector.change}
                 </span>
               </div>

@@ -11,7 +11,7 @@ interface OnboardingStep5Props {
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 
 export default function OnboardingStep5({ onComplete, onBack }: OnboardingStep5Props) {
-  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly')
+  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('yearly')
   const [selectedPlan, setSelectedPlan] = useState<string>('')
   const [loading, setLoading] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
@@ -38,7 +38,7 @@ export default function OnboardingStep5({ onComplete, onBack }: OnboardingStep5P
       id: 'gold',
       name: 'Gold',
       icon: '/assets/card2.svg',
-      price: { monthly: 699, yearly: 6999 },
+      price: { monthly: 1199, yearly: 11999 },
       description: 'All features, 15 countries, full dashboard access, export tools',
       subDescription: 'Best for: Analysts, boutique investors, consultants',
      features: [
@@ -58,7 +58,7 @@ export default function OnboardingStep5({ onComplete, onBack }: OnboardingStep5P
       id: 'diamond',
       name: 'Diamond',
       icon: '/assets/card1.svg',
-      price: { monthly: 2499, yearly: 24999 },
+      price: { monthly: 4999, yearly: 49999 },
       description: 'All features, 15 countries, full dashboard access, export tools',
       subDescription: 'Best for: Analysts, boutique investors, consultants',
      features: [

@@ -1242,7 +1242,7 @@ export default function METIContent({ onContentReady }: METIContentProps) {
           <div className="bg-white border border-gray-200 rounded-lg overflow-hidden flex-shrink-0">
             <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
               <div className="grid grid-cols-[1fr_auto_auto] gap-3 items-center">
-                <h3 className="text-sm font-semibold text-black text-center">Driver Category</h3>
+                <h3 className="text-sm font-semibold text-black text-left">Driver Category</h3>
                 <span className="text-sm font-semibold text-center min-w-[80px]">Contribution</span>
                 <span className="text-sm font-semibold text-center min-w-[100px]">Risk Level</span>
               </div>

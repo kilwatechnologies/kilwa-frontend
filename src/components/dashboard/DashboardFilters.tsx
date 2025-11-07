@@ -51,17 +51,17 @@ export default function DashboardFilters({ onFiltersChange, isCollapsed = false 
   }
 
   return (
-    <div className={`bg-black pt-2 ${isCollapsed ? 'w-0 overflow-hidden' : 'w-80 border-r border-gray-700'} transition-all duration-300 overflow-y-auto hidden lg:block`}>
+    <div className={`bg-[#1E1E1E] pt-2 ${isCollapsed ? 'w-0 overflow-hidden' : 'w-80 border-r border-[#4B4B4B]'} transition-all duration-300 overflow-y-auto hidden lg:block`}>
       {/* Filter Content - Only show when expanded */}
       {!isCollapsed && (
         <div className="p-6">
           {/* Map Filters */}
           <div className="mb-6">
-        <h3 className="text-base font-semibold text-[#686969] mb-4">Map Filters</h3>
+        <h3 className="text-[18px] font-semibold text-[#686969] mb-4">Map Filters</h3>
         
         {/* Where to invest - ISI */}
         <div className="mb-4 relative">
-          <div className="flex items-center text-sm">
+          <div className="flex items-center text-[16px]">
             <span
               className={`cursor-pointer transition-colors ${filters.displayMetric === 'isi' ? 'text-white font-semibold' : 'text-[#B0B2B2]'}`}
               onClick={() => updateFilter('displayMetric', 'isi')}
@@ -73,7 +73,7 @@ export default function DashboardFilters({ onFiltersChange, isCollapsed = false 
               onMouseEnter={() => setHoveredInfo('isi')}
               onMouseLeave={() => setHoveredInfo(null)}
             >
-              <svg className="w-4 h-4 text-[#B0B2B2] cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-[#B0B2B2] cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               {hoveredInfo === 'isi' && (
@@ -90,7 +90,7 @@ export default function DashboardFilters({ onFiltersChange, isCollapsed = false 
 
         {/* When to invest - METI */}
         <div className="mb-4 relative">
-          <div className="flex items-center text-sm">
+          <div className="flex items-center text-[16px]">
             <span
               className={`cursor-pointer transition-colors ${filters.displayMetric === 'meti' ? 'text-white font-semibold' : 'text-[#B0B2B2]'}`}
               onClick={() => updateFilter('displayMetric', 'meti')}
@@ -102,7 +102,7 @@ export default function DashboardFilters({ onFiltersChange, isCollapsed = false 
               onMouseEnter={() => setHoveredInfo('meti')}
               onMouseLeave={() => setHoveredInfo(null)}
             >
-              <svg className="w-4 h-4 text-[#B0B2B2] cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-[#B0B2B2] cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               {hoveredInfo === 'meti' && (
@@ -119,7 +119,7 @@ export default function DashboardFilters({ onFiltersChange, isCollapsed = false 
 
         {/* Market mood - Sentiment Pulse */}
         <div className="mb-6 relative">
-          <div className="flex items-center text-sm">
+          <div className="flex items-center text-[16px]">
             <span
               className={`cursor-pointer transition-colors ${filters.displayMetric === 'sentiment' ? 'text-white font-semibold' : 'text-[#B0B2B2]'}`}
               onClick={() => updateFilter('displayMetric', 'sentiment')}
@@ -131,7 +131,7 @@ export default function DashboardFilters({ onFiltersChange, isCollapsed = false 
               onMouseEnter={() => setHoveredInfo('sentiment')}
               onMouseLeave={() => setHoveredInfo(null)}
             >
-              <svg className="w-4 h-4 text-[#B0B2B2] cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-[#B0B2B2] cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               {hoveredInfo === 'sentiment' && (
@@ -151,13 +151,13 @@ export default function DashboardFilters({ onFiltersChange, isCollapsed = false 
           <select
             value={filters.performance}
             onChange={(e) => updateFilter('performance', e.target.value)}
-            className="w-full pl-3 pr-12 py-2 bg-black border border-gray-600 text-white rounded-lg text-sm appearance-none outline-none"
+            className="w-full pl-3 pr-12 py-2 bg-[#1E1E1E] border border-[#B0B2B2] text-[#E2E4E4] rounded-lg text-sm appearance-none outline-none"
           >
-            <option value="1-day" className="bg-black text-white">1-day performance</option>
-            <option value="1-week" className="bg-black text-white">1-week performance</option>
-            <option value="1-month" className="bg-black text-white">1-month performance</option>
-            <option value="3-month" className="bg-black text-white">3-month performance</option>
-            <option value="1-year" className="bg-black text-white">1-year performance</option>
+            <option value="1-day" className="bg-[#1E1E1E] text-[#E2E4E4]">1-day performance</option>
+            <option value="1-week" className="bg-[#1E1E1E] text-[#E2E4E4]">1-week performance</option>
+            <option value="1-month" className="bg-[#1E1E1E] text-[#E2E4E4]">1-month performance</option>
+            <option value="3-month" className="bg-[#1E1E1E] text-[#E2E4E4]">3-month performance</option>
+            <option value="1-year" className="bg-[#1E1E1E] text-[#E2E4E4]">1-year performance</option>
           </select>
           <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
             <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -169,7 +169,7 @@ export default function DashboardFilters({ onFiltersChange, isCollapsed = false 
 
       {/* Sectors */}
       <div>
-        <h3 className="text-base font-semibold text-[#686969] mb-4">Sectors:</h3>
+        <h3 className="text-[18px] font-semibold text-[#686969] mb-4">Sectors:</h3>
         <div className="space-y-3">
           {[
             { key: 'energy', label: 'Energy & Renewable Energy' },
@@ -195,7 +195,7 @@ export default function DashboardFilters({ onFiltersChange, isCollapsed = false 
                   </svg>
                 )}
               </div>
-              <span className="ml-3 text-sm text-[#B0B2B2] mb-0.5 cursor-pointer">{sector.label}</span>
+              <span className="ml-3 text-[16px] text-[#B0B2B2] mb-1 cursor-pointer">{sector.label}</span>
             </label>
           ))}
         </div>

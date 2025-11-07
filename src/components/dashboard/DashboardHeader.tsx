@@ -48,7 +48,7 @@ export default function DashboardHeader({ userName, userInitials, truncatedName,
   }, [])
 
   return (
-    <header className="bg-black border-b border-gray-700 px-6 h-[84px] flex items-center">
+    <header className="bg-[#1E1E1E] border-b border-[#4B4B4B] px-6 h-[84px] flex items-center">
       <div className="flex items-center justify-between w-full">
         {/* Mobile menu button + Title */}
         <div className="flex items-center">
@@ -61,7 +61,7 @@ export default function DashboardHeader({ userName, userInitials, truncatedName,
             </svg>
           </button>
           <div>
-            <h1 className="text-3xl font-semibold text-white">
+            <h1 className="text-[28px] font-semibold text-[#F8FAFB]">
               Welcome, {truncatedName}
             </h1>
           
@@ -76,7 +76,7 @@ export default function DashboardHeader({ userName, userInitials, truncatedName,
           {/* Ask Zawadi AI Button */}
           <button
             onClick={() => setShowZwadiModal(true)}
-            className="flex items-center px-4 py-2 bg-transparent text-white rounded-lg border  transition-colors text-sm"
+            className="flex items-center px-4 py-2 bg-transparent text-[#F8FAFB] rounded-lg border  transition-colors text-sm"
           >
             <Image
               src="/assets/zwadi.svg"
@@ -85,8 +85,8 @@ export default function DashboardHeader({ userName, userInitials, truncatedName,
               height={20}
               className="object-contain mr-2"
             />
-            <span className="hidden sm:inline">Ask Zawadi AI</span>
-            <span className="sm:hidden">AI</span>
+            <span className=" text-[16px]">Ask Zawadi AI</span>
+           
           </button>
 
           {/* User Profile */}
@@ -103,17 +103,17 @@ export default function DashboardHeader({ userName, userInitials, truncatedName,
                 />
               ) : (
                 <div className="w-8 h-8 bg-gradient-to-br from-pink-400 to-orange-400 rounded-full flex items-center justify-center">
-                  <span className="text-white text-sm font-medium">
+                  <span className="text-[#F8FAFB] text-sm font-medium">
                     {userInitials || userName.slice(0, 2).toUpperCase()}
                   </span>
                 </div>
               )}
               <div className="ml-3 text-left">
-                <div className="text-sm font-medium text-white">{truncatedName || userName}</div>
-                <div className="text-xs text-gray-300 mr-1.5 capitalize">{userPlan}</div>
+                <div className="text-[16px] font-medium text-[#F9FBFC]">{truncatedName || userName}</div>
+                <div className="text-[12px] text-[#B9B9B9] mr-1.5 capitalize">{userPlan}</div>
               </div>
               <svg
-                className={`ml-2 w-4 h-4 text-gray-400 transition-transform ${showUserDropdown ? 'rotate-180' : 'rotate-0'}`}
+                className={`ml-2 w-4 h-4 text-[#F8FAFB] transition-transform ${showUserDropdown ? 'rotate-180' : 'rotate-0'}`}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"

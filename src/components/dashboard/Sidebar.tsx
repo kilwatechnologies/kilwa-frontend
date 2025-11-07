@@ -81,9 +81,9 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
             <Image
               src={iconToUse}
               alt={`${item.label} icon`}
-              width={20}
-              height={20}
-              className={`flex-shrink-0 transition-all ${isActive ? 'brightness-0 invert' : 'group-hover:brightness-0 group-hover:invert'}`}
+              width={24}
+              height={24}
+              className={` w-6 h-6 flex-shrink-0 transition-all ${isActive ? 'brightness-0 invert' : 'group-hover:brightness-0 group-hover:invert'}`}
               onError={(e) => {
                 // Hide image on error and show emoji fallback
                 const target = e.target as HTMLImageElement
@@ -105,7 +105,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
   }
 
   return (
-    <div className={`bg-black text-white transition-all duration-300 flex flex-col ${isCollapsed ? 'w-16' : 'w-64'} ${isCollapsed ? 'md:w-16' : 'md:w-64'} hidden md:flex border-r border-gray-800 relative`}>
+    <div className={`bg-[#1E1E1E] text-white transition-all duration-300 flex flex-col ${isCollapsed ? 'w-16' : 'w-64'} ${isCollapsed ? 'md:w-16' : 'md:w-64'} hidden md:flex border-r border-[#4B4B4B] relative`}>
       {/* Header */}
       <div className="px-4 border-b border-gray-700 relative flex items-center h-[84px]">
         <div className="flex items-center justify-center w-full">
@@ -154,14 +154,14 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                 className={`flex items-center px-3 py-3 rounded-lg transition-colors group relative ${
                   pathname === item.href 
                     ? 'bg-[#323131] text-white' 
-                    : 'text-gray-300 hover:bg-[#323131] hover:text-white'
+                    : 'text-[#989898] hover:bg-[#323131] hover:text-[#E5E5E5]'
                 }`}
               >
                 <div className="flex items-center justify-center w-5 h-5">
                   <IconComponent item={item} isActive={pathname === item.href} />
                 </div>
                 {!isCollapsed && (
-                  <span className="ml-3 text-sm font-medium">{item.label}</span>
+                  <span className="ml-3 text-[16px] font-medium">{item.label}</span>
                 )}
                 {isCollapsed && (
                   <div className="absolute left-16 bg-gray-800 text-white px-2 py-1 rounded-md text-xs opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
