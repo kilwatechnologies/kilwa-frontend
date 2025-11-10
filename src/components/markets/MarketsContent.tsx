@@ -520,7 +520,7 @@ export default function MarketsContent({ onContentReady }: MarketsContentProps) 
           </div>
           <div className="bg-white border border-gray-200 rounded-lg overflow-hidden flex-1">
           <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 ">
-            <div className="grid grid-cols-3 gap-4 text-xs text-black font-semibold">
+            <div className="grid grid-cols-3 gap-4 text-[14px] text-black font-semibold">
               <span className='text-left pl-1'>Metric</span>
               <span className='text-center'>Value</span>
               <span className='text-center'>Score</span>
@@ -553,7 +553,7 @@ export default function MarketsContent({ onContentReady }: MarketsContentProps) 
           </div>
           <div className="bg-white border border-gray-200 rounded-lg overflow-hidden flex-1">
           <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 text-center">
-            <div className="grid grid-cols-3 gap-4 text-xs text-black font-semibold">
+            <div className="grid grid-cols-3 gap-4 text-[14px] text-black font-[600]">
               <span>Pair</span>
               <span>Rate</span>
               <span>%</span>
@@ -588,7 +588,7 @@ export default function MarketsContent({ onContentReady }: MarketsContentProps) 
           </div>
           <div className="bg-white border border-gray-200 rounded-lg overflow-hidden flex-1">
           <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 text-center">
-            <div className="grid grid-cols-3 gap-4 text-xs text-black font-semibold">
+            <div className="grid grid-cols-3 gap-4 text-[14px] text-black font-semibold">
               <span>External Finance</span>
               <span>Value</span>
               <span>Score</span>
@@ -847,7 +847,7 @@ export default function MarketsContent({ onContentReady }: MarketsContentProps) 
           </div>
           <div className="bg-white border border-gray-200 rounded-lg overflow-hidden flex-1">
           <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 text-center">
-            <div className="grid grid-cols-3 gap-4 text-xs text-black font-semibold">
+            <div className="grid grid-cols-3 gap-4 text-[14px] text-black font-semibold">
               <span>Indicator</span>
               <span>Value</span>
               <span>Score</span>
@@ -880,7 +880,7 @@ export default function MarketsContent({ onContentReady }: MarketsContentProps) 
           </div>
           <div className="bg-white border border-gray-200 rounded-lg overflow-hidden flex-1">
           <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 text-center">
-            <div className="text-sm text-black font-semibold">1-Day Performance</div>
+            <div className="text-[14px] text-black font-semibold">1-Day Performance</div>
           </div>
           <div className="p-4 h-full text-center">
           <div className="mb-4">
@@ -927,7 +927,7 @@ export default function MarketsContent({ onContentReady }: MarketsContentProps) 
           </div>
           <div className="bg-white border border-gray-200 rounded-lg overflow-hidden flex-1">
           <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 text-center">
-            <div className="grid grid-cols-4 gap-4 text-xs text-black font-semibold">
+            <div className="grid grid-cols-4 gap-4 text-[14px] text-black font-semibold">
               <span>S&P Sector ETFs</span>
               <span>Value</span>
               <span>Forecast</span>

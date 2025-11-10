@@ -861,15 +861,15 @@ export default function METIContent({ onContentReady }: METIContentProps) {
         {/* METI Score */}
         <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
           <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
-            <h3 className="text-sm font-medium text-gray-800">METI Score</h3>
+            <h3 className="text-[16px] font-medium text-[#1E1E1E]">METI Score</h3>
           </div>
           <div className="p-4">
             <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
                 <div>
-                  <div className="text-[24px] font-bold text-black mb-1">
+                  <div className="text-[24px] font-bold text-[#1E1E1E] mb-1">
                     Entry timing
                   </div>
-                  <div className="text-sm text-gray-600">{getMETIStatus(displayScore)}</div>
+                  <div className="text-sm text-[#686868]">{getMETIStatus(displayScore)}</div>
                 </div>
 
                 {/* Circular Progress */}
@@ -905,13 +905,13 @@ export default function METIContent({ onContentReady }: METIContentProps) {
         {/* Zawadi Signal */}
         <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
           <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
-            <h3 className="text-sm font-medium text-gray-800">Zawadi Signal</h3>
+            <h3 className="text-[16px] font-medium text-[#1E1E1E]">Zawadi Signal</h3>
           </div>
           <div className="p-4">
             <>
               <div className="text-[24px] font-semibold text-black mb-1">{dominantSentiment.label}</div>
               <div className="flex items-center justify-between">
-                <div className="text-sm text-gray-600">Based on multi-signal strength</div>
+                <div className="text-sm text-[#686868]">Based on multi-signal strength</div>
                 <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${dominantSentiment.badge}`}>
                   {dominantSentiment.signal}
                 </div>
@@ -923,7 +923,7 @@ export default function METIContent({ onContentReady }: METIContentProps) {
         {/* Sentiment Pulse */}
         <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
           <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
-            <h3 className="text-sm font-medium text-gray-800">Sentiment Pulse</h3>
+            <h3 className="text-[16px] font-medium text-[#1E1E1E]">Sentiment Pulse</h3>
           </div>
           <div className="p-4">
             <>
@@ -931,7 +931,7 @@ export default function METIContent({ onContentReady }: METIContentProps) {
                 <div className={`text-[24px] font-semibold`}>
                   {sentimentPulseDisplay.label}
                 </div>
-                <div className="text-sm text-black flex items-center gap-1 flex-shrink-0 ml-2">
+                <div className="text-xs text-black flex items-center gap-1 flex-shrink-0 ml-2">
                   <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     {sentimentPulseDisplay.trend === 'Upward' ? (
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
@@ -945,7 +945,7 @@ export default function METIContent({ onContentReady }: METIContentProps) {
                 </div>
               </div>
               <div className="flex items-center justify-between">
-                <div className="text-sm text-black">Based on last 30 days</div>
+                <div className="text-sm text-[#1E1E1E]">Based on last 30 days</div>
                 <div className="flex-shrink-0 max-w-[100px]">
                   <img
                     src={
@@ -967,7 +967,7 @@ export default function METIContent({ onContentReady }: METIContentProps) {
         {/* Alerts */}
         <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
           <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
-            <h3 className="text-sm font-medium text-gray-800">Alerts</h3>
+            <h3 className="text-[16PX] font-medium text-gray-800">Alerts</h3>
           </div>
           <div className="p-4">
             <>
@@ -975,7 +975,7 @@ export default function METIContent({ onContentReady }: METIContentProps) {
                 {alertsSummary.critical > 0 && (
                   <div className="w-2 h-2 bg-red-500 rounded-full"></div>
                 )}
-                <span className="text-[24px] font-semibold text-black">
+                <span className="text-[24px] font-semibold text-[#1E1E1E]">
                   {alertsSummary.critical > 0
                     ? `${alertsSummary.critical} Critical / ${alertsSummary.total} New`
                     : alertsSummary.total > 0
@@ -983,7 +983,7 @@ export default function METIContent({ onContentReady }: METIContentProps) {
                     : 'No alerts'}
                 </span>
               </div>
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-[#686868]">
                 {alertsSummary.message}
               </div>
             </>
@@ -1192,7 +1192,7 @@ export default function METIContent({ onContentReady }: METIContentProps) {
           {/* Sectors Section */}
           <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
             <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 ">
-              <div className="grid grid-cols-3 gap-4 text-xs font-semibold text-gray-700">
+              <div className="grid grid-cols-3 gap-4 text-[14px] font-semibold text-[#1E1E1E]">
                 <span className="text-left">Sector</span>
                 <span className="text-center">Zawadi AI Outlook</span>
                 <span className="text-center">Focus Markets</span>
@@ -1224,12 +1224,12 @@ export default function METIContent({ onContentReady }: METIContentProps) {
                         setSelectedSectors(newSelected)
                       }}
                     />
-                    <span className="text-sm text-black">{sector.name}</span>
+                    <span className="text-sm text-[#686868]">{sector.name}</span>
                   </div>
                   <span className={`text-sm ${getOutlookColor(sector.outlook)} text-center`}>
                     {sector.outlook}
                   </span>
-                  <span className="text-sm text-gray-600 text-center">{sector.focusMarkets}</span>
+                  <span className="text-sm text-[#686868] text-center">{sector.focusMarkets}</span>
                 </div>
               ))}
             </div>
@@ -1242,9 +1242,9 @@ export default function METIContent({ onContentReady }: METIContentProps) {
           <div className="bg-white border border-gray-200 rounded-lg overflow-hidden flex-shrink-0">
             <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
               <div className="grid grid-cols-[1fr_auto_auto] gap-3 items-center">
-                <h3 className="text-sm font-semibold text-black text-left">Driver Category</h3>
-                <span className="text-sm font-semibold text-center min-w-[80px]">Contribution</span>
-                <span className="text-sm font-semibold text-center min-w-[100px]">Risk Level</span>
+                <h3 className="text-sm font-semibold text-[#1E1E1E] text-left">Driver Category</h3>
+                <span className="text-sm font-semibold text-[#1E1E1E] text-center min-w-[80px]">Contribution</span>
+                <span className="text-sm font-semibold text-[#1E1E1E] text-center min-w-[100px]">Risk Level</span>
               </div>
             </div>
             <div className="p-4">
@@ -1255,11 +1255,11 @@ export default function METIContent({ onContentReady }: METIContentProps) {
                     index !== driverCategories.length - 1 ? 'border-b border-gray-100' : ''
                   }`}
                 >
-                  <span className="text-sm text-black leading-tight text-center">{category.name}</span>
-                  <span className="text-sm text-black text-center min-w-[60px]">{category.contribution}</span>
+                  <span className="text-sm text-[#686868] leading-tight text-center">{category.name}</span>
+                  <span className="text-sm text-[#686868] text-center min-w-[60px]">{category.contribution}</span>
                   <div className="flex items-center justify-center space-x-2 min-w-[100px]">
                     <div className={`w-2 h-2 rounded-full ${getRiskLevelDot(category.riskLevel)}`}></div>
-                    <span className="text-sm text-gray-600">{category.riskLevel}</span>
+                    <span className="text-sm text-[#686868]">{category.riskLevel}</span>
                   </div>
                 </div>
               ))}
@@ -1269,39 +1269,39 @@ export default function METIContent({ onContentReady }: METIContentProps) {
           {/* Investment Briefs - Fixed height with scrolling */}
           <div className="bg-white border border-gray-200 rounded-lg overflow-hidden max-h-[440px] flex flex-col">
             <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 flex-shrink-0">
-              <h3 className="text-lg font-semibold text-black">Investment Briefs (AI Generated)</h3>
+              <h3 className="text-[14px] font-semibold text-[#1E1E1E]">Investment Briefs (AI Generated)</h3>
             </div>
             <div className="flex-1 overflow-y-auto">
               <div className="p-4 space-y-6">
                 {aiBrief ? (
                   <div>
                     <div className="flex items-center justify-between mb-3">
-                      <h4 className="font-semibold text-black">{selectedCountry?.name}</h4>
+                      <h4 className="font-semibold text-[18px] text-[#1E1E1E]">{selectedCountry?.name}</h4>
                       <div className="flex items-center space-x-2">
-                        <span className={`text-sm ${aiBrief.confidence === 'High Confidence' ? 'text-green-600' : 'text-yellow-600'}`}>
+                        <span className={`text-sm px-3 py-1 rounded-full ${aiBrief.confidence === 'High Confidence' ? 'text-green-600 bg-[#ECFDF3] border border-[#CDEEE0]' : 'text-yellow-600 bg-[#FFF4DB]'}`}>
                           {aiBrief.confidence}
                         </span>
-                        <span className="text-xs text-gray-500">{aiBrief.updatedAt}</span>
+                        <span className="text-xs text-[#686868]">{aiBrief.updatedAt}</span>
                       </div>
                     </div>
 
                     <div className="space-y-4">
                       <div>
-                        <h5 className="font-medium text-black mb-2 flex items-center">
-                          <div className="w-2 h-2 bg-black rounded-full mr-2"></div>
+                        <h5 className="font-[600] text-[#1E1E1E] mb-2 flex items-center">
+                          <div className="w-2 h-2  bg-[#1E1E1E] rounded-full mr-2"></div>
                           Setup
                         </h5>
-                        <p className="text-sm text-gray-700 leading-relaxed">
+                        <p className="text-sm text-[#686868] leading-relaxed">
                           {aiBrief.setup}
                         </p>
                       </div>
 
                       <div>
-                        <h5 className="font-medium text-black mb-2 flex items-center">
-                          <div className="w-2 h-2 bg-black rounded-full mr-2"></div>
+                        <h5 className="font-[600] text-[#1E1E1E] mb-2 flex items-center">
+                          <div className="w-2 h-2 bg-[#1E1E1E] rounded-full mr-2"></div>
                           Positioning
                         </h5>
-                        <p className="text-sm text-gray-700 leading-relaxed">
+                        <p className="text-sm text-[#686868] leading-relaxed">
                           {aiBrief.positioning}
                         </p>
                       </div>

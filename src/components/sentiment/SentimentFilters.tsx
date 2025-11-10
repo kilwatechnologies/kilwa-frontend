@@ -65,7 +65,7 @@ export default function SentimentFilters({ onFiltersChange, isCollapsed = false,
   }
 
   return (
-    <div className={`bg-black ${isCollapsed ? 'w-auto border-r-0' : 'w-80 border-r border-gray-700'} transition-all duration-300 overflow-y-auto hidden lg:block`}>
+    <div className={`bg-[#1E1E1E] ${isCollapsed ? 'w-auto border-r-0' : 'w-80 border-r border-gray-700'} transition-all duration-300 overflow-y-auto hidden lg:block`}>
       {/* Collapsible Header */}
       {isCollapsed ? (
         // Collapsed state: rounded button with Filters text
@@ -82,7 +82,7 @@ export default function SentimentFilters({ onFiltersChange, isCollapsed = false,
               height={24}
               className="text-white"
             />
-            <span className="text-white font-semibold text-base ">Filters</span>
+            <span className="text-white font-semibold text-[16px] ">Filters</span>
             <Image
               src="/assets/filter.svg"
               alt="Expand"
@@ -106,7 +106,7 @@ export default function SentimentFilters({ onFiltersChange, isCollapsed = false,
               height={24}
               className="text-[#B0B2B2]"
             />
-            <span className="text-[#B0B2B2] font-normal text-medium">Filters</span>
+            <span className="text-[#B0B2B2] font-normal text-[16px]">Filters</span>
           </div>
           <Image
             src="/assets/filter-gray.svg"
@@ -127,7 +127,7 @@ export default function SentimentFilters({ onFiltersChange, isCollapsed = false,
               <input
                 type="text"
                 placeholder="Search"
-                className="w-full pl-10 pr-4 py-2 bg-black border border-[#B0B2B2] text-white rounded-lg text-sm placeholder-[#B0B2B2] focus:outline-none focus:border-gray-500"
+                className="w-full pl-10 pr-4 py-2 bg-[#1E1E1E] border border-[#B0B2B2] text-white rounded-lg text-sm placeholder-[#B0B2B2] focus:outline-none focus:border-gray-500"
               />
               <svg
                 className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400"
@@ -147,7 +147,7 @@ export default function SentimentFilters({ onFiltersChange, isCollapsed = false,
 
           {/* Sectors */}
           <div>
-            <h3 className="text-base font-semibold text-[#686969] mb-4">Sectors:</h3>
+            <h3 className="text-[18px] font-semibold text-[#686969] mb-4">Sectors:</h3>
             <div className="space-y-3">
               {[
                 { key: 'energy', label: 'Energy & Renewable Energy' },
@@ -174,7 +174,7 @@ export default function SentimentFilters({ onFiltersChange, isCollapsed = false,
                       </svg>
                     )}
                   </div>
-                  <span className="ml-3 text-sm text-[#B0B2B2]">{sector.label}</span>
+                  <span className="ml-3 text-[16px] text-[#B0B2B2]">{sector.label}</span>
                 </label>
               ))}
             </div>
@@ -182,13 +182,13 @@ export default function SentimentFilters({ onFiltersChange, isCollapsed = false,
 
           {/* Sources: News */}
           <div>
-            <h3 className="text-base font-semibold text-[#686969] mb-4">Sources:</h3>
+            <h3 className="text-[18px] font-semibold text-[#686969] mb-4">Sources:</h3>
 
             {/* News Section */}
             <div className="mb-4">
               <button
                 onClick={() => setNewsExpanded(!newsExpanded)}
-                className="w-full flex items-center justify-between text-sm font-medium text-white mb-3 hover:text-gray-300 transition-colors"
+                className="w-full flex items-center justify-between text-[18px] font-medium text-white mb-3 hover:text-gray-300 transition-colors"
               >
                 <span>News</span>
                 <svg
@@ -220,7 +220,7 @@ export default function SentimentFilters({ onFiltersChange, isCollapsed = false,
                           </svg>
                         )}
                       </div>
-                      <span className="ml-3 text-sm text-[#B0B2B2]">{source.label}</span>
+                      <span className="ml-3 text-[16px] text-[#B0B2B2]">{source.label}</span>
                     </label>
                   ))}
                 </div>
@@ -231,7 +231,7 @@ export default function SentimentFilters({ onFiltersChange, isCollapsed = false,
             <div>
               <button
                 onClick={() => setSocialsExpanded(!socialsExpanded)}
-                className="w-full flex items-center justify-between text-sm font-medium text-white mb-3 hover:text-gray-300 transition-colors"
+                className="w-full flex items-center justify-between text-[18px] font-medium text-white mb-3 hover:text-gray-300 transition-colors"
               >
                 <span>Socials</span>
                 <svg
@@ -265,7 +265,7 @@ export default function SentimentFilters({ onFiltersChange, isCollapsed = false,
                           </svg>
                         )}
                       </div>
-                      <span className="ml-3 text-sm text-[#B0B2B2]">{social.label}</span>
+                      <span className="ml-3 text-[16px] text-[#B0B2B2]">{social.label}</span>
                     </label>
                   ))}
                 </div>
@@ -289,7 +289,7 @@ export default function SentimentFilters({ onFiltersChange, isCollapsed = false,
                   </svg>
                 )}
               </div>
-              <span className="ml-3 text-sm text-white">Al insights</span>
+              <span className="ml-3 text-[18px] text-white">Al insights</span>
             </label>
           </div>
         </div>

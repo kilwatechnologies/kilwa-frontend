@@ -622,7 +622,7 @@ export default function SentimentPulsePage() {
               {filtersCollapsed ? (
                 <button
                   onClick={() => setFiltersCollapsed(false)}
-                  className="bg-black rounded-md px-4 py-2 cursor-pointer flex items-center gap-2"
+                  className="bg-[#1E1E1E] rounded-md px-4 py-2 cursor-pointer flex items-center gap-2"
                   aria-label="Expand filters"
                 >
                   <Image
@@ -854,8 +854,8 @@ export default function SentimentPulsePage() {
             {/* Sentiment Over Time */}
             <div className="flex flex-col">
               <div className="mb-4" style={{ minHeight: '100px' }}>
-                <h2 className="text-gray-900 text-xl font-semibold mb-1">Sentiment Over Time</h2>
-                <p className="text-gray-500 text-sm">Confidence-based outlook for market entry over the next 6 months.</p>
+                <h2 className="text-[#100F0F] text-[20px] font-semibold mb-1">Sentiment Over Time</h2>
+                <p className="text-[#4C4C4C] text-sm">Confidence-based outlook for market entry over the next 6 months.</p>
               </div>
 
               <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex-1">
@@ -947,8 +947,8 @@ export default function SentimentPulsePage() {
             {/* Top Positive Sectors */}
             <div className="flex flex-col">
               <div className="mb-4" style={{ minHeight: '100px' }}>
-                <h2 className="text-gray-900 text-xl font-semibold mb-1">Top Positive Sectors by Sentiment</h2>
-                <p className="text-gray-500 text-sm">Highlights where investor confidence is rising or falling.</p>
+                <h2 className="text-[#100F0F] text-[20px] font-semibold mb-1">Top Positive Sectors by Sentiment</h2>
+                <p className="text-[#4C4C4C] text-sm">Highlights where investor confidence is rising or falling.</p>
               </div>
 
               <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex-1">
@@ -1016,8 +1016,8 @@ export default function SentimentPulsePage() {
             {/* Signal Cards */}
             <div className="flex flex-col">
               <div className="mb-4" style={{ minHeight: '68px' }}>
-                <h2 className="text-gray-900 text-xl font-semibold mb-1">Signal Cards</h2>
-                <p className="text-gray-500 text-sm">
+                <h2 className="text-[#100F0F] text-[20px] font-semibold mb-1">Signal Cards</h2>
+                <p className="text-[#4C4C4C] text-sm">
                   Highlights why investor confidence is declining across sectors.
                 </p>
               </div>
@@ -1032,13 +1032,13 @@ export default function SentimentPulsePage() {
                         index === 0 ? 'pt-0' : ''
                       }`}
                     >
-                      <h3 className="text-gray-900 text-sm font-medium mb-3 leading-snug">
+                      <h3 className="text-[#1E1E1E] text-[16px] font-medium mb-3 leading-snug">
                         {article.title}
                       </h3>
                       <div className="flex items-center justify-between flex-wrap gap-2">
                         <div className="flex items-center gap-2">
                           <span
-                            className={`px-2.5 py-1 rounded-full text-xs font-medium ${getCategoryColor(
+                            className={`px-2.5 py-1 rounded-full text-sm font-medium ${getCategoryColor(
                               article.topics?.[0] || 'Economics'
                             )}`}
                           >
@@ -1046,7 +1046,7 @@ export default function SentimentPulsePage() {
                           </span>
                           {article.sentiment_label && (
                             <span
-                              className={`px-2.5 py-1 rounded-full text-xs font-medium capitalize ${getSentimentBadgeColor(
+                              className={`px-2.5 py-1 rounded-full text-sm font-medium capitalize ${getSentimentBadgeColor(
                                 article.sentiment_label
                               )}`}
                             >
@@ -1054,7 +1054,7 @@ export default function SentimentPulsePage() {
                             </span>
                           )}
                         </div>
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-[#989898]">
                           {getRelativeTime(article.published_at)}
                         </span>
                       </div>
@@ -1067,8 +1067,8 @@ export default function SentimentPulsePage() {
             {/* Sentiment Mix */}
             <div className="flex flex-col">
               <div className="mb-4" style={{ minHeight: '68px' }}>
-                <h2 className="text-gray-900 text-xl font-semibold mb-1">Sentiment Mix</h2>
-                <p className="text-gray-500 text-sm">
+                <h2 className="text-[#100F0F] text-[20px] font-semibold mb-1">Sentiment Mix</h2>
+                <p className="text-[#4C4C4C] text-sm">
                   Confidence-based outlook for market entry over the next 6 months.
                 </p>
               </div>
@@ -1147,8 +1147,8 @@ export default function SentimentPulsePage() {
 
             {/* Most Common Words from Positive Mentions */}
             <div className="flex flex-col">
-              <div className="mb-4" style={{ minHeight: '68px' }}>
-                <h2 className="text-gray-900 text-xl font-semibold mb-1">Most Common Words from Positive Mentions</h2>
+              <div className="mb-4" style={{ minHeight: '72px' }}>
+                <h2 className="text-[#100F0F] text-[20px] font-semibold mb-1">Most Common Words from Positive Mentions</h2>
               </div>
 
               <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex-1 flex flex-col" style={{ minHeight: '500px' }}>
