@@ -295,9 +295,9 @@ export const sentimentApi = {
   analyzeAll: () =>
     api.post<APIResponse<any>>('/sentiment/analyze-all'),
 
-  // Get sentiment trends
-  getTrends: (countryId: number, daysBack: number = 30) =>
-    api.get<APIResponse<any>>(`/sentiment/trends/${countryId}?days_back=${daysBack}`),
+  // Get sentiment trends for one or more countries
+  getTrends: (countryIds: number[], daysBack: number = 30) =>
+    api.get<APIResponse<any>>(`/sentiment/trends?country_ids=${countryIds.join(',')}&days_back=${daysBack}`),
 };
 
 // Markets API

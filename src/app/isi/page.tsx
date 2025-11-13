@@ -68,7 +68,10 @@ export default function ISIPage() {
 
           {/* ISI Content Area - Scrollable */}
           <div className="flex-1 overflow-auto">
-            <ISIContent onContentReady={() => setContentReady(true)} />
+            <ISIContent
+              onContentReady={() => setContentReady(true)}
+              userPlan={userData.userPlan}
+            />
           </div>
         </div>
       </div>

@@ -68,7 +68,10 @@ export default function MarketsPage() {
 
           {/* Markets Content Area - Scrollable */}
           <div className="flex-1 overflow-auto">
-            <MarketsContent onContentReady={() => setContentReady(true)} />
+            <MarketsContent
+              onContentReady={() => setContentReady(true)}
+              userPlan={userData.userPlan}
+            />
           </div>
         </div>
       </div>

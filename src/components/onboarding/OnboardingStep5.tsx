@@ -23,7 +23,7 @@ export default function OnboardingStep5({ onComplete, onBack }: OnboardingStep5P
       name: 'Free',
       icon: '/assets/star.svg',
       price: { monthly: 0, yearly: 0 },
-      description: 'All features, 15 countries, full dashboard access, export tools',
+      description: 'All features, 10 countries, full dashboard access, export tools',
       subDescription: 'Best for: Analysts, boutique investors, consultants',
      features: [
   'Interactive Dashboard',
@@ -39,13 +39,14 @@ export default function OnboardingStep5({ onComplete, onBack }: OnboardingStep5P
       name: 'Gold',
       icon: '/assets/card2.svg',
       price: { monthly: 1199, yearly: 11999 },
-      description: 'All features, 15 countries, full dashboard access, export tools',
+      description: 'All features, 10 countries, full dashboard access, export tools',
       subDescription: 'Best for: Analysts, boutique investors, consultants',
      features: [
   'Interactive Dashboard',
-  'Basic ISI Scores',
+  'Investment Suitability Index (All Countries, Daily Updates)',
   'Market Entry Timing Indicator (METI)',
   'Sentiment Pulse',
+  'NLG Narrative Generator',
   '1 User Seat',
   'Priority Support'
 ],
@@ -59,16 +60,19 @@ export default function OnboardingStep5({ onComplete, onBack }: OnboardingStep5P
       name: 'Diamond',
       icon: '/assets/card1.svg',
       price: { monthly: 4999, yearly: 49999 },
-      description: 'All features, 15 countries, full dashboard access, export tools',
+      description: 'All features, 10 countries, full dashboard access, export tools',
       subDescription: 'Best for: Analysts, boutique investors, consultants',
      features: [
   'Interactive Dashboard',
-  'Basic ISI Scores',
+  'Investment Suitability Index (All Countries, Real-Time)',
   'Market Entry Timing Indicator (METI)',
   'Sentiment Pulse',
-  '5 User Seats',
-  'Priority Support',
-  'NLG Narrative Generator'
+  'NLG Narrative Generator',
+  'Up to 5 User Seats',
+  'API Access (Standard)',
+  'Data Export (CSV/Excel)',
+  'Custom Report Generation',
+  'Dedicated Support'
 ],
       buttonText: 'Subscribe',
       buttonStyle: 'bg-[#1E1E1E] text-white'
@@ -78,18 +82,22 @@ export default function OnboardingStep5({ onComplete, onBack }: OnboardingStep5P
       id: 'enterprise',
       name: 'Enterprise',
       icon: '/assets/buildings.svg',
-      price: { monthly: 2499, yearly: 24999 },
-      description: 'All features, 15 countries, full dashboard access, export tools',
+      price: { monthly: null, yearly: null },
+      description: 'All features, 10 countries, full dashboard access, export tools',
       subDescription: 'Best for: Analysts, boutique investors, consultants',
       features: [
-        'Interative Dashboard',
-        'Basic ISI Scores',
-  'Market Entry Timing Indicator (METI)',
-  'Sentiment Pulse',
-   'Custom User Seats',
+        'Interactive Dashboard',
+        'Investment Suitability Index (All Countries, Real-Time)',
+        'Market Entry Timing Indicator (METI)',
+        'Sentiment Pulse',
+        'NLG Narrative Generator',
+        'Custom User Seats',
+        'API Access (High-Volume)',
+        'Data Export (CSV/Excel)',
         'Custom Report Generation',
-        'Custom Model Development',
-        'Dedicated Account Manager'
+        'Dedicated Support',
+        'Dedicated Account Manager',
+        'Custom Model Development'
       ],
       buttonText: 'Contact Sales',
       buttonStyle: 'bg-[#1E1E1E] text-white'
@@ -233,14 +241,25 @@ export default function OnboardingStep5({ onComplete, onBack }: OnboardingStep5P
         </p>
       </div>
 
-      {/* Billing Toggle */}
-      <div className="flex justify-center mb-8">
+      {/* Billing Toggle with Best Value Banner */}
+      <div className="flex flex-col items-center mb-8 space-y-4">
+        {/* Best Value Banner */}
+        {billingPeriod === 'yearly' && (
+          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-green-50 to-teal-50 border border-green-200 rounded-lg px-4 py-2.5 shadow-sm">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+            <span className="text-sm font-semibold text-gray-800">
+              Save up to 17% with yearly billing
+            </span>
+          </div>
+        )}
+
+        {/* Toggle Switch */}
         <div className="bg-gray-200 rounded-lg p-1 flex">
           <button
             onClick={() => setBillingPeriod('monthly')}
             className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${
-              billingPeriod === 'monthly' 
-                ? 'bg-white text-gray-900 shadow-sm' 
+              billingPeriod === 'monthly'
+                ? 'bg-white text-gray-900 shadow-sm'
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
@@ -249,8 +268,8 @@ export default function OnboardingStep5({ onComplete, onBack }: OnboardingStep5P
           <button
             onClick={() => setBillingPeriod('yearly')}
             className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${
-              billingPeriod === 'yearly' 
-                ? 'bg-white text-gray-900 shadow-sm' 
+              billingPeriod === 'yearly'
+                ? 'bg-white text-gray-900 shadow-sm'
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
@@ -315,7 +334,7 @@ export default function OnboardingStep5({ onComplete, onBack }: OnboardingStep5P
                   ${plan.price[billingPeriod]}
                 </span>
                 <span className={`text-sm ${plan.highlighted ? 'text-gray-300' : 'text-gray-600'}`}>
-                  / mon
+                  / {billingPeriod === 'monthly' ? 'mon' : 'year'}
                 </span>
                 </>
                )}

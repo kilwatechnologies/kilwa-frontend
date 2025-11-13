@@ -3,6 +3,8 @@
 import Image from 'next/image'
 import { useState, useEffect, useRef } from 'react'
 import ZwadiAIModal from './ZwadiAIModal'
+import { usePlanFeatures } from '@/hooks/usePlanFeatures'
+import Link from 'next/link'
 
 interface DashboardHeaderProps {
   userName: string
@@ -18,6 +20,7 @@ export default function DashboardHeader({ userName, userInitials, truncatedName,
   const [showUserDropdown, setShowUserDropdown] = useState(false)
   const [showZwadiModal, setShowZwadiModal] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const { features } = usePlanFeatures(userPlan)
 
   const handleEditProfile = () => {
     // Navigate to settings page
@@ -74,20 +77,30 @@ export default function DashboardHeader({ userName, userInitials, truncatedName,
    
 
           {/* Ask Zawadi AI Button */}
-          <button
-            onClick={() => setShowZwadiModal(true)}
-            className="flex items-center px-4 py-2 bg-transparent text-[#F8FAFB] rounded-lg border  transition-colors text-sm"
-          >
-            <Image
-              src="/assets/zwadi.svg"
-              alt="Kilwa Mini"
-              width={20}
-              height={20}
-              className="object-contain mr-2"
-            />
-            <span className=" text-[16px]">Ask Zawadi AI</span>
-           
-          </button>
+          {features.hasNLGNarrative ? (
+            <button
+              onClick={() => setShowZwadiModal(true)}
+              className="flex items-center px-4 py-2 bg-transparent text-[#F8FAFB] rounded-lg border transition-colors text-sm hover:bg-[#2E2E2E]"
+            >
+              <Image
+                src="/assets/zwadi.svg"
+                alt="Kilwa Mini"
+                width={20}
+                height={20}
+                className="object-contain mr-2"
+              />
+              <span className="text-[16px]">Ask Zawadi AI</span>
+            </button>
+          ) : (
+            <Link href="/onboarding/step-5?returnTo=dashboard">
+              <button className="flex items-center px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg transition-all text-sm hover:from-amber-600 hover:to-orange-600 shadow-md">
+                <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                </svg>
+                <span className="text-[16px]">Unlock Zawadi AI</span>
+              </button>
+            </Link>
+          )}
 
           {/* User Profile */}
           <div className="relative" ref={dropdownRef}>

@@ -58,7 +58,8 @@ export const loadUserData = async (): Promise<UserData> => {
     } catch (error: any) {
       console.error('Error fetching user data:', error)
 
-      // If token is invalid/expired (401), clear localStorage and redirect
+      // If token is invalid/expired (401), clear localStorage but don't redirect
+      // Let pages handle their own auth states
       if (error.response?.status === 401) {
         console.log('Token expired or invalid, clearing session...')
         localStorage.removeItem('access_token')
@@ -66,24 +67,15 @@ export const loadUserData = async (): Promise<UserData> => {
         localStorage.removeItem('user_email')
         localStorage.removeItem('userEmail')
 
-        // Redirect to login if not already there
-        if (typeof window !== 'undefined' &&
-            !window.location.pathname.includes('/auth') &&
-            !window.location.pathname.includes('/onboarding')) {
-          window.location.href = '/'
-        }
+        // Don't redirect - let the page show its own auth prompt
+        console.log('Token cleared. Page will show auth prompt if needed.')
       }
     }
   } else {
-    // No token found, redirect to login if not already there
+    // No token found - for protected pages like /sentiment, allow graceful fallback
     console.log('No access token found')
-    if (typeof window !== 'undefined' &&
-        !window.location.pathname.includes('/auth') &&
-        !window.location.pathname.includes('/onboarding') &&
-        window.location.pathname !== '/') {
-      console.log('Redirecting to login...')
-      window.location.href = '/'
-    }
+    // Don't redirect from protected pages - let them handle their own auth
+    // Only redirect from truly unauthenticated pages
   }
 
   return { email, firstName: '', lastName: '', profilePicture: '', userPlan: 'free' }

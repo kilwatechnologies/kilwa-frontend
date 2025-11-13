@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import { marketsApi, countriesApi, sentimentApi, currencyApi } from '@/lib/api'
 import { getCountryPreference } from '@/lib/countryPreference'
+import { usePlanFeatures } from '@/hooks/usePlanFeatures'
+import Link from 'next/link'
 
 interface Country {
   id: number
@@ -45,9 +47,11 @@ interface MarketKPI {
 
 interface MarketsContentProps {
   onContentReady?: () => void
+  userPlan?: string
 }
 
-export default function MarketsContent({ onContentReady }: MarketsContentProps) {
+export default function MarketsContent({ onContentReady, userPlan = 'free' }: MarketsContentProps) {
+  const { features } = usePlanFeatures(userPlan)
   const [selectedCountry, setSelectedCountry] = useState<Country | null>(null)
   const [countries, setCountries] = useState<Country[]>([])
   const [loading, setLoading] = useState(true)
@@ -359,8 +363,50 @@ export default function MarketsContent({ onContentReady }: MarketsContentProps) 
 
   return (
     <div className="bg-white text-black p-6">
-      {/* Country Selector and Date */}
-      <div className="flex items-center justify-between mb-6">
+      {!features.hasMETI ? (
+        <div className="flex items-center justify-center min-h-[600px]">
+          <div className="max-w-2xl text-center p-12">
+            <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full mb-6">
+              <svg className="w-12 h-12 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+              </svg>
+            </div>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Market Entry Timing Indicator (METI)</h2>
+            <p className="text-lg text-gray-600 mb-6 leading-relaxed">
+              Access comprehensive macroeconomic analytics, market timing indicators, and advanced investment insights. Track GDP growth, inflation rates, FDI inflows, and more across multiple time periods.
+            </p>
+            <div className="grid grid-cols-2 gap-4 mb-8 text-left">
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-semibold text-gray-900 mb-2">📊 Macro KPIs</h4>
+                <p className="text-sm text-gray-600">7+ key economic indicators with historical trends</p>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-semibold text-gray-900 mb-2">📈 Market Charts</h4>
+                <p className="text-sm text-gray-600">Interactive multi-year analysis with 5Y data</p>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-semibold text-gray-900 mb-2">💱 Currency Analysis</h4>
+                <p className="text-sm text-gray-600">Exchange rate volatility and trade balance</p>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-semibold text-gray-900 mb-2">🎯 Investment Timing</h4>
+                <p className="text-sm text-gray-600">Optimal market entry signal analysis</p>
+              </div>
+            </div>
+            <Link href="/onboarding/step-5?returnTo=markets">
+              <button className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all font-semibold text-lg shadow-xl">
+                <svg className="w-6 h-6 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                </svg>
+                Upgrade to Gold Plan
+              </button>
+            </Link>
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Country Selector and Date */}
+          <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <div className="relative">
             <div className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center overflow-hidden flex-shrink-0 pointer-events-none z-10">
@@ -951,6 +997,8 @@ export default function MarketsContent({ onContentReady }: MarketsContentProps) 
           </div>
         </div>
       </div>
+        </>
+      )}
     </div>
   )
 }

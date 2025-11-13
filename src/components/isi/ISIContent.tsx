@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import { countriesApi, isiApi, sentimentApi, marketsApi } from '@/lib/api'
 import { generateInvestmentBrief } from '@/lib/zwadiService'
 import { getCountryPreference } from '@/lib/countryPreference'
+import { usePlanFeatures } from '@/hooks/usePlanFeatures'
+import Link from 'next/link'
 
 interface Country {
   id: number
@@ -48,9 +50,11 @@ interface DriverCategoryData {
 
 interface ISIContentProps {
   onContentReady?: () => void
+  userPlan?: string
 }
 
-export default function ISIContent({ onContentReady }: ISIContentProps) {
+export default function ISIContent({ onContentReady, userPlan = 'free' }: ISIContentProps) {
+  const { features } = usePlanFeatures(userPlan)
   const [selectedCountry, setSelectedCountry] = useState<Country | null>(null)
   const [countries, setCountries] = useState<Country[]>([])
   const [isiScore, setIsiScore] = useState<ISIScoreData | null>(null)
@@ -1135,49 +1139,71 @@ export default function ISIContent({ onContentReady }: ISIContentProps) {
         <div className="flex-[0.65] space-y-6">
           {/* Chart Section */}
           <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-            <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
-              {/* Year Range Selector */}
-              <div className="inline-flex space-x-2">
-                {[
-                  { label: '2Y', value: 2 },
-                  { label: '3Y', value: 3 },
-                  { label: '4Y', value: 4 },
-                  { label: '5Y', value: 5 }
-                ].map((period) => (
-                  <button
-                    key={period.label}
-                    onClick={() => setSelectedYearRange(period.value)}
-                    className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${
-                      selectedYearRange === period.value ? 'bg-white text-black shadow-sm' : 'text-gray-600 hover:text-black'
-                    }`}
-                  >
-                    {period.label}
+            {!features.hasRealtimeISI ? (
+              <div className="p-12 text-center">
+                <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full mb-4">
+                  <svg className="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                </div>
+                <h4 className="text-xl font-semibold text-gray-900 mb-2">Historical ISI Analytics</h4>
+                <p className="text-sm text-gray-600 mb-4 max-w-md mx-auto">
+                  Track ISI score trends over 2-5 years with interactive charts. Analyze historical performance and identify investment patterns with real-time data.
+                </p>
+                <Link href="/onboarding/step-5?returnTo=isi">
+                  <button className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all font-medium shadow-lg">
+                    <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                    </svg>
+                    Upgrade to Diamond Plan
                   </button>
-                ))}
+                </Link>
               </div>
-            </div>
-            <div className="p-4">
+            ) : (
               <>
-                {/* Chart Legend */}
-                <div className="flex items-center space-x-4 mb-4">
-                  <div className="flex items-center gap-2 text-gray-600 bg-white px-3 py-2 rounded-lg border border-gray-200 shadow-sm border-l-4 border-l-purple-500">
-                    <span className="text-sm text-gray-700">ISI Score - {selectedCountry?.name}</span>
+                <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+                  {/* Year Range Selector */}
+                  <div className="inline-flex space-x-2">
+                    {[
+                      { label: '2Y', value: 2 },
+                      { label: '3Y', value: 3 },
+                      { label: '4Y', value: 4 },
+                      { label: '5Y', value: 5 }
+                    ].map((period) => (
+                      <button
+                        key={period.label}
+                        onClick={() => setSelectedYearRange(period.value)}
+                        className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${
+                          selectedYearRange === period.value ? 'bg-white text-black shadow-sm' : 'text-gray-600 hover:text-black'
+                        }`}
+                      >
+                        {period.label}
+                      </button>
+                    ))}
                   </div>
                 </div>
+                <div className="p-4">
+                  <>
+                    {/* Chart Legend */}
+                    <div className="flex items-center space-x-4 mb-4">
+                      <div className="flex items-center gap-2 text-gray-600 bg-white px-3 py-2 rounded-lg border border-gray-200 shadow-sm border-l-4 border-l-purple-500">
+                        <span className="text-sm text-gray-700">ISI Score - {selectedCountry?.name}</span>
+                      </div>
+                    </div>
 
-                {/* Chart Area */}
-                <div className="h-80 bg-gray-50 rounded relative p-8">
-                    {(() => {
-                      const filteredData = getFilteredHistoricalData()
-                      if (filteredData.length === 0) {
-                        return (
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <span className="text-gray-500">No historical data available</span>
-                          </div>
-                        )
-                      }
+                    {/* Chart Area */}
+                    <div className="h-80 bg-gray-50 rounded relative p-8">
+                        {(() => {
+                          const filteredData = getFilteredHistoricalData()
+                          if (filteredData.length === 0) {
+                            return (
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <span className="text-gray-500">No historical data available</span>
+                              </div>
+                            )
+                          }
 
-                      return (
+                          return (
                         <>
                           {/* Y-axis labels */}
                           <div className="absolute left-2 top-8 bottom-12 flex flex-col justify-between text-xs text-gray-500">
@@ -1323,8 +1349,10 @@ export default function ISIContent({ onContentReady }: ISIContentProps) {
                       )
                     })()}
                   </div>
-                </>
-            </div>
+                  </>
+                </div>
+              </>
+            )}
           </div>
 
           {/* Sectors Section */}
@@ -1406,7 +1434,24 @@ export default function ISIContent({ onContentReady }: ISIContentProps) {
             </div>
             <div className="flex-1 overflow-y-auto">
               <div className="p-4 space-y-6">
-                {aiBrief ? (
+                {!features.hasNLGNarrative ? (
+                  <div className="text-center py-12 px-4">
+                    <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-amber-100 to-orange-100 rounded-full mb-4">
+                      <svg className="w-8 h-8 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-2">AI-Generated Investment Briefs</h4>
+                    <p className="text-sm text-gray-600 mb-4 max-w-sm mx-auto">
+                      Get AI-powered investment analysis, setup strategies, and positioning recommendations powered by Zawadi AI.
+                    </p>
+                    <Link href="/onboarding/step-5?returnTo=isi">
+                      <button className="inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all font-medium shadow-md">
+                        Upgrade to Gold Plan
+                      </button>
+                    </Link>
+                  </div>
+                ) : aiBrief ? (
                   <div>
                     <div className="flex items-center justify-between mb-3">
                       <h4 className="font-semibold text-[18px] text-[#1E1E1E]">{selectedCountry?.name}</h4>
