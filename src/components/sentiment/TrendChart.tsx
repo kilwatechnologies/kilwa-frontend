@@ -86,30 +86,29 @@ export default function TrendChart({ data, period, onPeriodChange }: TrendChartP
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden h-full flex flex-col relative">
-      <div className="p-4 flex-1 flex flex-col min-h-0">
-        <div className="flex items-center justify-between mb-4 flex-shrink-0">
-          <div>
-            <h2 className="text-base font-semibold text-gray-900">Top Trends</h2>
-            <p className="text-xs text-gray-500 mt-0.5">Over Time</p>
-          </div>
+      {/* Header */}
+      <div className="p-5 flex-shrink-0 border-b border-gray-200">
+        <h2 className="text-base font-semibold text-gray-900 mb-3">Top Trends</h2>
 
-          {/* Period Filter */}
-          <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
-            {periods.map((p) => (
-              <button
-                key={p}
-                onClick={() => onPeriodChange(p)}
-                className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
-                  period === p
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                {p}
-              </button>
-            ))}
-          </div>
+        {/* Period Filter - separate row */}
+        <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1 w-fit">
+          {periods.map((p) => (
+            <button
+              key={p}
+              onClick={() => onPeriodChange(p)}
+              className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
+                period === p
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              {p}
+            </button>
+          ))}
         </div>
+      </div>
+
+      <div className="p-4 flex-1 flex flex-col min-h-0">
 
         {/* No Data Message */}
         {!hasData ? (

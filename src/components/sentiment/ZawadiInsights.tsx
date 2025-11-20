@@ -159,17 +159,8 @@ export default function ZawadiInsights({ selectedCountries, articlesByCountry }:
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm h-full flex flex-col overflow-hidden hover:shadow-md transition-shadow">
-      <div className="p-5 flex-shrink-0 bg-gradient-to-br from-purple-50 to-white border-b border-purple-100">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-            <svg className="w-5 h-5 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z" />
-            </svg>
-          </div>
-          <h2 className="text-base font-bold text-gray-900">
-            <span className="text-purple-600">Zawadi</span> AI Insights
-          </h2>
-        </div>
+      <div className="p-5 flex-shrink-0 border-b border-gray-200">
+        <h2 className="text-base font-bold text-gray-900">Zawadi AI Insights</h2>
       </div>
 
       <div className="flex-1 overflow-y-auto px-5 py-4 min-h-0">

@@ -80,7 +80,12 @@ export default function TabbedNewsFeed({ articles, selectedCountries = [] }: Tab
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden h-full flex flex-col">
-      {/* Header with Tabs */}
+      {/* Header with Title */}
+      <div className="p-5 flex-shrink-0 border-b border-gray-200">
+        <h2 className="text-base font-semibold text-gray-900">News Sentiment</h2>
+      </div>
+
+      {/* Tabs */}
       <div className="flex border-b border-gray-200 flex-shrink-0">
         <button
           onClick={() => setActiveTab('positive')}

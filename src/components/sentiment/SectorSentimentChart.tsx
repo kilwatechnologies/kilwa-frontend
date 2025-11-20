@@ -134,15 +134,8 @@ export default function SectorSentimentChart({ articles }: SectorSentimentChartP
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm h-full flex flex-col overflow-hidden hover:shadow-md transition-shadow">
-      <div className="p-5 flex-shrink-0 bg-gradient-to-br from-emerald-50 to-white border-b border-emerald-100">
-        <div className="flex items-center gap-2 mb-4">
-          <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
-            <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
-            </svg>
-          </div>
-          <h2 className="text-base font-bold text-gray-900">Sentiment by Sector</h2>
-        </div>
+      <div className="p-5 flex-shrink-0 border-b border-gray-200">
+        <h2 className="text-base font-bold text-gray-900 mb-4">Sentiment by Sector</h2>
         {/* Header */}
         <div className="grid grid-cols-3 gap-3 text-center">
           <div className="text-xs font-bold text-green-700 uppercase tracking-wide bg-green-50 py-1.5 rounded">POSITIVE</div>

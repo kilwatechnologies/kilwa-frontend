@@ -67,8 +67,8 @@ export default function EnhancedWordCloud({ articles, selectedCountryIds = [] }:
 
   // Extract real keywords from positive articles or use Google Trends
   const wordCloudData = useMemo(() => {
-    // Use Google Trends data if available
-    if (useGoogleTrends && googleTrends.length > 0) {
+    // Use Google Trends data if available AND has enough keywords (at least 10)
+    if (useGoogleTrends && googleTrends.length >= 10) {
       return googleTrends.map(trend => ({
         value: trend.keyword,
         count: trend.total_count || trend.count || 10
@@ -162,7 +162,7 @@ export default function EnhancedWordCloud({ articles, selectedCountryIds = [] }:
     // Get top words by frequency
     const sortedWords = Object.entries(wordFrequency)
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 40) // Top 40 words
+      .slice(0, 60) // Top 60 words for better coverage
 
     // Convert to TagCloud format
     return sortedWords.map(([word, count]) => ({
@@ -194,20 +194,23 @@ export default function EnhancedWordCloud({ articles, selectedCountryIds = [] }:
     // Vary rotation slightly for cloud effect
     const rotation = ((tag.count % 3) - 1) * 15 // -15, 0, or 15 degrees
 
+    // Vary margins for better dispersion
+    const marginVariation = (tag.count % 4) + 1
+
     return (
       <span
         key={tag.value}
         style={{
           fontSize: `${size}px`,
           color: selectedColor,
-          margin: '1px 2px',
-          padding: '1px 2px',
+          margin: `${marginVariation}px ${marginVariation + 2}px`,
+          padding: '2px 4px',
           display: 'inline-block',
           fontWeight: size > 28 ? '700' : size > 20 ? '600' : size > 14 ? '500' : '400',
           cursor: 'pointer',
           transition: 'all 0.2s ease',
           transform: `rotate(${rotation}deg)`,
-          lineHeight: '1.1',
+          lineHeight: '1.2',
         }}
         className="hover:scale-105 hover:opacity-80"
         title={`${tag.value} (${tag.count} ${useGoogleTrends ? 'trend score' : 'mentions'})`}
@@ -246,15 +249,7 @@ export default function EnhancedWordCloud({ articles, selectedCountryIds = [] }:
         <div className="mb-3 flex-shrink-0">
           <div className="flex items-center justify-between">
             <h2 className="text-base font-semibold text-gray-900">Trending Topics</h2>
-            {useGoogleTrends && googleTrends.length > 0 && (
-              <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 rounded text-xs font-medium">
-                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
-                  <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
-                </svg>
-                Google Trends
-              </span>
-            )}
+         
           </div>
           <p className="text-xs text-gray-500 mt-1">
             {useGoogleTrends && googleTrends.length > 0
@@ -274,12 +269,12 @@ export default function EnhancedWordCloud({ articles, selectedCountryIds = [] }:
               </div>
             </div>
           ) : (
-            <div className="w-full h-full flex items-center justify-center">
+            <div className="w-full h-full flex items-center justify-center overflow-hidden">
               <TagCloud
-                minSize={11}
-                maxSize={38}
+                minSize={9}
+                maxSize={36}
                 tags={wordCloudData}
-                className="w-full"
+                className="w-full text-center"
                 renderer={customRenderer}
                 shuffle={true}
               />

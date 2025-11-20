@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import Image from 'next/image'
 
 interface Country {
   id: number
@@ -14,16 +15,23 @@ interface FilterPillsProps {
   onCountryChange: (country: Country) => void
 }
 
-// Helper function to get flag emoji from country ISO code
-const getFlagEmoji = (isoCode: string): string => {
-  if (!isoCode || isoCode.length !== 2) return '🌍'
+// Map country names to their flag SVG filenames
+const countryFlagMap: { [key: string]: string } = {
+  'Nigeria': 'nigeria.svg',
+  'Kenya': 'kenya.svg',
+  'South Africa': 'south-africa.svg',
+  'Ghana': 'ghana.svg',
+  'Egypt': 'egypt.svg',
+  'Morocco': 'morocco.svg',
+  'Tunisia': 'tunisia.svg',
+  'Rwanda': 'rwanda.svg',
+  'Botswana': 'botswana.svg',
+  'Mauritius': 'mauritius.svg',
+}
 
-  const codePoints = isoCode
-    .toUpperCase()
-    .split('')
-    .map(char => 127397 + char.charCodeAt(0))
-
-  return String.fromCodePoint(...codePoints)
+// Helper function to get flag image path from country name
+const getFlagPath = (countryName: string): string => {
+  return `/assets/${countryFlagMap[countryName] || 'nigeria.svg'}`
 }
 
 export default function FilterPills({
@@ -74,7 +82,13 @@ export default function FilterPills({
                 key={country.id}
                 className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-100 text-blue-800 rounded-full text-sm font-medium border border-blue-200"
               >
-                <span className="text-lg">{getFlagEmoji(country.isoCode)}</span>
+                <Image
+                  src={getFlagPath(country.name)}
+                  alt={`${country.name} flag`}
+                  width={20}
+                  height={20}
+                  className="rounded-sm"
+                />
                 <span>{country.name}</span>
                 <button
                   onClick={() => onCountryChange(country)}
@@ -143,7 +157,13 @@ export default function FilterPills({
                         }`}
                       >
                         <div className="flex items-center gap-3">
-                          <span className="text-xl">{getFlagEmoji(country.isoCode)}</span>
+                          <Image
+                            src={getFlagPath(country.name)}
+                            alt={`${country.name} flag`}
+                            width={24}
+                            height={24}
+                            className="rounded-sm"
+                          />
                           <span className={`text-sm ${selected ? 'font-semibold text-blue-900' : 'text-gray-700'}`}>
                             {country.name}
                           </span>

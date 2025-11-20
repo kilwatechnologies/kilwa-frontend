@@ -366,7 +366,7 @@ export default function SentimentPulsePage() {
               {/* First Row - 3 Cards (Zawadi Insights, Country Comparison, Sector Sentiment) */}
               <div className="grid grid-cols-3 gap-6 h-[400px] mb-8">
                 {/* Zawadi AI Insights - Full explanation */}
-                <div className="col-span-1 h-full">
+                <div className="col-span-1 h-full overflow-hidden">
                   <ZawadiInsights
                     selectedCountries={selectedCountries}
                     articlesByCountry={articlesByCountry}
@@ -374,7 +374,7 @@ export default function SentimentPulsePage() {
                 </div>
 
                 {/* Country Comparison Chart */}
-                <div className="col-span-1 h-full">
+                <div className="col-span-1 h-full overflow-hidden">
                   <CountryComparison
                     selectedCountries={selectedCountries}
                     articlesByCountry={articlesByCountry}
@@ -382,7 +382,7 @@ export default function SentimentPulsePage() {
                 </div>
 
                 {/* Sector Sentiment Chart */}
-                <div className="col-span-1 h-full">
+                <div className="col-span-1 h-full overflow-hidden">
                   <SectorSentimentChart articles={newsArticles} />
                 </div>
               </div>
@@ -390,7 +390,7 @@ export default function SentimentPulsePage() {
               {/* Second Row - 3 Cards (Trend Chart, News Feed, Word Cloud) */}
               <div className="grid grid-cols-3 gap-6 h-[500px]">
                 {/* Trend Chart */}
-                <div className="col-span-1 h-full">
+                <div className="col-span-1 h-full overflow-hidden">
                   <TrendChart
                     data={sentimentTimelineData}
                     period={selectedPeriod}
@@ -399,7 +399,7 @@ export default function SentimentPulsePage() {
                 </div>
 
                 {/* Tabbed News Feed */}
-                <div className="col-span-1 h-full">
+                <div className="col-span-1 h-full overflow-hidden">
                   <TabbedNewsFeed
                     articles={newsArticles}
                     selectedCountries={selectedCountries}
@@ -407,7 +407,7 @@ export default function SentimentPulsePage() {
                 </div>
 
                 {/* Word Cloud */}
-                <div className="col-span-1 h-full">
+                <div className="col-span-1 h-full overflow-hidden">
                   <EnhancedWordCloud
                     articles={newsArticles}
                     selectedCountryIds={selectedCountries.map(c => c.id)}
